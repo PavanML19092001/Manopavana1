@@ -1,40 +1,329 @@
 // ==========================================
-// CONFIGURATION & CLOUD CONSTANTS
+// CONFIGURATION & CONSTANTS
 // ==========================================
-const WHATSAPP_BUSINESS_NUMBER = "919180301917"; // Primary WhatsApp Dispatch Channel
-const UPI_MERCHANT_VPA = "8431023984@upi";       // Dedicated Merchant Billing UPI
-const UPI_BUSINESS_NAME = "MANOPAVANA";
+const R2_PUBLIC_BASE_URL = "https://pub-9e18bb265ecf4224ae1230cf913745ca.r2.dev";
+const WHATSAPP_BUSINESS_NUMBER = "919180301917"; 
 const FREE_SHIPPING_THRESHOLD = 500;
 const STANDARD_DELIVERY_FEE = 49;
 const REORDER_DISCOUNT_PERCENT = 10;
-const QR_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30-Day Strict Validity Window
+const QR_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 Days
 const ADMIN_PIN = "1234";
 
-// Dedicated Google Cloud Apps Script Endpoint
-const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwxmCGWSAD_TdW37fu55Vkmvt8o35h3fAXUOC21Y4akgpLQq-WQCslggaa3ZpuCTiwDlA/exec";
+// Google Apps Script Web App Endpoint
+const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbywg6x0ljh31_FyAwpaey3oJofB1uyQZj-9yB6j_FgURYtyX-BXtH5YjowuPTJHIspB/exec";
 
 let countdownTimerInterval = null;
 let currentCalculatedGrandTotal = 0;
 let currentOrderRef = "";
-let isGiftOrder = false;
 
-// Cloud State Variables
-let activeCloudBottleCode = null;
-let cloudScanTimestampMs = null;
-let isCloudLoyaltyActive = false;
+let checkoutSource = "cart"; 
+let buyNowItem = null;
 
-// Master Product Catalog with Cloudinary Assets
+// User Selected Delivery Pincode State (Default Bangalore)
+let userSelectedPincode = localStorage.getItem("manopavana_user_pincode") || "560058";
+let isBangalorePincode = userSelectedPincode.startsWith("560");
+
+let activeBottleCode = localStorage.getItem("manopavana_bottle_code") || null;
+let bottleScanTimestampMs = localStorage.getItem("manopavana_bottle_scan_time") 
+  ? parseInt(localStorage.getItem("manopavana_bottle_scan_time"), 10) 
+  : null;
+let isLoyaltyActive = false;
+
+// ==========================================
+// 1. ALL-INDIA STATES & DISTRICTS
+// ==========================================
+const INDIA_STATES_AND_DISTRICTS = {
+  "Karnataka": [
+    "Bengaluru Urban", "Bengaluru Rural", "Bagalkote", "Ballari", "Belagavi", "Bidar", 
+    "Chamarajanagara", "Chikkaballapura", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada", 
+    "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", "Kalaburagi", "Kodagu", "Kolar", 
+    "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi", 
+    "Uttara Kannada", "Vijayanagara", "Vijayapura", "Yadgir"
+  ],
+  "Tamil Nadu": [
+    "Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tiruppur", "Erode", 
+    "Vellore", "Kanchipuram", "Chengalpattu", "Dindigul", "Tirunelveli", "Thanjavur", "Cuddalore"
+  ],
+  "Kerala": [
+    "Thiruvananthapuram", "Ernakulam", "Kozhikode", "Thrissur", "Malappuram", "Palakkad", 
+    "Kollam", "Alappuzha", "Kannur", "Kottayam", "Idukki", "Kasaragod", "Pathanamthitta", "Wayanad"
+  ],
+  "Andhra Pradesh": [
+    "Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool", "Tirupati", "Kakinada", 
+    "Rajahmundry", "Kadapa", "Anantapur", "Eluru", "Ongole"
+  ],
+  "Telangana": [
+    "Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam", "Ranga Reddy", 
+    "Medchal-Malkajgiri", "Sangareddy", "Siddipet", "Mahabubnagar"
+  ],
+  "Maharashtra": [
+    "Mumbai City", "Mumbai Suburban", "Pune", "Nagpur", "Thane", "Nashik", "Aurangabad", 
+    "Solapur", "Kolhapur", "Amravati", "Navi Mumbai"
+  ],
+  "Delhi": [
+    "Central Delhi", "New Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi", 
+    "North West Delhi", "South West Delhi"
+  ],
+  "Gujarat": [
+    "Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Gandhinagar", "Junagadh"
+  ],
+  "Rajasthan": [
+    "Jaipur", "Jodhpur", "Udaipur", "Kota", "Bikaner", "Ajmer", "Alwar", "Bhilwara"
+  ],
+  "Uttar Pradesh": [
+    "Lucknow", "Kanpur", "Varanasi", "Agra", "Noida", "Ghaziabad", "Prayagraj", "Meerut", "Bareilly"
+  ],
+  "West Bengal": [
+    "Kolkata", "Howrah", "North 24 Parganas", "South 24 Parganas", "Darjeeling", "Hooghly"
+  ],
+  "Goa": ["North Goa", "South Goa"],
+  "Punjab": ["Amritsar", "Ludhiana", "Jalandhar", "Patiala", "Bathinda", "Mohali"],
+  "Haryana": ["Gurugram", "Faridabad", "Panipat", "Ambala", "Karnal", "Hisar"],
+  "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Darbhanga"],
+  "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur", "Ujjain"],
+  "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Puri", "Sambalpur"],
+  "Assam": ["Guwahati", "Dibrugarh", "Silchar", "Jorhat", "Nagaon"],
+  "Chhattisgarh": ["Raipur", "Bhilai", "Bilaspur", "Korba"],
+  "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro"],
+  "Uttarakhand": ["Dehradun", "Haridwar", "Nainital", "Rishikesh"],
+  "Himachal Pradesh": ["Shimla", "Dharamshala", "Mandi", "Solan"],
+  "Jammu and Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla"],
+  "Chandigarh": ["Chandigarh"],
+  "Puducherry": ["Puducherry", "Karaikal"]
+};
+
+function populateStatesDropdown() {
+  const stateSelect = document.getElementById("custState");
+  const districtSelect = document.getElementById("custDistrict");
+  if (!stateSelect || !districtSelect) return;
+
+  stateSelect.innerHTML = `<option value="">-- Select State / UT --</option>`;
+  Object.keys(INDIA_STATES_AND_DISTRICTS).sort().forEach((stateName) => {
+    const opt = document.createElement("option");
+    opt.value = stateName;
+    opt.textContent = stateName;
+    stateSelect.appendChild(opt);
+  });
+
+  stateSelect.value = "Karnataka";
+  populateDistrictsForState("Karnataka");
+
+  stateSelect.addEventListener("change", (e) => {
+    populateDistrictsForState(e.target.value);
+  });
+}
+
+function populateDistrictsForState(stateName) {
+  const districtSelect = document.getElementById("custDistrict");
+  if (!districtSelect) return;
+
+  districtSelect.innerHTML = `<option value="">-- Select District --</option>`;
+  if (!stateName || !INDIA_STATES_AND_DISTRICTS[stateName]) return;
+
+  const districts = [...INDIA_STATES_AND_DISTRICTS[stateName]].sort();
+  districts.forEach((dist) => {
+    const opt = document.createElement("option");
+    opt.value = dist;
+    opt.textContent = dist;
+    districtSelect.appendChild(opt);
+  });
+
+  if (stateName === "Karnataka" && districts.includes("Bengaluru Urban")) {
+    districtSelect.value = "Bengaluru Urban";
+  }
+}
+
+// ==========================================
+// 2. UPFRONT LOCATION CONTROLLER
+// ==========================================
+window.openLocationCheckModal = function() {
+  const modal = document.getElementById("locationModalBackdrop");
+  const pinInput = document.getElementById("pincodeCheckInput");
+  const resultBox = document.getElementById("pincodeCheckResultBox");
+  if (!modal) return;
+
+  if (pinInput) pinInput.value = userSelectedPincode;
+  if (resultBox) resultBox.style.display = "none";
+  modal.classList.add("open");
+};
+
+window.closeLocationCheckModal = function() {
+  const modal = document.getElementById("locationModalBackdrop");
+  if (modal) modal.classList.remove("open");
+};
+
+window.submitPincodeCheck = function() {
+  const pinInput = document.getElementById("pincodeCheckInput");
+  const resultBox = document.getElementById("pincodeCheckResultBox");
+  if (!pinInput || !resultBox) return;
+
+  const enteredPin = pinInput.value.trim();
+  if (!/^\d{6}$/.test(enteredPin)) {
+    resultBox.className = "pincode-result-box warning";
+    resultBox.innerHTML = `<strong>Invalid Pincode</strong>Please enter a valid 6-digit Indian pincode.`;
+    resultBox.style.display = "block";
+    return;
+  }
+
+  userSelectedPincode = enteredPin;
+  isBangalorePincode = enteredPin.startsWith("560");
+  localStorage.setItem("manopavana_user_pincode", enteredPin);
+
+  updateLocationUI();
+
+  if (isBangalorePincode) {
+    resultBox.className = "pincode-result-box success";
+    resultBox.innerHTML = `<strong>✅ Delivering to Bangalore (${enteredPin})</strong>Fresh wood-pressed batch will be delivered to your doorstep in 48–72 hours from our Peenya mill. Free delivery on ₹500+ orders.`;
+    resultBox.style.display = "block";
+    setTimeout(() => {
+      window.closeLocationCheckModal();
+    }, 1400);
+  } else {
+    resultBox.className = "pincode-result-box warning";
+    resultBox.innerHTML = `<strong>📍 Outside Bangalore (${enteredPin})</strong>Direct doorstep delivery from our Bangalore mill is currently exclusive to Bangalore (560xxx). Orders for your location are fulfilled quickly via our <strong>Official Flipkart Store (10% Off)</strong>.<br><br>
+    <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" class="btn-continue-flipkart" style="display:inline-flex; width:auto; padding:0.6rem 1.2rem; margin-top:0.5rem;">
+      🛒 Shop on Flipkart &rarr;
+    </a>`;
+    resultBox.style.display = "block";
+  }
+};
+
+function updateLocationUI() {
+  const headerLoc = document.getElementById("headerLocationLabel");
+  const cartLoc = document.getElementById("cartDrawerLocLabel");
+  const custPin = document.getElementById("custPincode");
+
+  if (custPin && !custPin.value) {
+    custPin.value = userSelectedPincode;
+  }
+
+  if (isBangalorePincode) {
+    if (headerLoc) headerLoc.innerHTML = `Deliver to: <strong>Bangalore (${userSelectedPincode})</strong>`;
+    if (cartLoc) cartLoc.textContent = `Bangalore (${userSelectedPincode})`;
+  } else {
+    if (headerLoc) headerLoc.innerHTML = `Deliver to: <strong>${userSelectedPincode} (Flipkart Delivery)</strong>`;
+    if (cartLoc) cartLoc.textContent = `${userSelectedPincode} (Flipkart)`;
+  }
+
+  renderProductsGrid();
+  renderComboSection();
+}
+
+// ==========================================
+// 3. AUDIO & VIDEO AUTOPLAY
+// ==========================================
+const heroVideo = document.getElementById("heroVideo");
+const heroFallbackImage = document.getElementById("heroFallbackImage");
+const heroBgAudio = document.getElementById("heroBgAudio");
+const soundToggleBtn = document.getElementById("soundToggleBtn");
+const soundIcon = document.getElementById("soundIcon");
+const soundText = document.getElementById("soundText");
+
+let isAudioPlaying = false;
+
+function initVideoAutoplay() {
+  if (!heroVideo) return;
+  heroVideo.muted = true;
+  heroVideo.loop = true;
+  heroVideo.playsInline = true;
+
+  const playPromise = heroVideo.play();
+  if (playPromise !== undefined) {
+    playPromise.catch(() => {
+      if (heroFallbackImage) {
+        heroVideo.style.display = "none";
+        heroFallbackImage.style.display = "block";
+      }
+    });
+  }
+}
+
+function startAudioPlayback() {
+  if (!heroBgAudio || isAudioPlaying) return;
+  heroBgAudio.volume = 1.0;
+  
+  const audioPromise = heroBgAudio.play();
+  if (audioPromise !== undefined) {
+    audioPromise.then(() => {
+      isAudioPlaying = true;
+      if (soundIcon) soundIcon.textContent = "🔊";
+      if (soundText) soundText.textContent = "Sound On";
+      if (soundToggleBtn) soundToggleBtn.classList.add("playing");
+      detachAudioUnlockListeners();
+    }).catch(() => {
+      isAudioPlaying = false;
+      if (soundIcon) soundIcon.textContent = "🔇";
+      if (soundText) soundText.textContent = "Tap for Sound";
+      if (soundToggleBtn) soundToggleBtn.classList.remove("playing");
+    });
+  }
+}
+
+function pauseAudioPlayback() {
+  if (!heroBgAudio) return;
+  heroBgAudio.pause();
+  isAudioPlaying = false;
+  if (soundIcon) soundIcon.textContent = "🔇";
+  if (soundText) soundText.textContent = "Sound Off";
+  if (soundToggleBtn) soundToggleBtn.classList.remove("playing");
+}
+
+const unlockEvents = ["scroll", "wheel", "touchstart", "touchmove", "pointerdown", "click", "keydown"];
+
+function handleUserUnlock() {
+  if (!isAudioPlaying) {
+    startAudioPlayback();
+  }
+}
+
+function attachAudioUnlockListeners() {
+  unlockEvents.forEach((evt) => {
+    window.addEventListener(evt, handleUserUnlock, { once: true, passive: true });
+    document.addEventListener(evt, handleUserUnlock, { once: true, passive: true });
+  });
+}
+
+function detachAudioUnlockListeners() {
+  unlockEvents.forEach((evt) => {
+    window.removeEventListener(evt, handleUserUnlock);
+    document.removeEventListener(evt, handleUserUnlock);
+  });
+}
+
+["DOMContentLoaded", "load", "pageshow"].forEach((loadEvent) => {
+  window.addEventListener(loadEvent, () => {
+    initVideoAutoplay();
+    startAudioPlayback();
+  });
+});
+
+attachAudioUnlockListeners();
+
+if (soundToggleBtn) {
+  soundToggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (isAudioPlaying) {
+      pauseAudioPlayback();
+    } else {
+      startAudioPlayback();
+    }
+  });
+}
+
+const createGallery = (prefix, count = 11) =>
+  Array.from({ length: count }, (_, i) => `${R2_PUBLIC_BASE_URL}/${prefix}-${i + 1}.png`);
+
+// ==========================================
+// 4. MASTER CATALOG & EXACT NUTRITION
+// ==========================================
 const PRODUCT_CATALOG = {
   groundnut: {
     id: "groundnut",
     name: "Wood-Pressed Groundnut Oil",
     badgeTheme: "theme-groundnut",
     bgClass: "oil-groundnut",
-    img: "https://res.cloudinary.com/bng9wtel/image/upload/v1788615807/groundnut-oil.jpg",
-    gallery: [
-      "https://res.cloudinary.com/bng9wtel/image/upload/v1788615807/groundnut-oil.jpg",
-      "https://res.cloudinary.com/bng9wtel/image/upload/v1788615840/label-groundnut.jpg"
-    ],
+    img: `${R2_PUBLIC_BASE_URL}/groundnut-1.png`,
+    gallery: createGallery("groundnut", 11),
     shortDesc: "Traditional single slow-press extraction using heavy wooden pestles (<45°C). Triple cotton cloth filtered with zero chemical bleaches, giving unadulterated nutty aroma and high smoke-point performance.",
     features: [
       { icon: "🌾", label: "Aroma", val: "Naturally Nutty" },
@@ -51,14 +340,22 @@ const PRODUCT_CATALOG = {
       "Authenticity Standards": "Zero Mineral Oil, No Argemone, No Added Preservatives"
     },
     nutrition: [
-      { name: "Energy", val: "884 kcal" },
-      { name: "Total Fats", val: "100 g" },
-      { name: "MUFA", val: "48 g" },
-      { name: "PUFA", val: "32 g" },
-      { name: "Trans Fat", val: "0 g" }
+      { name: "Energy", val: "862.1 Kcal" },
+      { name: "Carbohydrates", val: "0.0 gm" },
+      { name: "Total Fat", val: "99.97 gm" },
+      { name: "Saturated Fat", val: "86.95 gm" },
+      { name: "Mono Unsaturated Fat", val: "6.48 gm" },
+      { name: "Poly Unsaturated Fat", val: "1.83 gm" },
+      { name: "Trans Fat", val: "0.0 gm" },
+      { name: "Cholestral", val: "0.0 mg" },
+      { name: "Protein", val: "0.0 gm" },
+      { name: "Total Sugar", val: "0.0 gm" },
+      { name: "Dietary Fiber", val: "0.0 gm" },
+      { name: "Moisture", val: "0.05 %" },
+      { name: "Total Ash", val: "0.05 %" }
     ],
     sizes: {
-      "1L": { id: "groundnut-1l", price: 349, badge: "1 Litre", title: "Wood-Pressed Groundnut Oil (1L)" },
+      "1L": { id: "groundnut-1l", price: 399, badge: "1 Litre", title: "Wood-Pressed Groundnut Oil (1L)" },
       "500ml": { id: "groundnut-500ml", price: 189, badge: "500 ml", title: "Wood-Pressed Groundnut Oil (500ml)" }
     }
   },
@@ -67,12 +364,9 @@ const PRODUCT_CATALOG = {
     name: "Wood-Pressed Coconut Oil",
     badgeTheme: "theme-coconut",
     bgClass: "oil-coconut",
-    img: "https://res.cloudinary.com/bng9wtel/image/upload/v1788615797/coconut-oil.jpg",
-    gallery: [
-      "https://res.cloudinary.com/bng9wtel/image/upload/v1788615797/coconut-oil.jpg",
-      "https://res.cloudinary.com/bng9wtel/image/upload/v1788615819/label-coconut.jpg"
-    ],
-    shortDesc: "Extracted from 100% sulfur-free, sun-dried copra. Packed with natural Lauric acid and medium-chain fatty acids (MCTs). 100% edible-grade with unrefined natural coconut fragrance.",
+    img: `${R2_PUBLIC_BASE_URL}/coconut-1.png`,
+    gallery: createGallery("coconut", 11),
+    shortDesc: "Extracted from 100% sulfur-free, sun-dried copra. Packed with natural medium-chain fatty acids (MCTs). 100% edible-grade with unrefined natural coconut fragrance.",
     features: [
       { icon: "🥥", label: "Aroma", val: "Fresh Copra Scent" },
       { icon: "✨", label: "Extraction", val: "Slow Wood Chekku" },
@@ -88,11 +382,19 @@ const PRODUCT_CATALOG = {
       "Authenticity Standards": "Zero Liquid Paraffin, No Added Aromas"
     },
     nutrition: [
-      { name: "Energy", val: "892 kcal" },
-      { name: "Total Fats", val: "99.8 g" },
-      { name: "Lauric Acid", val: "49.5 g" },
-      { name: "MCTs", val: "62%" },
-      { name: "Trans Fat", val: "0 g" }
+      { name: "Energy", val: "862.1 Kcal" },
+      { name: "Carbohydrates", val: "0.0 gm" },
+      { name: "Total Fat", val: "99.97 gm" },
+      { name: "Saturated Fat", val: "86.95 gm" },
+      { name: "Mono Unsaturated Fat", val: "6.48 gm" },
+      { name: "Poly Unsaturated Fat", val: "1.83 gm" },
+      { name: "Trans Fat", val: "0.0 gm" },
+      { name: "Cholestral", val: "0.0 mg" },
+      { name: "Protein", val: "0.0 gm" },
+      { name: "Total Sugar", val: "0.0 gm" },
+      { name: "Dietary Fiber", val: "0.0 gm" },
+      { name: "Moisture", val: "0.05 %" },
+      { name: "Total Ash", val: "0.05 %" }
     ],
     sizes: {
       "1L": { id: "coconut-1l", price: 499, badge: "1 Litre", title: "Wood-Pressed Coconut Oil (1L)" },
@@ -104,16 +406,13 @@ const PRODUCT_CATALOG = {
     name: "Wood-Pressed Sesame Oil",
     badgeTheme: "theme-sesame",
     bgClass: "oil-sesame",
-    img: "https://res.cloudinary.com/bng9wtel/image/upload/v1788615861/sesame-oil.jpg",
-    gallery: [
-      "https://res.cloudinary.com/bng9wtel/image/upload/v1788615861/sesame-oil.jpg",
-      "https://res.cloudinary.com/bng9wtel/image/upload/v1788615838/label-sesame.jpg"
-    ],
+    img: `${R2_PUBLIC_BASE_URL}/sesame-1.png`,
+    gallery: createGallery("sesame", 11),
     shortDesc: "Authentic wood-pressed Gingelly oil extracted with natural palm jaggery to harmonize the deep nutty bite. Rich in Sesamol antioxidants, zinc, and heart-healthy unsaturated lipids.",
     features: [
       { icon: "🍯", label: "Aroma", val: "Chekku Scent" },
       { icon: "🪵", label: "Process", val: "Slow Crushed" },
-      { icon: "☀️", label: "Quality", val: "Unrefined Extraction" }
+      { icon: "☀", label: "Quality", val: "Unrefined Extraction" }
     ],
     specs: {
       "Extraction Method": "Slow Wooden Press with Palm Jaggery",
@@ -125,61 +424,57 @@ const PRODUCT_CATALOG = {
       "Authenticity Standards": "100% Sesame Extract, Zero Synthetic Fragrances"
     },
     nutrition: [
-      { name: "Energy", val: "884 kcal" },
-      { name: "Total Fats", val: "100 g" },
-      { name: "MUFA", val: "40 g" },
-      { name: "PUFA", val: "42 g" },
-      { name: "Sesamol", val: "High Antioxidant" }
+      { name: "Energy", val: "884.3 Kcal" },
+      { name: "Carbohydrates", val: "0.0 gm" },
+      { name: "Total Fat", val: "99.96 gm" },
+      { name: "Saturated Fat", val: "13.9 gm" },
+      { name: "Poly Unsaturated Fat", val: "43.35 gm" },
+      { name: "Mono Unsaturated Fat", val: "42.11 gm" },
+      { name: "Trans Fat", val: "0.0 gm" },
+      { name: "Cholestral", val: "0.0 mg" },
+      { name: "Protein", val: "0.0 gm" },
+      { name: "Total Sugar", val: "0.0 gm" },
+      { name: "Dietary Fiber", val: "0.0 gm" },
+      { name: "Moisture", val: "0.07 %" },
+      { name: "Total Ash", val: "0.03 %" }
     ],
     sizes: {
       "1L": { id: "sesame-1l", price: 499, badge: "1 Litre", title: "Wood-Pressed Sesame Oil (1L)" },
       "500ml": { id: "sesame-500ml", price: 269, badge: "500 ml", title: "Wood-Pressed Sesame Oil (500ml)" }
     }
-  },
-  mustard: {
-    id: "mustard",
-    name: "Wood-Pressed Mustard Oil",
-    badgeTheme: "theme-mustard",
-    bgClass: "oil-mustard",
-    img: "https://res.cloudinary.com/bng9wtel/image/upload/v1788615845/mustard-oil.jpg",
-    gallery: [
-      "https://res.cloudinary.com/bng9wtel/image/upload/v1788615845/mustard-oil.jpg",
-      "https://res.cloudinary.com/bng9wtel/image/upload/v1788615816/label-mustard.jpg"
-    ],
-    isPreOrder: true,
-    shortDesc: "Freshly cold-pressed on order. Retains signature natural pungency and Sinigrin glucosinolates without chemical enhancements. Perfect for traditional tawa cooking and pickle pickling.",
-    features: [
-      { icon: "⚡", label: "Aroma", val: "Pungent Kick" },
-      { icon: "🪵", label: "Batch", val: "Single Slow Press" },
-      { icon: "⏱️", label: "Dispatched", val: "48–72 hrs Fresh Crush" }
-    ],
-    specs: {
-      "Extraction Method": "Single Cold Press Wooden Ghani",
-      "Processing Type": "Fresh Micro-Batch Crush on Order",
-      "FSSAI License": "Reg. No. 21226008004689",
-      "Container Type": "Food-Grade Shatterproof Bottle + Drip-Free Spout",
-      "Best For": "North Indian Curries, Baingan Bharta, Artisanal Pickles",
-      "Shelf Life": "9-12 Months",
-      "Authenticity Standards": "Zero Artificial Pungency Additives"
-    },
-    nutrition: [
-      { name: "Energy", val: "884 kcal" },
-      { name: "Total Fats", val: "100 g" },
-      { name: "MUFA", val: "60 g" },
-      { name: "PUFA", val: "28 g" },
-      { name: "Omega 3:6", val: "Naturally Balanced" }
-    ],
-    sizes: {
-      "1L": { id: "mustard-1l", price: 299, badge: "Pre-Order (1L)", title: "Mustard Oil (1L - Pre-Order Fresh Crush)" },
-      "500ml": { id: "mustard-500ml", price: 159, badge: "Pre-Order (500ml)", title: "Mustard Oil (500ml - Pre-Order Fresh Crush)" }
-    }
   }
 };
 
-// Global Shopping Cart State
+const COMBO_CATALOG = {
+  "combo-3l": {
+    id: "combo-3l",
+    title: "Complete 3-Oil Essential Box (3L Trio)",
+    volume: "3 Litres",
+    badgeText: "3 x 1 Litre Kitchen Trio",
+    headingText: "Complete Kitchen 3-Oil Essential Box (3 Litres)",
+    descText: "Equip your kitchen with South India's 3 core traditional wood-pressed oils. Includes brand-new sealed 1L Groundnut Oil (₹399), 1L Coconut Oil (₹499), and 1L Sesame Oil (₹499).",
+    price: 1299,
+    originalPrice: 1397,
+    qrPrice: 1169,
+    img: `${R2_PUBLIC_BASE_URL}/combo-all-labels.jpg`
+  },
+  "combo-15l": {
+    id: "combo-15l",
+    title: "Complete 3-Oil Starter Box (1.5L Trio)",
+    volume: "1.5 Litres",
+    badgeText: "3 x 500ml Kitchen Trio",
+    headingText: "Complete Kitchen 3-Oil Starter Box (1.5 Litres)",
+    descText: "Compact starter box containing 500ml Groundnut Oil (₹189), 500ml Coconut Oil (₹269), and 500ml Sesame Oil (₹269).",
+    price: 699,
+    originalPrice: 727,
+    qrPrice: 629,
+    img: `${R2_PUBLIC_BASE_URL}/combo-all-labels.jpg`
+  }
+};
+
+let currentSelectedComboKey = "combo-3l";
 let cart = JSON.parse(localStorage.getItem("manopavana_cart")) || [];
 
-// Active Modal State
 let currentDetailProductKey = null;
 let currentDetailSelectedSize = "1L";
 
@@ -209,92 +504,21 @@ const checkoutModalBackdrop = document.getElementById("checkoutModalBackdrop");
 const closeModalBtn = document.getElementById("closeModalBtn");
 const submitOrderBtn = document.getElementById("submitOrderBtn");
 const formError = document.getElementById("formError");
+const modalCheckoutTitle = document.getElementById("modalCheckoutTitle");
+const checkoutOrderPreview = document.getElementById("checkoutOrderPreview");
 
-const payUPIRadio = document.getElementById("payUPI");
+const payPhonePeRadio = document.getElementById("payPhonePe");
 const payCODRadio = document.getElementById("payCOD");
-const labelPayUPI = document.getElementById("labelPayUPI");
+const payWhatsAppRadio = document.getElementById("payWhatsApp");
+const labelPayPhonePe = document.getElementById("labelPayPhonePe");
 const labelPayCOD = document.getElementById("labelPayCOD");
-const upiPaymentBox = document.getElementById("upiPaymentBox");
-const upiPayableAmount = document.getElementById("upiPayableAmount");
-const dynamicUpiQrImg = document.getElementById("dynamicUpiQrImg");
-const mobileUpiDeepLink = document.getElementById("mobileUpiDeepLink");
+const labelPayWhatsApp = document.getElementById("labelPayWhatsApp");
+const phonepePaymentInfoBox = document.getElementById("phonepePaymentInfoBox");
 
 // ==========================================
-// 1. VIDEO AUTOPLAY & AUDIO CONTROLLER
+// 5. BACKEND API JSONP WRAPPER
 // ==========================================
-const heroVideo = document.getElementById("heroVideo");
-const heroBgAudio = document.getElementById("heroBgAudio");
-const soundToggleBtn = document.getElementById("soundToggleBtn");
-const soundIcon = document.getElementById("soundIcon");
-const soundText = document.getElementById("soundText");
-
-let isSoundActive = false;
-
-if (heroVideo) {
-  heroVideo.muted = true;
-  heroVideo.loop = true;
-  heroVideo.playsInline = true;
-  heroVideo.play().catch(() => {});
-}
-
-function enableAudio() {
-  if (!heroBgAudio) return;
-  heroBgAudio.volume = 1.0;
-  heroBgAudio
-    .play()
-    .then(() => {
-      isSoundActive = true;
-      if (soundIcon) soundIcon.textContent = "🔊";
-      if (soundText) soundText.textContent = "Sound On";
-    })
-    .catch((err) => {
-      console.warn("Audio waiting for gesture:", err);
-    });
-}
-
-function disableAudio() {
-  if (!heroBgAudio) return;
-  heroBgAudio.pause();
-  isSoundActive = false;
-  if (soundIcon) soundIcon.textContent = "🔇";
-  if (soundText) soundText.textContent = "Sound Off";
-}
-
-function triggerAudioOnFirstInteraction(e) {
-  if (soundToggleBtn && soundToggleBtn.contains(e.target)) return;
-  enableAudio();
-  ["click", "touchstart", "pointerdown"].forEach((evt) => {
-    window.removeEventListener(evt, triggerAudioOnFirstInteraction);
-    document.removeEventListener(evt, triggerAudioOnFirstInteraction);
-  });
-}
-
-["click", "touchstart", "pointerdown"].forEach((evt) => {
-  window.addEventListener(evt, triggerAudioOnFirstInteraction, { once: true });
-  document.addEventListener(evt, triggerAudioOnFirstInteraction, { once: true });
-});
-
-if (soundToggleBtn && heroBgAudio) {
-  soundToggleBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (!isSoundActive) {
-      enableAudio();
-    } else {
-      disableAudio();
-    }
-  });
-}
-
-if (heroVideo) {
-  heroVideo.addEventListener("pause", () => {
-    heroVideo.play().catch(() => {});
-  });
-}
-
-// ==========================================
-// 2. CORS-PROOF GOOGLE SHEETS CLOUD CLIENT
-// ==========================================
-function callGoogleSheetsCloud(params) {
+function callBackend(params) {
   return new Promise((resolve, reject) => {
     const callbackName = "jsonp_cb_" + Math.round(100000 * Math.random());
     let script = null;
@@ -314,94 +538,147 @@ function callGoogleSheetsCloud(params) {
     script.onerror = function () {
       delete window[callbackName];
       if (script && script.parentNode) script.parentNode.removeChild(script);
-      reject(new Error("Network error calling Google Sheets"));
+      reject(new Error("Unable to connect to Google Sheets backend. Verify deployment URL."));
     };
 
     document.body.appendChild(script);
   });
 }
 
-async function checkBottleQRScan() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const rawCode = urlParams.get("code") || (urlParams.get("ref") === "bottle_qr" ? "DEFAULT_BOTTLE" : null);
-
-  if (!rawCode) return;
-  const scannedCode = rawCode.trim();
-
-  if (window.history && window.history.replaceState) {
-    const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-    window.history.replaceState({ path: cleanUrl }, "", cleanUrl);
-  }
-
-  const announcementText = document.getElementById("announcementText");
-  if (announcementText) {
-    announcementText.innerHTML = `⏳ <strong>Verifying Bottle QR Code with Cloud Database...</strong>`;
-  }
-
-  try {
-    const checkData = await callGoogleSheetsCloud({ action: "check", code: scannedCode });
-
-    if (checkData.status === "REDEEMED") {
-      alert("⚠️ This bottle QR code has already been redeemed for a previous order. Please scan the QR code on your new fresh bottle!");
-      resetCloudLoyaltyState();
-      return;
+// ==========================================
+// 6. RANDOMIZED BOTTLE LABEL QUIZ POOL
+// ==========================================
+const BOTTLE_QUIZ_POOLS = {
+  groundnut: [
+    {
+      hint: "Look at the front label right below 'GROUNDNUT OIL':",
+      question: "What tagline is printed right below 'GROUNDNUT OIL' on the front label?",
+      options: [
+        { text: "Perfect for Everyday Indian Cooking", correct: true },
+        { text: "The Traditional Choice for Rich Flavour", correct: false },
+        { text: "Made for Authentic Flavours", correct: false }
+      ]
+    },
+    {
+      hint: "Look at the nutrition table on the back label:",
+      question: "What is the Energy value (per 100g) printed on the back label?",
+      options: [
+        { text: "862.1 Kcal", correct: true },
+        { text: "884.3 Kcal", correct: false },
+        { text: "910.0 Kcal", correct: false }
+      ]
+    },
+    {
+      hint: "Look at the bottom-right of the back label under 'PACKED & MARKETED BY':",
+      question: "What is the FSSAI registration number printed on the back label?",
+      options: [
+        { text: "21226008004689", correct: true },
+        { text: "11221004001234", correct: false },
+        { text: "21224005009876", correct: false }
+      ]
     }
-
-    if (!checkData.exists || checkData.status === "NEW") {
-      const regData = await callGoogleSheetsCloud({ action: "register", code: scannedCode });
-
-      activeCloudBottleCode = scannedCode;
-      cloudScanTimestampMs = regData.firstScannedAt ? new Date(regData.firstScannedAt).getTime() : Date.now();
-      isCloudLoyaltyActive = true;
-    } else if (checkData.status === "ACTIVE" && checkData.firstScannedAt) {
-      const firstScanTime = new Date(checkData.firstScannedAt).getTime();
-      const elapsed = Date.now() - firstScanTime;
-
-      if (elapsed >= QR_EXPIRY_MS) {
-        alert("⚠️ The 30-day validity window for this bottle QR code has expired. Please scan the QR code on your new bottle!");
-        resetCloudLoyaltyState();
-        return;
-      }
-
-      activeCloudBottleCode = scannedCode;
-      cloudScanTimestampMs = firstScanTime;
-      isCloudLoyaltyActive = true;
+  ],
+  coconut: [
+    {
+      hint: "Look at the front label right below 'COCONUT OIL':",
+      question: "What tagline is printed right below 'COCONUT OIL' on the front label?",
+      options: [
+        { text: "Made for Authentic Flavours", correct: true },
+        { text: "Perfect for Everyday Indian Cooking", correct: false },
+        { text: "The Traditional Choice for Rich Flavour", correct: false }
+      ]
+    },
+    {
+      hint: "Look at the top panel on the back label titled 'THE MANOPAVANA STANDARD':",
+      question: "What does Pillar 2 ('CRAFT') specify on the back label?",
+      options: [
+        { text: "Slow Wood Pressed (Milled gently without heat)", correct: true },
+        { text: "High-Heat Expeller Pressed", correct: false },
+        { text: "Solvent Chemical Refined", correct: false }
+      ]
+    },
+    {
+      hint: "Look at the vertical strip on the left edge of the front label:",
+      question: "What extraction method is printed on the vertical black side banner?",
+      options: [
+        { text: "Traditional Marachekku Extraction", correct: true },
+        { text: "Centrifugal Machine Separation", correct: false },
+        { text: "Double Filtered Solvent Extraction", correct: false }
+      ]
     }
+  ],
+  sesame: [
+    {
+      hint: "Look at the front label right below 'SESAME OIL':",
+      question: "What tagline is printed right below 'SESAME OIL' on the front label?",
+      options: [
+        { text: "The Traditional Choice for Rich Flavour", correct: true },
+        { text: "Made for Authentic Flavours", correct: false },
+        { text: "Perfect for Everyday Indian Cooking", correct: false }
+      ]
+    },
+    {
+      hint: "Look at the nutrition table on the back label:",
+      question: "According to the back nutrition panel, what is the Energy per 100g?",
+      options: [
+        { text: "884.3 Kcal", correct: true },
+        { text: "862.1 Kcal", correct: false },
+        { text: "790.5 Kcal", correct: false }
+      ]
+    },
+    {
+      hint: "Look at the vertical strip on the right edge of the front label:",
+      question: "What purity guarantee is printed on the right vertical banner?",
+      options: [
+        { text: "No Chemicals and Preservatives", correct: true },
+        { text: "Added Artificial Aromas", correct: false },
+        { text: "Contains Added Liquid Paraffin", correct: false }
+      ]
+    }
+  ]
+};
 
-    if (isCloudLoyaltyActive) {
-      showLoyaltyToast();
-      renderCart();
+let selectedQuizBottleKey = "groundnut";
+let currentActiveQuizQuestion = null;
+let selectedQuizOptionIndex = null;
+
+function initLoyaltyFromStorage() {
+  const storedTime = localStorage.getItem("manopavana_bottle_scan_time");
+  if (storedTime) {
+    const elapsed = Date.now() - parseInt(storedTime, 10);
+    if (elapsed < QR_EXPIRY_MS) {
+      isLoyaltyActive = true;
+      bottleScanTimestampMs = parseInt(storedTime, 10);
+      activeBottleCode = localStorage.getItem("manopavana_bottle_code") || "VERIFIED_BOTTLE";
       startLiveCountdown();
+    } else {
+      window.clearLoyaltyDiscount();
     }
-  } catch (err) {
-    console.error("Cloud Sheets verification error:", err);
-    alert("Unable to verify QR code with the cloud server. Please check your internet connection.");
-    resetCloudLoyaltyState();
-  }
-}
-
-function resetCloudLoyaltyState() {
-  activeCloudBottleCode = null;
-  cloudScanTimestampMs = null;
-  isCloudLoyaltyActive = false;
-  renderCart();
-  startLiveCountdown();
-}
-
-function showLoyaltyToast() {
-  const rewardToast = document.getElementById("rewardToast");
-  if (rewardToast) {
-    setTimeout(() => {
-      rewardToast.classList.add("show");
-      setTimeout(() => rewardToast.classList.remove("show"), 6500);
-    }, 400);
   }
 }
 
 function isLoyaltyDiscountValid() {
-  if (!isCloudLoyaltyActive || !cloudScanTimestampMs) return false;
-  const elapsed = Date.now() - cloudScanTimestampMs;
-  return elapsed < QR_EXPIRY_MS;
+  if (!bottleScanTimestampMs) return false;
+  return (Date.now() - bottleScanTimestampMs) < QR_EXPIRY_MS;
+}
+
+window.clearLoyaltyDiscount = function() {
+  activeBottleCode = null;
+  bottleScanTimestampMs = null;
+  isLoyaltyActive = false;
+  localStorage.removeItem("manopavana_bottle_code");
+  localStorage.removeItem("manopavana_bottle_scan_time");
+  renderCart();
+  startLiveCountdown();
+  renderComboSection();
+};
+
+function showLoyaltyToast() {
+  const rewardToast = document.getElementById("rewardToast");
+  if (rewardToast) {
+    rewardToast.classList.add("show");
+    setTimeout(() => rewardToast.classList.remove("show"), 6500);
+  }
 }
 
 function startLiveCountdown() {
@@ -413,13 +690,10 @@ function startLiveCountdown() {
     if (!announcementText || !topBar) return;
 
     if (isLoyaltyDiscountValid()) {
-      const remainingMs = Math.max(0, QR_EXPIRY_MS - (Date.now() - cloudScanTimestampMs));
+      const remainingMs = Math.max(0, QR_EXPIRY_MS - (Date.now() - bottleScanTimestampMs));
 
       if (remainingMs <= 0) {
-        resetCloudLoyaltyState();
-        announcementText.innerHTML = `🚚 <strong>FREE Doorstep Delivery</strong> on all orders above ₹500 across Bangalore (Delivered in 48–72 hrs)`;
-        topBar.classList.remove("loyal-banner");
-        clearInterval(countdownTimerInterval);
+        window.clearLoyaltyDiscount();
         return;
       }
 
@@ -431,7 +705,7 @@ function startLiveCountdown() {
 
       const formattedTime = `${days}d ${String(hours).padStart(2, "0")}h ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
 
-      announcementText.innerHTML = `🏷️ <strong>Bottle QR Verified:</strong> 10% Loyalty Discount Active! <span class="countdown-pill">⏱️ ${formattedTime}</span>`;
+      announcementText.innerHTML = `🏷️ <strong>Bottle Scan Verified:</strong> 10% Loyalty Discount Active! <span class="countdown-pill">⏱ ${formattedTime}</span>`;
       topBar.classList.add("loyal-banner");
     } else {
       announcementText.innerHTML = `🚚 <strong>FREE Doorstep Delivery</strong> on all orders above ₹500 across Bangalore (Delivered in 48–72 hrs)`;
@@ -444,40 +718,170 @@ function startLiveCountdown() {
   countdownTimerInterval = setInterval(updateTimer, 1000);
 }
 
-checkBottleQRScan();
-startLiveCountdown();
+window.openBottleClaimModal = function () {
+  const modal = document.getElementById("bottleClaimModalBackdrop");
+  const alreadyBox = document.getElementById("alreadyClaimedBox");
+  const quizBox = document.getElementById("quizVerificationBox");
 
-// ==========================================
-// 3. PERSISTENT BOTTLE SHOWCASE PLAYBACK
-// ==========================================
-const bottleAutoplayVideo = document.getElementById("bottleAutoplayVideo");
-const bottleFallbackImg = document.getElementById("bottleFallbackImg");
+  if (!modal) return;
 
-if (bottleAutoplayVideo) {
-  bottleAutoplayVideo.muted = true;
-  bottleAutoplayVideo.loop = true;
-  bottleAutoplayVideo.playsInline = true;
-  bottleAutoplayVideo.play().catch(() => {});
+  if (isLoyaltyDiscountValid()) {
+    if (alreadyBox) alreadyBox.style.display = "block";
+    if (quizBox) quizBox.style.display = "none";
+    updateClaimedRemainingText();
+  } else {
+    if (alreadyBox) alreadyBox.style.display = "none";
+    if (quizBox) quizBox.style.display = "block";
+    window.selectQuizBottle(selectedQuizBottleKey);
+  }
 
-  bottleAutoplayVideo.addEventListener("error", () => {
-    bottleAutoplayVideo.style.display = "none";
-    if (bottleFallbackImg) bottleFallbackImg.style.display = "block";
-  });
+  modal.classList.add("open");
+};
 
-  bottleAutoplayVideo.addEventListener("pause", () => {
-    bottleAutoplayVideo.play().catch(() => {});
-  });
+window.closeBottleClaimModal = function () {
+  const modal = document.getElementById("bottleClaimModalBackdrop");
+  if (modal) modal.classList.remove("open");
+  const feedback = document.getElementById("quizFeedbackBox");
+  if (feedback) feedback.style.display = "none";
+};
+
+function updateClaimedRemainingText() {
+  const textEl = document.getElementById("claimedRemainingText");
+  if (!textEl || !bottleScanTimestampMs) return;
+
+  const remainingMs = Math.max(0, QR_EXPIRY_MS - (Date.now() - bottleScanTimestampMs));
+  const totalSeconds = Math.floor(remainingMs / 1000);
+  const days = Math.floor(totalSeconds / (24 * 3600));
+  const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+  textEl.textContent = `${days} days, ${hours} hours and ${minutes} mins remaining`;
 }
 
+window.selectQuizBottle = function (bottleKey) {
+  selectedQuizBottleKey = bottleKey;
+  selectedQuizOptionIndex = null;
+
+  document.querySelectorAll(".quiz-bottle-pill").forEach((pill) => pill.classList.remove("active"));
+  const activePill = document.getElementById("pill" + bottleKey.charAt(0).toUpperCase() + bottleKey.slice(1));
+  if (activePill) activePill.classList.add("active");
+
+  const pool = BOTTLE_QUIZ_POOLS[bottleKey];
+  const randomIndex = Math.floor(Math.random() * pool.length);
+  currentActiveQuizQuestion = pool[randomIndex];
+
+  const hintEl = document.getElementById("quizHintText");
+  const questionEl = document.getElementById("quizQuestionText");
+  const optionsContainer = document.getElementById("quizOptionsContainer");
+  const feedback = document.getElementById("quizFeedbackBox");
+
+  if (feedback) feedback.style.display = "none";
+  if (hintEl) hintEl.textContent = currentActiveQuizQuestion.hint;
+  if (questionEl) questionEl.textContent = currentActiveQuizQuestion.question;
+
+  if (optionsContainer) {
+    optionsContainer.innerHTML = currentActiveQuizQuestion.options
+      .map((opt, idx) => `
+        <label class="quiz-option-card" id="quizOptionLabel_${idx}" onclick="selectQuizOption(${idx})">
+          <input type="radio" name="bottleQuizChoice" value="${idx}" />
+          <span>${opt.text}</span>
+        </label>
+      `)
+      .join("");
+  }
+};
+
+window.selectQuizOption = function (idx) {
+  selectedQuizOptionIndex = idx;
+  document.querySelectorAll(".quiz-option-card").forEach((card, i) => {
+    card.classList.toggle("selected", i === idx);
+  });
+};
+
+window.submitBottleLabelQuiz = function () {
+  if (isLoyaltyDiscountValid()) {
+    window.openBottleClaimModal();
+    return;
+  }
+
+  const feedback = document.getElementById("quizFeedbackBox");
+  if (selectedQuizOptionIndex === null) {
+    if (feedback) {
+      feedback.className = "quiz-feedback-box error";
+      feedback.textContent = "Please select one of the options from your bottle label.";
+      feedback.style.display = "block";
+    }
+    return;
+  }
+
+  const isCorrect = currentActiveQuizQuestion.options[selectedQuizOptionIndex].correct;
+
+  if (isCorrect) {
+    const selCard = document.getElementById("quizOptionLabel_" + selectedQuizOptionIndex);
+    if (selCard) selCard.classList.add("is-correct");
+
+    if (feedback) {
+      feedback.className = "quiz-feedback-box success";
+      feedback.innerHTML = "✅ <strong>Label Verified!</strong> 10% Loyalty discount is now active for 30 days.";
+      feedback.style.display = "block";
+    }
+
+    activeBottleCode = `VERIFIED_${selectedQuizBottleKey.toUpperCase()}_BOTTLE`;
+    bottleScanTimestampMs = Date.now();
+    isLoyaltyActive = true;
+
+    localStorage.setItem("manopavana_bottle_code", activeBottleCode);
+    localStorage.setItem("manopavana_bottle_scan_time", bottleScanTimestampMs.toString());
+
+    showLoyaltyToast();
+    renderCart();
+    startLiveCountdown();
+    renderComboSection();
+
+    const submitBtn = document.getElementById("btnSubmitQuiz");
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Discount Activated ✨";
+    }
+
+    setTimeout(() => {
+      window.closeBottleClaimModal();
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Verify & Unlock 10% Discount ⚡";
+      }
+    }, 1800);
+
+  } else {
+    const selCard = document.getElementById("quizOptionLabel_" + selectedQuizOptionIndex);
+    if (selCard) selCard.classList.add("is-wrong");
+
+    if (feedback) {
+      feedback.className = "quiz-feedback-box error";
+      feedback.textContent = "❌ That doesn't match the bottle label. Please inspect your MANOPAVANA bottle and try again!";
+      feedback.style.display = "block";
+    }
+  }
+};
+
 // ==========================================
-// 4. MAIN PRODUCT CATALOG RENDERING & MODAL
+// 7. PRODUCTS & DUAL COMBO RENDERING
 // ==========================================
 function getCartItemQuantity(itemId) {
   const item = cart.find((i) => i.id === itemId);
   return item ? item.quantity : 0;
 }
 
-function renderStepperButtonHTML(id, title, price, img, quantity, isPreOrder = false) {
+function renderStepperButtonHTML(id, title, price, img, quantity) {
+  // If user selected non-Bangalore location upfront, route immediately to Flipkart
+  if (!isBangalorePincode) {
+    return `
+      <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" class="btn-buy-flipkart-inline" style="text-decoration:none;">
+        🛒 Buy on Flipkart
+      </a>
+    `;
+  }
+
   if (quantity > 0) {
     return `
       <div class="stepper-active-box">
@@ -488,14 +892,11 @@ function renderStepperButtonHTML(id, title, price, img, quantity, isPreOrder = f
     `;
   }
 
-  const btnClass = isPreOrder ? "btn-buy btn-preorder" : "btn-buy";
-  const btnText = isPreOrder ? "Pre-Order Fresh" : "Add to Bag";
-
   return `
-    <button class="${btnClass}" 
+    <button class="btn-buy" 
       onclick="handleDirectAdd('${id}', '${escapeHtml(title)}', ${price}, '${img}')" 
       type="button">
-      ${btnText}
+      Add to Bag
     </button>
   `;
 }
@@ -506,8 +907,7 @@ function renderProductsGrid() {
 
   Object.keys(PRODUCT_CATALOG).forEach((key) => {
     const product = PRODUCT_CATALOG[key];
-    const defaultSizeKey = "1L";
-    const defaultData = product.sizes[defaultSizeKey];
+    const defaultData = product.sizes["1L"];
     const currentQty = getCartItemQuantity(defaultData.id);
 
     const card = document.createElement("div");
@@ -519,7 +919,7 @@ function renderProductsGrid() {
       .join("");
 
     card.innerHTML = `
-      <span class="card-badge ${product.isPreOrder ? "badge-preorder" : ""}">${product.isPreOrder ? "Pre-Order" : "Wood Pressed"}</span>
+      <span class="card-badge">Wood Pressed</span>
       <div class="card-image-wrap ${product.bgClass}" onclick="openProductDetailModal('${key}')">
         <img src="${product.img}" alt="${product.name}" class="product-img" onerror="this.src='https://placehold.co/200x260/171412/eab308?text=Oil'" />
         <span class="card-quick-hint">Tap for More Details</span>
@@ -534,7 +934,7 @@ function renderProductsGrid() {
             <span class="price">₹${defaultData.price} <small>/ 1L</small></span>
           </div>
           <div class="stepper-wrap-inline" id="stepper-container-${defaultData.id}">
-            ${renderStepperButtonHTML(defaultData.id, defaultData.title, defaultData.price, product.img, currentQty, product.isPreOrder)}
+            ${renderStepperButtonHTML(defaultData.id, defaultData.title, defaultData.price, product.img, currentQty)}
           </div>
         </div>
       </div>
@@ -543,23 +943,81 @@ function renderProductsGrid() {
     productGridContainer.appendChild(card);
   });
 
-  // Refresh combo stepper button
-  const comboQty = getCartItemQuantity("combo-3l");
-  const comboContainer = document.getElementById("stepper-combo-3l");
-  if (comboContainer) {
-    comboContainer.innerHTML = renderStepperButtonHTML(
-      "combo-3l",
-      "Complete 3-Oil Essential Box (3L Trio)",
-      1249,
-      "https://res.cloudinary.com/bng9wtel/image/upload/v1788615807/groundnut-oil.jpg",
-      comboQty,
-      false
+  renderComboSection();
+}
+
+function renderComboSection() {
+  const currentCombo = COMBO_CATALOG[currentSelectedComboKey];
+  if (!currentCombo) return;
+
+  const comboBadgeText = document.getElementById("comboBadgeText");
+  const comboTitleHeading = document.getElementById("comboTitleHeading");
+  const comboDescText = document.getElementById("comboDescText");
+  const comboCurrentPrice = document.getElementById("comboCurrentPrice");
+  const comboOriginalPrice = document.getElementById("comboOriginalPrice");
+  const comboQrDiscountHint = document.getElementById("comboQrDiscountHint");
+  const stepperComboContainer = document.getElementById("stepper-combo-container");
+  const btnComboBuyNowDirect = document.getElementById("btnComboBuyNowDirect");
+
+  if (comboBadgeText) comboBadgeText.textContent = currentCombo.badgeText;
+  if (comboTitleHeading) comboTitleHeading.textContent = currentCombo.headingText;
+  if (comboDescText) comboDescText.textContent = currentCombo.descText;
+  if (comboCurrentPrice) comboCurrentPrice.textContent = `₹${currentCombo.price}`;
+  if (comboOriginalPrice) comboOriginalPrice.textContent = `₹${currentCombo.originalPrice}`;
+  if (comboQrDiscountHint) comboQrDiscountHint.textContent = `(₹${currentCombo.qrPrice} with Bottle QR Scan)`;
+
+  const btnCombo3L = document.getElementById("btnCombo3L");
+  const btnCombo15L = document.getElementById("btnCombo15L");
+  if (btnCombo3L && btnCombo15L) {
+    if (currentSelectedComboKey === "combo-3l") {
+      btnCombo3L.classList.add("active");
+      btnCombo15L.classList.remove("active");
+    } else {
+      btnCombo15L.classList.add("active");
+      btnCombo3L.classList.remove("active");
+    }
+  }
+
+  const currentQty = getCartItemQuantity(currentCombo.id);
+  if (stepperComboContainer) {
+    stepperComboContainer.innerHTML = renderStepperButtonHTML(
+      currentCombo.id,
+      currentCombo.title,
+      currentCombo.price,
+      currentCombo.img,
+      currentQty
     );
+  }
+
+  if (btnComboBuyNowDirect) {
+    if (!isBangalorePincode) {
+      btnComboBuyNowDirect.innerHTML = `🛒 Buy Combo on Flipkart`;
+      btnComboBuyNowDirect.onclick = function() { window.open("https://www.flipkart.com", "_blank"); };
+    } else {
+      btnComboBuyNowDirect.innerHTML = `⚡ Buy Now`;
+      btnComboBuyNowDirect.onclick = window.handleDirectComboBuyNow;
+    }
   }
 }
 
-// Product Details Modal Window
-function openProductDetailModal(productKey) {
+window.selectComboVariant = function(comboKey) {
+  currentSelectedComboKey = comboKey;
+  renderComboSection();
+};
+
+window.handleDirectComboBuyNow = function() {
+  if (!isBangalorePincode) {
+    window.open("https://www.flipkart.com", "_blank");
+    return;
+  }
+  const currentCombo = COMBO_CATALOG[currentSelectedComboKey];
+  window.handleDirectBuyNow(currentCombo.id, currentCombo.title, currentCombo.price, currentCombo.img);
+};
+
+// ==========================================
+// 8. PRODUCT DETAIL MODAL
+// ==========================================
+window.openProductDetailModal = function(productKey) {
   const product = PRODUCT_CATALOG[productKey];
   if (!product) return;
 
@@ -576,32 +1034,32 @@ function openProductDetailModal(productKey) {
     productDetailModalBackdrop.classList.add("open");
     document.body.style.overflow = "hidden";
   }
-}
+};
 
-function closeProductDetailModal() {
+window.closeProductDetailModal = function() {
   if (productDetailModalBackdrop) {
     productDetailModalBackdrop.classList.remove("open");
     document.body.style.overflow = "";
   }
   currentDetailProductKey = null;
-}
+};
 
 if (closeDetailModalBtn) {
-  closeDetailModalBtn.addEventListener("click", closeProductDetailModal);
+  closeDetailModalBtn.addEventListener("click", window.closeProductDetailModal);
 }
 
 if (productDetailModalBackdrop) {
   productDetailModalBackdrop.addEventListener("click", (e) => {
     if (e.target === productDetailModalBackdrop) {
-      closeProductDetailModal();
+      window.closeProductDetailModal();
     }
   });
 }
 
-function selectModalVariantSize(sizeKey) {
+window.selectModalVariantSize = function(sizeKey) {
   currentDetailSelectedSize = sizeKey;
   renderProductDetailModalContent();
-}
+};
 
 function renderProductDetailModalContent() {
   if (!currentDetailProductKey || !modalProductDetailBody) return;
@@ -662,14 +1120,50 @@ function renderProductDetailModalContent() {
             <div class="modal-price-val">₹${selectedSizeData.price}</div>
           </div>
           <div class="stepper-wrap-inline" id="stepper-container-modal-${selectedSizeData.id}">
-            ${renderStepperButtonHTML(selectedSizeData.id, selectedSizeData.title, selectedSizeData.price, product.img, currentQty, product.isPreOrder)}
+            ${renderStepperButtonHTML(selectedSizeData.id, selectedSizeData.title, selectedSizeData.price, product.img, currentQty)}
+          </div>
+        </div>
+
+        <div class="modal-direct-buy-wrap">
+          ${isBangalorePincode ? `
+            <button type="button" class="btn-direct-buy-now" onclick="handleDirectBuyNow('${selectedSizeData.id}', '${escapeHtml(selectedSizeData.title)}', ${selectedSizeData.price}, '${product.img}')">
+              ⚡ Buy Now — Proceed to Delivery
+            </button>
+          ` : `
+            <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" class="btn-continue-flipkart">
+              🛒 Order this on Flipkart (10% Off) &rarr;
+            </a>
+          `}
+        </div>
+
+        <div class="modal-trust-strip">
+          <div class="trust-badge-pill">
+            <span class="trust-icon">🪵</span>
+            <div>
+              <strong>Chekku Cold Press</strong>
+              <small>Crushed &lt; 45°C</small>
+            </div>
+          </div>
+          <div class="trust-badge-pill">
+            <span class="trust-icon">🧪</span>
+            <div>
+              <strong>0% Chemicals</strong>
+              <small>No Hexane / Solvents</small>
+            </div>
+          </div>
+          <div class="trust-badge-pill">
+            <span class="trust-icon">🚚</span>
+            <div>
+              <strong>Free Delivery</strong>
+              <small>Orders ₹500+ / 48–72h</small>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
     <div class="detail-spec-box">
-      <h4>Authenticity & Extraction Specifications</h4>
+      <h4>Authenticity &amp; Extraction Specifications</h4>
       <table class="specs-table-grid">
         <tbody>
           ${specRows}
@@ -695,7 +1189,145 @@ window.switchDetailMainImage = function (src, thumbEl) {
 };
 
 // ==========================================
-// 5. SHOPPING CART ENGINE & SYNC
+// 9. UNIFIED CHECKOUT MODAL LOGIC
+// ==========================================
+window.handleDirectBuyNow = function(id, title, price, img) {
+  if (!isBangalorePincode) {
+    window.open("https://www.flipkart.com", "_blank");
+    return;
+  }
+  checkoutSource = "buynow";
+  buyNowItem = {
+    id: id,
+    title: title,
+    price: parseInt(price, 10),
+    quantity: 1,
+    img: img
+  };
+
+  window.closeProductDetailModal();
+  openCheckoutModalUI();
+};
+
+function openCartCheckout() {
+  if (!cart || cart.length === 0) {
+    alert("Please add at least one bottle to your bag first!");
+    return;
+  }
+  if (!isBangalorePincode) {
+    window.openFlipkartModal();
+    return;
+  }
+  checkoutSource = "cart";
+  buyNowItem = null;
+  closeCart();
+  openCheckoutModalUI();
+}
+
+function openCheckoutModalUI() {
+  currentOrderRef = "MP" + Math.floor(1000 + Math.random() * 9000);
+
+  if (modalCheckoutTitle) {
+    modalCheckoutTitle.textContent = checkoutSource === "buynow" 
+      ? `Delivery & Payment: ${buyNowItem.title}` 
+      : "Delivery & Payment Details";
+  }
+
+  updateCheckoutFinancials();
+  updatePaymentModeUI();
+
+  if (checkoutModalBackdrop) {
+    checkoutModalBackdrop.classList.add("open");
+  }
+}
+
+window.closeCheckoutModal = function() {
+  if (checkoutModalBackdrop) {
+    checkoutModalBackdrop.classList.remove("open");
+  }
+};
+
+if (openCheckoutModalBtn) {
+  openCheckoutModalBtn.addEventListener("click", openCartCheckout);
+}
+
+if (closeModalBtn) {
+  closeModalBtn.addEventListener("click", window.closeCheckoutModal);
+}
+
+if (checkoutModalBackdrop) {
+  checkoutModalBackdrop.addEventListener("click", (e) => {
+    if (e.target === checkoutModalBackdrop) {
+      window.closeCheckoutModal();
+    }
+  });
+}
+
+function updateCheckoutFinancials() {
+  let subtotal = 0;
+  let itemsCount = 0;
+  let previewHTML = "";
+
+  if (checkoutSource === "buynow" && buyNowItem) {
+    subtotal = buyNowItem.price * buyNowItem.quantity;
+    itemsCount = buyNowItem.quantity;
+    previewHTML = `
+      <div class="checkout-preview-item">
+        <img src="${buyNowItem.img}" class="checkout-preview-thumb" alt="${buyNowItem.title}" onerror="this.src='https://placehold.co/50x60/171412/eab308?text=Bottle'" />
+        <div class="checkout-preview-info">
+          <strong>${buyNowItem.title}</strong>
+          <span>Qty: 1 × ₹${buyNowItem.price}</span>
+        </div>
+        <div class="checkout-preview-cost">₹${buyNowItem.price}</div>
+      </div>
+    `;
+  } else {
+    subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    itemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+    previewHTML = cart.map(item => `
+      <div class="checkout-preview-item">
+        <img src="${item.img}" class="checkout-preview-thumb" alt="${item.title}" onerror="this.src='https://placehold.co/50x60/171412/eab308?text=Bottle'" />
+        <div class="checkout-preview-info">
+          <strong>${item.title}</strong>
+          <span>Qty: ${item.quantity} × ₹${item.price}</span>
+        </div>
+        <div class="checkout-preview-cost">₹${(item.price * item.quantity).toLocaleString("en-IN")}</div>
+      </div>
+    `).join("");
+  }
+
+  const isLoyal = isLoyaltyDiscountValid();
+  let discountAmount = 0;
+  if (isLoyal && subtotal > 0) {
+    discountAmount = Math.round((subtotal * REORDER_DISCOUNT_PERCENT) / 100);
+  }
+
+  const discountedSubtotal = subtotal - discountAmount;
+  let deliveryFee = 0;
+  if (itemsCount > 0) {
+    deliveryFee = discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_DELIVERY_FEE;
+  }
+  const grandTotal = discountedSubtotal + deliveryFee;
+  currentCalculatedGrandTotal = grandTotal;
+
+  if (checkoutOrderPreview) {
+    checkoutOrderPreview.innerHTML = `
+      <div class="checkout-preview-header">
+        <span>Order Item(s) (${itemsCount})</span>
+        <span>Subtotal: ₹${subtotal.toLocaleString("en-IN")}</span>
+      </div>
+      <div class="checkout-preview-list">${previewHTML}</div>
+      <div class="checkout-preview-footer">
+        ${discountAmount > 0 ? `<div class="checkout-row discount-text"><span>Bottle QR Loyalty (10%):</span><span>-₹${discountAmount.toLocaleString("en-IN")}</span></div>` : ""}
+        <div class="checkout-row"><span>Delivery:</span><span>${deliveryFee === 0 ? '<strong class="free-tag">FREE</strong>' : `₹${deliveryFee}`}</span></div>
+        <div class="checkout-row total-highlight"><span>Total Payable:</span><span>₹${grandTotal.toLocaleString("en-IN")}</span></div>
+      </div>
+    `;
+  }
+}
+
+// ==========================================
+// 10. CART DRAWER OPERATIONS
 // ==========================================
 function saveCart() {
   localStorage.setItem("manopavana_cart", JSON.stringify(cart));
@@ -720,10 +1352,13 @@ if (openCartBtn) openCartBtn.addEventListener("click", openCart);
 if (closeCartBtn) closeCartBtn.addEventListener("click", closeCart);
 if (cartBackdrop) cartBackdrop.addEventListener("click", closeCart);
 
-function handleDirectAdd(id, title, price, img) {
-  const product = { id, title, price: parseInt(price, 10), img };
-  addToCart(product);
-}
+window.handleDirectAdd = function(id, title, price, img) {
+  if (!isBangalorePincode) {
+    window.open("https://www.flipkart.com", "_blank");
+    return;
+  }
+  addToCart({ id, title, price: parseInt(price, 10), img });
+};
 
 function addToCart(product) {
   const existing = cart.find((item) => item.id === product.id);
@@ -739,8 +1374,9 @@ window.updateQuantity = function (id, delta) {
   const item = cart.find((item) => item.id === id);
   if (!item) {
     if (delta > 0) {
-      if (id === "combo-3l") {
-        cart.push({ id: "combo-3l", title: "Complete 3-Oil Essential Box (3L Trio)", price: 1249, img: "https://res.cloudinary.com/bng9wtel/image/upload/v1788615807/groundnut-oil.jpg", quantity: 1 });
+      if (COMBO_CATALOG[id]) {
+        const combo = COMBO_CATALOG[id];
+        cart.push({ id: combo.id, title: combo.title, price: combo.price, img: combo.img, quantity: 1 });
       } else {
         const [prodKey, sizeKey] = id.split("-");
         const formattedSize = sizeKey === "1l" ? "1L" : "500ml";
@@ -764,122 +1400,6 @@ window.removeItem = function (id) {
   saveCart();
 };
 
-function generateDynamicUPI() {
-  if (!currentOrderRef) {
-    currentOrderRef = "MP" + Math.floor(1000 + Math.random() * 9000);
-  }
-
-  const formattedAmount = Number(currentCalculatedGrandTotal).toFixed(2);
-  const rawUpiString = `upi://pay?pa=${UPI_MERCHANT_VPA}&pn=${encodeURIComponent(
-    UPI_BUSINESS_NAME
-  )}&am=${formattedAmount}&cu=INR&mode=02&purpose=00`;
-
-  if (dynamicUpiQrImg) {
-    dynamicUpiQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=10&data=${encodeURIComponent(
-      rawUpiString
-    )}`;
-  }
-
-  if (mobileUpiDeepLink) {
-    mobileUpiDeepLink.href = rawUpiString;
-  }
-
-  if (upiPayableAmount) {
-    upiPayableAmount.textContent = `₹${currentCalculatedGrandTotal.toLocaleString("en-IN")}`;
-  }
-}
-
-function updatePaymentModeUI() {
-  const isUPI = payUPIRadio && payUPIRadio.checked;
-
-  if (isUPI) {
-    if (labelPayUPI) labelPayUPI.classList.add("active");
-    if (labelPayCOD) labelPayCOD.classList.remove("active");
-    if (upiPaymentBox) upiPaymentBox.style.display = "block";
-    if (submitOrderBtn) submitOrderBtn.textContent = "I Have Paid — Confirm Order on WhatsApp 💬";
-    generateDynamicUPI();
-  } else {
-    if (labelPayUPI) labelPayUPI.classList.remove("active");
-    if (labelPayCOD) labelPayCOD.classList.add("active");
-    if (upiPaymentBox) upiPaymentBox.style.display = "none";
-    if (submitOrderBtn) submitOrderBtn.textContent = "Confirm COD Order via WhatsApp 💬";
-  }
-}
-
-if (payUPIRadio) payUPIRadio.addEventListener("change", updatePaymentModeUI);
-if (payCODRadio) payCODRadio.addEventListener("change", updatePaymentModeUI);
-
-// ==========================================
-// 6. INTENT TOGGLE (FAMILY VS GIFT)
-// ==========================================
-const btnIntentFamily = document.getElementById("btnIntentFamily");
-const btnIntentGift = document.getElementById("btnIntentGift");
-const giftNoteGroup = document.getElementById("giftNoteGroup");
-const lblCustName = document.getElementById("lblCustName");
-const lblCustPhone = document.getElementById("lblCustPhone");
-const custLabelName = document.getElementById("custLabelName");
-
-if (btnIntentFamily && btnIntentGift) {
-  btnIntentFamily.addEventListener("click", () => {
-    isGiftOrder = false;
-    btnIntentFamily.classList.add("active");
-    btnIntentGift.classList.remove("active");
-    if (giftNoteGroup) giftNoteGroup.style.display = "none";
-    if (lblCustName) lblCustName.textContent = "Full Name (Your Name) *";
-    if (lblCustPhone) lblCustPhone.textContent = "WhatsApp Contact Number (10 Digits) *";
-    if (custLabelName) custLabelName.placeholder = "e.g. The Kumar Family / Ramesh's Kitchen";
-  });
-
-  btnIntentGift.addEventListener("click", () => {
-    isGiftOrder = true;
-    btnIntentGift.classList.add("active");
-    btnIntentFamily.classList.remove("active");
-    if (giftNoteGroup) giftNoteGroup.style.display = "block";
-    if (lblCustName) lblCustName.textContent = "Recipient's Name (Delivery To) *";
-    if (lblCustPhone) lblCustPhone.textContent = "Recipient's WhatsApp / Phone Number *";
-    if (custLabelName) custLabelName.placeholder = "e.g. Specially Crafted for Suresh & Family / Amma's Kitchen";
-  });
-}
-
-function openCheckoutModal(e) {
-  if (e) e.preventDefault();
-
-  if (!cart || cart.length === 0) {
-    alert("Please add at least one bottle to your bag first!");
-    return;
-  }
-
-  currentOrderRef = "MP" + Math.floor(1000 + Math.random() * 9000);
-  updatePaymentModeUI();
-
-  closeCart();
-  if (checkoutModalBackdrop) {
-    checkoutModalBackdrop.classList.add("open");
-  }
-}
-
-function closeCheckoutModal() {
-  if (checkoutModalBackdrop) {
-    checkoutModalBackdrop.classList.remove("open");
-  }
-}
-
-if (openCheckoutModalBtn) {
-  openCheckoutModalBtn.addEventListener("click", openCheckoutModal);
-}
-
-if (closeModalBtn) {
-  closeModalBtn.addEventListener("click", closeCheckoutModal);
-}
-
-if (checkoutModalBackdrop) {
-  checkoutModalBackdrop.addEventListener("click", (e) => {
-    if (e.target === checkoutModalBackdrop) {
-      closeCheckoutModal();
-    }
-  });
-}
-
 function renderCart() {
   const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -896,13 +1416,11 @@ function renderCart() {
   }
 
   const discountedSubtotal = subtotal - discountAmount;
-
   let deliveryFee = 0;
   if (totalCount > 0) {
     deliveryFee = discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_DELIVERY_FEE;
   }
   const grandTotal = discountedSubtotal + deliveryFee;
-  currentCalculatedGrandTotal = grandTotal;
 
   if (cartCountBadge) cartCountBadge.textContent = totalCount;
   if (cartTotalItems) cartTotalItems.textContent = totalCount;
@@ -934,7 +1452,7 @@ function renderCart() {
   }
 
   if (checkoutModalBackdrop && checkoutModalBackdrop.classList.contains("open")) {
-    generateDynamicUPI();
+    updateCheckoutFinancials();
   }
 
   if (!cartItemsList) return;
@@ -965,172 +1483,149 @@ function renderCart() {
     .join("");
 }
 
-// Global hook for buttons with data attributes
-document.querySelectorAll(".btn-buy-combo").forEach((button) => {
-  button.addEventListener("click", (e) => {
-    const btn = e.currentTarget;
-    const product = {
-      id: btn.dataset.id,
-      title: btn.dataset.title,
-      price: parseInt(btn.dataset.price, 10),
-      img: btn.dataset.img
-    };
-    addToCart(product);
-  });
-});
+// ==========================================
+// 11. PAYMENT METHOD CONTROLS
+// ==========================================
+function updatePaymentModeUI() {
+  const isPhonePe = payPhonePeRadio && payPhonePeRadio.checked;
+  const isCOD = payCODRadio && payCODRadio.checked;
+  const isWhatsApp = payWhatsAppRadio && payWhatsAppRadio.checked;
+
+  if (labelPayPhonePe) labelPayPhonePe.classList.toggle("active", isPhonePe);
+  if (labelPayCOD) labelPayCOD.classList.toggle("active", isCOD);
+  if (labelPayWhatsApp) labelPayWhatsApp.classList.toggle("active", isWhatsApp);
+
+  if (isPhonePe) {
+    if (phonepePaymentInfoBox) phonepePaymentInfoBox.style.display = "block";
+    if (submitOrderBtn) submitOrderBtn.textContent = "Proceed to Pay via PhonePe ⚡";
+  } else if (isCOD) {
+    if (phonepePaymentInfoBox) phonepePaymentInfoBox.style.display = "none";
+    if (submitOrderBtn) submitOrderBtn.textContent = "Confirm Cash on Delivery Order 💵";
+  } else {
+    if (phonepePaymentInfoBox) phonepePaymentInfoBox.style.display = "none";
+    if (submitOrderBtn) submitOrderBtn.textContent = "Confirm Order on WhatsApp 💬";
+  }
+}
+
+if (payPhonePeRadio) payPhonePeRadio.addEventListener("change", updatePaymentModeUI);
+if (payCODRadio) payCODRadio.addEventListener("change", updatePaymentModeUI);
+if (payWhatsAppRadio) payWhatsAppRadio.addEventListener("change", updatePaymentModeUI);
 
 // ==========================================
-// 7. FORM VALIDATION ENGINE
+// 12. LOCATION ROUTING & VALIDATION
 // ==========================================
 const nameEl = document.getElementById("custName");
 const phoneEl = document.getElementById("custPhone");
 const addressEl = document.getElementById("custAddress");
+const stateEl = document.getElementById("custState");
+const districtEl = document.getElementById("custDistrict");
 const cityEl = document.getElementById("custCity");
 const pincodeEl = document.getElementById("custPincode");
 
 const nameErr = document.getElementById("custNameErr");
 const phoneErr = document.getElementById("custPhoneErr");
 const addressErr = document.getElementById("custAddressErr");
+const stateErr = document.getElementById("custStateErr");
+const districtErr = document.getElementById("custDistrictErr");
 const cityErr = document.getElementById("custCityErr");
 const pincodeErr = document.getElementById("custPincodeErr");
 
 function validateField(field, errorEl, ruleFn, errorMsg) {
+  if (!field) return true;
   const isValid = ruleFn(field.value.trim());
   if (!isValid) {
     field.classList.add("input-error");
-    errorEl.textContent = errorMsg;
-    errorEl.style.display = "block";
+    if (errorEl) {
+      errorEl.textContent = errorMsg;
+      errorEl.style.display = "block";
+    }
   } else {
     field.classList.remove("input-error");
-    errorEl.textContent = "";
-    errorEl.style.display = "none";
+    if (errorEl) {
+      errorEl.textContent = "";
+      errorEl.style.display = "none";
+    }
   }
   return isValid;
 }
 
-const isNameValid = (v) => v.length >= 3 && /^[a-zA-Z\s.]+$/.test(v);
+const isNameValid = (v) => v.length >= 3;
 const isPhoneValid = (v) => /^[6-9]\d{9}$/.test(v);
-const isAddressValid = (v) => v.length >= 10;
+const isAddressValid = (v) => v.length >= 8;
+const isSelected = (v) => v.length > 0;
 const isCityValid = (v) => v.length >= 2;
-const isPincodeValid = (v) => /^(5[6-9]\d{4})$/.test(v);
+const isPincodeNumeric = (v) => /^\d{6}$/.test(v);
 
-nameEl?.addEventListener("blur", () => {
-  if (nameEl.value.trim().length > 0) {
-    validateField(nameEl, nameErr, isNameValid, "Please enter a valid full name (at least 3 characters).");
-  }
-});
+function validateAllFields() {
+  const v1 = validateField(nameEl, nameErr, isNameValid, "Please enter your name (minimum 3 characters).");
+  const v2 = validateField(phoneEl, phoneErr, isPhoneValid, "Enter a valid 10-digit mobile number.");
+  const v3 = validateField(addressEl, addressErr, isAddressValid, "Please enter your street address (minimum 8 characters).");
+  const v4 = validateField(stateEl, stateErr, isSelected, "Please select a State.");
+  const v5 = validateField(districtEl, districtErr, isSelected, "Please select a District.");
+  const v6 = validateField(cityEl, cityErr, isCityValid, "Please enter your city/town.");
+  const v7 = validateField(pincodeEl, pincodeErr, isPincodeNumeric, "Enter a valid 6-digit Pincode.");
 
-phoneEl?.addEventListener("blur", () => {
-  if (phoneEl.value.trim().length > 0) {
-    validateField(phoneEl, phoneErr, isPhoneValid, "Enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.");
-  }
-});
-
-addressEl?.addEventListener("blur", () => {
-  if (addressEl.value.trim().length > 0) {
-    validateField(addressEl, addressErr, isAddressValid, "Please provide complete street / house details (minimum 10 characters).");
-  }
-});
-
-cityEl?.addEventListener("blur", () => {
-  if (cityEl.value.trim().length > 0) {
-    validateField(cityEl, cityErr, isCityValid, "Please enter a valid city or area.");
-  }
-});
-
-pincodeEl?.addEventListener("blur", () => {
-  if (pincodeEl.value.trim().length > 0) {
-    validateField(pincodeEl, pincodeErr, isPincodeValid, "Enter a valid 6-digit Karnataka pincode (starting with 56–59).");
-  }
-});
-
-nameEl?.addEventListener("input", () => {
-  if (nameEl.classList.contains("input-error") && isNameValid(nameEl.value.trim())) {
-    nameEl.classList.remove("input-error");
-    nameErr.style.display = "none";
-  }
-});
+  return v1 && v2 && v3 && v4 && v5 && v6 && v7;
+}
 
 phoneEl?.addEventListener("input", (e) => {
   e.target.value = e.target.value.replace(/\D/g, "");
-  if (phoneEl.classList.contains("input-error") && isPhoneValid(e.target.value.trim())) {
-    phoneEl.classList.remove("input-error");
-    phoneErr.style.display = "none";
-  }
-});
-
-addressEl?.addEventListener("input", () => {
-  if (addressEl.classList.contains("input-error") && isAddressValid(addressEl.value.trim())) {
-    addressEl.classList.remove("input-error");
-    addressErr.style.display = "none";
-  }
-});
-
-cityEl?.addEventListener("input", () => {
-  if (cityEl.classList.contains("input-error") && isCityValid(cityEl.value.trim())) {
-    cityEl.classList.remove("input-error");
-    cityErr.style.display = "none";
-  }
 });
 
 pincodeEl?.addEventListener("input", (e) => {
   e.target.value = e.target.value.replace(/\D/g, "");
-  if (pincodeEl.classList.contains("input-error") && isPincodeValid(e.target.value.trim())) {
-    pincodeEl.classList.remove("input-error");
-    pincodeErr.style.display = "none";
-  }
 });
 
-function validateAllFields() {
-  const v1 = validateField(nameEl, nameErr, isNameValid, "Please enter a valid full name (at least 3 characters).");
-  const v2 = validateField(phoneEl, phoneErr, isPhoneValid, "Enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.");
-  const v3 = validateField(addressEl, addressErr, isAddressValid, "Please provide complete street / house details (minimum 10 characters).");
-  const v4 = validateField(cityEl, cityErr, isCityValid, "Please enter a valid city or area.");
-  const v5 = validateField(pincodeEl, pincodeErr, isPincodeValid, "Enter a valid 6-digit Karnataka pincode (starting with 56–59).");
+window.openFlipkartModal = function() {
+  const modal = document.getElementById("flipkartModalBackdrop");
+  if (modal) modal.classList.add("open");
+};
 
-  return v1 && v2 && v3 && v4 && v5;
-}
+window.closeFlipkartModal = function() {
+  const modal = document.getElementById("flipkartModalBackdrop");
+  if (modal) modal.classList.remove("open");
+};
 
 // ==========================================
-// 8. SYNCHRONIZED CLOUD DISPATCH & WHATSAPP
+// 13. CHECKOUT SUBMISSION & PAYMENT DISPATCH
 // ==========================================
-async function checkoutViaWhatsApp() {
-  if (!cart || cart.length === 0) return;
-
+async function handleCheckoutSubmission() {
   if (!validateAllFields()) {
     if (formError) {
-      formError.textContent = "Please fix the highlighted fields above before confirming.";
+      formError.textContent = "Please fill in all the required delivery details above.";
       formError.style.display = "block";
     }
     return;
   }
 
-  if (formError) {
-    formError.style.display = "none";
+  const pincode = pincodeEl.value.trim();
+
+  // Bangalore (560xxx) vs Non-Bangalore Flipkart Interception
+  if (!pincode.startsWith("560")) {
+    window.openFlipkartModal();
+    return;
+  }
+
+  if (formError) formError.style.display = "none";
+
+  const itemsToCheckout = checkoutSource === "buynow" && buyNowItem ? [buyNowItem] : cart;
+  if (!itemsToCheckout || itemsToCheckout.length === 0) {
+    alert("No products selected for checkout.");
+    return;
   }
 
   const name = nameEl.value.trim();
   const phone = phoneEl.value.trim();
-  const labelCustomName = custLabelName ? custLabelName.value.trim() : "";
-  const giftNote = document.getElementById("custGiftNote") ? document.getElementById("custGiftNote").value.trim() : "";
   const address = addressEl.value.trim();
-  const district = document.getElementById("custDistrict").value;
+  const state = stateEl.value.trim();
+  const district = districtEl.value.trim();
   const city = cityEl.value.trim();
-  const pincode = pincodeEl.value.trim();
-  const isUPI = payUPIRadio && payUPIRadio.checked;
-  const paymentModeText = isUPI ? "Prepaid UPI / QR Scan" : "Cash on Delivery (COD)";
-
-  let message = `🌿 *New Order - MANOPAVANA Wood-Pressed Oils*\n`;
-  message += `*Ref ID:* #${currentOrderRef}\n`;
-  message += `─────────────────────────\n`;
 
   let subtotal = 0;
   let itemsSummaryArray = [];
 
-  cart.forEach((item, index) => {
-    const itemTotal = item.price * item.quantity;
-    subtotal += itemTotal;
-    message += `${index + 1}. *${item.title}*\n    Qty: ${item.quantity} × ₹${item.price} = ₹${itemTotal.toLocaleString("en-IN")}\n`;
+  itemsToCheckout.forEach((item) => {
+    subtotal += item.price * item.quantity;
     itemsSummaryArray.push(`${item.title} (x${item.quantity})`);
   });
 
@@ -1144,100 +1639,103 @@ async function checkoutViaWhatsApp() {
   const deliveryFee = discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_DELIVERY_FEE;
   const grandTotal = discountedSubtotal + deliveryFee;
 
-  message += `─────────────────────────\n`;
-  message += `*Subtotal:* ₹${subtotal.toLocaleString("en-IN")}\n`;
-
-  if (isLoyal && discountAmount > 0) {
-    message += `*Bottle QR Reorder Discount (10% OFF):* -₹${discountAmount.toLocaleString("en-IN")}\n`;
-  }
-
-  message += `*Delivery Fee:* ${deliveryFee === 0 ? "FREE (Orders above ₹500)" : `₹${deliveryFee}`}\n`;
-  message += `*Grand Total Payable:* ₹${grandTotal.toLocaleString("en-IN")}\n`;
-  message += `*Payment Method:* ${paymentModeText}\n\n`;
-
-  if (isGiftOrder) {
-    message += `🎁 *Order Type:* Gift Dispatch (Fresh Bottles)\n`;
-  } else {
-    message += `🏡 *Order Type:* Home Kitchen Delivery (Fresh Bottles)\n`;
-  }
-
-  if (labelCustomName) {
-    message += `🏷️ *Custom Bottle Label:* "${labelCustomName}"\n`;
-  }
-
-  if (isGiftOrder && giftNote) {
-    message += `💌 *Gift Tag Note:* "${giftNote}"\n`;
-  }
-
-  message += `\n📍 *Delivery Details (Karnataka - 48 to 72 hrs):*\n`;
-  message += `• *Recipient Name:* ${name}\n`;
-  message += `• *Phone:* ${phone}\n`;
-  message += `• *Address:* ${address}\n`;
-  message += `• *City / Area:* ${city}\n`;
-  message += `• *District:* ${district}\n`;
-  message += `• *State:* Karnataka\n`;
-  message += `• *Pincode:* ${pincode}\n\n`;
-
-  if (isLoyal && discountAmount > 0) {
-    message += `🏷️ *Promo Claimed:* Verified Bottle QR (${activeCloudBottleCode})\n`;
-  }
-
-  if (isUPI) {
-    message += `✅ *Payment Status:* Paid via UPI / QR Scan. Please verify and confirm order!\n`;
-  } else {
-    message += `💵 *Payment Status:* Cash on Delivery. Please confirm dispatch!`;
-  }
+  const paymentMode = payPhonePeRadio.checked ? "PHONEPE" : (payCODRadio.checked ? "COD" : "WHATSAPP");
 
   const originalBtnText = submitOrderBtn.textContent;
-  if (submitOrderBtn) {
-    submitOrderBtn.disabled = true;
-    submitOrderBtn.textContent = "Processing Order...";
-  }
+  submitOrderBtn.disabled = true;
+  submitOrderBtn.textContent = "Processing Order...";
 
   try {
-    await callGoogleSheetsCloud({
-      action: "create_order",
-      orderRef: currentOrderRef,
-      name: name,
-      phone: phone,
-      address: `${address}, ${city}`,
-      district: district,
-      pincode: pincode,
-      orderType: isGiftOrder ? "Gift Dispatch" : "Home Kitchen",
-      customLabel: labelCustomName,
-      giftNote: giftNote,
-      items: itemsSummaryArray.join(", "),
-      grandTotal: grandTotal,
-      paymentMode: isUPI ? "UPI_PREPAID" : "COD",
-      bottleCode: activeCloudBottleCode || ""
-    });
-  } catch (e) {
-    console.warn("Google Sheets order sync notice:", e);
-  }
+    if (paymentMode === "PHONEPE") {
+      const response = await callBackend({
+        action: "create_phonepe_order",
+        orderRef: currentOrderRef,
+        amount: grandTotal,
+        name: name,
+        phone: phone,
+        address: `${address}, ${city}`,
+        state: state,
+        district: district,
+        pincode: pincode,
+        items: itemsSummaryArray.join(", "),
+        bottleCode: activeBottleCode || ""
+      });
 
-  resetCloudLoyaltyState();
+      if (response && response.redirectUrl) {
+        if (checkoutSource === "cart") {
+          cart = [];
+          localStorage.removeItem("manopavana_cart");
+        }
+        window.location.href = response.redirectUrl;
+        return;
+      } else {
+        throw new Error(response.message || "Failed to initialize PhonePe payment gateway.");
+      }
+    } else {
+      await callBackend({
+        action: "create_order",
+        orderRef: currentOrderRef,
+        grandTotal: grandTotal,
+        name: name,
+        phone: phone,
+        address: `${address}, ${city}`,
+        state: state,
+        district: district,
+        pincode: pincode,
+        items: itemsSummaryArray.join(", "),
+        paymentMode: paymentMode,
+        bottleCode: activeBottleCode || ""
+      });
 
-  const encodedMessage = encodeURIComponent(message);
-  const whatsappUrl = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${encodedMessage}`;
+      let message = `🌿 *New Order - MANOPAVANA Wood-Pressed Oils*\n`;
+      message += `*Ref ID:* #${currentOrderRef}\n`;
+      message += `─────────────────────────\n`;
 
-  closeCheckoutModal();
-  renderCart();
-  startLiveCountdown();
+      itemsToCheckout.forEach((item, index) => {
+        message += `${index + 1}. *${item.title}*\n    Qty: ${item.quantity} × ₹${item.price} = ₹${(item.price * item.quantity).toLocaleString("en-IN")}\n`;
+      });
 
-  if (submitOrderBtn) {
+      message += `─────────────────────────\n`;
+      message += `*Subtotal:* ₹${subtotal.toLocaleString("en-IN")}\n`;
+      if (discountAmount > 0) message += `*Bottle QR Loyalty (10% OFF):* -₹${discountAmount.toLocaleString("en-IN")}\n`;
+      message += `*Delivery Fee:* ${deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}\n`;
+      message += `*Grand Total Payable:* ₹${grandTotal.toLocaleString("en-IN")}\n`;
+      message += `*Payment Method:* ${paymentMode === "COD" ? "Cash on Delivery (COD)" : "WhatsApp Manual Confirmation"}\n\n`;
+
+      message += `📍 *Delivery Address:*\n`;
+      message += `• *Name:* ${name}\n`;
+      message += `• *Phone:* ${phone}\n`;
+      message += `• *Address:* ${address}\n`;
+      message += `• *City:* ${city}\n`;
+      message += `• *District:* ${district}\n`;
+      message += `• *State:* ${state} - ${pincode}\n`;
+
+      if (checkoutSource === "cart") {
+        cart = [];
+        localStorage.removeItem("manopavana_cart");
+      }
+
+      window.closeCheckoutModal();
+      renderCart();
+
+      const encodedMessage = encodeURIComponent(message);
+      window.open(`https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${encodedMessage}`, "_blank");
+    }
+  } catch (err) {
+    console.error("Order processing error:", err);
+    alert(err.message || "An error occurred while connecting with the server. Please try again or choose WhatsApp Order.");
+  } finally {
     submitOrderBtn.disabled = false;
     submitOrderBtn.textContent = originalBtnText;
   }
-
-  window.open(whatsappUrl, "_blank");
 }
 
 if (submitOrderBtn) {
-  submitOrderBtn.addEventListener("click", checkoutViaWhatsApp);
+  submitOrderBtn.addEventListener("click", handleCheckoutSubmission);
 }
 
 // ==========================================
-// 9. DYNAMIC USER REVIEWS & ADMIN PIN DELETE
+// 14. REVIEWS & ADMIN DELETION ENGINE
 // ==========================================
 let reviewsList = JSON.parse(localStorage.getItem("manopavana_user_reviews")) || [];
 const reviewsDisplayGrid = document.getElementById("reviewsDisplayGrid");
@@ -1273,11 +1771,7 @@ function renderReviews() {
         <div>
           <div class="review-card-top">
             <div class="review-stars">${starsDisplay}</div>
-            ${
-              isAdmin
-                ? `<button class="btn-admin-delete" onclick="deleteReview('${rev.id}')" title="Admin Delete">🗑️ Delete</button>`
-                : ""
-            }
+            ${isAdmin ? `<button class="btn-admin-delete" onclick="deleteReview('${rev.id}')" title="Admin Delete">🗑️ Delete</button>` : ""}
           </div>
           <p class="review-text">"${escapeHtml(rev.comment)}"</p>
         </div>
@@ -1321,7 +1815,7 @@ if (productReviewForm) {
     const name = document.getElementById("revName").value.trim();
     const product = document.getElementById("revProduct").value;
     const rating = document.getElementById("revRating").value;
-    const location = document.getElementById("revLocation").value.trim() || "Karnataka Customer";
+    const location = document.getElementById("revLocation").value.trim() || "India";
     const comment = document.getElementById("revComment").value.trim();
 
     if (!name || !comment) {
@@ -1348,23 +1842,22 @@ if (productReviewForm) {
 
     renderReviews();
     productReviewForm.reset();
-
-    alert("✨ Thank you! Your review has been successfully posted on the website.");
+    alert("✨ Thank you! Your review has been successfully posted.");
   });
 }
 
 // ==========================================
-// 10. LEGAL MODALS & ACCORDION SETUP
+// 15. LEGAL MODALS & INITIALIZATION
 // ==========================================
-function openLegalModal(modalId) {
+window.openLegalModal = function(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.add("open");
-}
+};
 
-function closeLegalModal(modalId) {
+window.closeLegalModal = function(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.remove("open");
-}
+};
 
 document.querySelectorAll(".legal-backdrop").forEach((backdrop) => {
   backdrop.addEventListener("click", (e) => {
@@ -1389,8 +1882,10 @@ document.querySelectorAll(".faq-question").forEach((button) => {
   });
 });
 
-// Initialize on DOM Ready
 document.addEventListener("DOMContentLoaded", () => {
+  populateStatesDropdown();
+  updateLocationUI();
+  initLoyaltyFromStorage();
   renderProductsGrid();
   renderCart();
   renderReviews();
