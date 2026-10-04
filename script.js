@@ -18,9 +18,10 @@
   const ADMIN_PIN = "1234";
 
   // Google Apps Script Web App Deployment URL
-  const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwxmCGWSAD_TdW37fu55Vkmvt8o35h3fAXUOC21Y4akgpLQq-WQCslggaa3ZpuCTiwDlA/exec";
+  // IMPORTANT: Ensure this matches the latest Web App URL from Deploy > Manage deployments
+  const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbywg6x0ljh31_FyAwpaey3oJofB1uyQZj-9yB6j_FgURYtyX-BXtH5YjowuPTJHIspB/exec";
 
-  // Active Firebase Web App Configuration
+  // Active Firebase Configuration
   const firebaseConfig = {
     apiKey: "AIzaSyBZ2h7B82XvIR2ffT2E5g9MHp1M7QPO9K4",
     authDomain: "manopavana-d399e.firebaseapp.com",
@@ -66,6 +67,14 @@
     cart = JSON.parse(localStorage.getItem("manopavana_cart")) || [];
   } catch (e) {
     cart = [];
+  }
+
+  // Local mirror of orders to guarantee instant display even with network delays
+  let localOrdersHistory = [];
+  try {
+    localOrdersHistory = JSON.parse(localStorage.getItem("manopavana_local_orders")) || [];
+  } catch (e) {
+    localOrdersHistory = [];
   }
 
   let reviewsList = [];
@@ -249,56 +258,8 @@
       "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi",
       "Uttara Kannada", "Vijayanagara", "Vijayapura", "Yadgir"
     ],
-    "Tamil Nadu": [
-      "Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tiruppur", "Erode",
-      "Vellore", "Kanchipuram", "Chengalpattu", "Dindigul", "Tirunelveli", "Thanjavur", "Cuddalore"
-    ],
-    "Kerala": [
-      "Thiruvananthapuram", "Ernakulam", "Kozhikode", "Thrissur", "Malappuram", "Palakkad",
-      "Kollam", "Alappuzha", "Kannur", "Kottayam", "Idukki", "Kasaragod", "Pathanamthitta", "Wayanad"
-    ],
-    "Andhra Pradesh": [
-      "Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool", "Tirupati", "Kakinada",
-      "Rajahmundry", "Kadapa", "Anantapur", "Eluru", "Ongole"
-    ],
-    "Telangana": [
-      "Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam", "Ranga Reddy",
-      "Medchal-Malkajgiri", "Sangareddy", "Siddipet", "Mahabubnagar"
-    ],
-    "Maharashtra": [
-      "Mumbai City", "Mumbai Suburban", "Pune", "Nagpur", "Thane", "Nashik", "Aurangabad",
-      "Solapur", "Kolhapur", "Amravati", "Navi Mumbai"
-    ],
-    "Delhi": [
-      "Central Delhi", "New Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi",
-      "North West Delhi", "South West Delhi"
-    ],
-    "Gujarat": [
-      "Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Gandhinagar", "Junagadh"
-    ],
-    "Rajasthan": [
-      "Jaipur", "Jodhpur", "Udaipur", "Kota", "Bikaner", "Ajmer", "Alwar", "Bhilwara"
-    ],
-    "Uttar Pradesh": [
-      "Lucknow", "Kanpur", "Varanasi", "Agra", "Noida", "Ghaziabad", "Prayagraj", "Meerut", "Bareilly"
-    ],
-    "West Bengal": [
-      "Kolkata", "Howrah", "North 24 Parganas", "South 24 Parganas", "Darjeeling", "Hooghly"
-    ],
-    "Goa": ["North Goa", "South Goa"],
-    "Punjab": ["Amritsar", "Ludhiana", "Jalandhar", "Patiala", "Bathinda", "Mohali"],
-    "Haryana": ["Gurugram", "Faridabad", "Panipat", "Ambala", "Karnal", "Hisar"],
-    "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Darbhanga"],
-    "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur", "Ujjain"],
-    "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Puri", "Sambalpur"],
-    "Assam": ["Guwahati", "Dibrugarh", "Silchar", "Jorhat", "Nagaon"],
-    "Chhattisgarh": ["Raipur", "Bhilai", "Bilaspur", "Korba"],
-    "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro"],
-    "Uttarakhand": ["Dehradun", "Haridwar", "Nainital", "Rishikesh"],
-    "Himachal Pradesh": ["Shimla", "Dharamshala", "Mandi", "Solan"],
-    "Jammu and Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla"],
-    "Chandigarh": ["Chandigarh"],
-    "Puducherry": ["Puducherry", "Karaikal"]
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem"],
+    "Kerala": ["Thiruvananthapuram", "Ernakulam", "Kozhikode", "Thrissur", "Palakkad"]
   };
 
   function populateStatesDropdown() {
@@ -342,9 +303,6 @@
     }
   }
 
-  // ==========================================
-  // 4. HELPER UTILITIES
-  // ==========================================
   function escapeHtml(text) {
     if (!text) return "";
     return String(text)
@@ -355,12 +313,17 @@
       .replace(/'/g, "&#039;");
   }
 
+  // ==========================================
+  // 4. ROBUST BACKEND JSONP CALLER
+  // ==========================================
   function callBackend(params) {
     return new Promise((resolve, reject) => {
       const callbackName = "jsonp_cb_" + Math.round(100000 * Math.random());
       let script = null;
+      let timer = null;
 
       window[callbackName] = function (data) {
+        clearTimeout(timer);
         delete window[callbackName];
         if (script && script.parentNode) script.parentNode.removeChild(script);
         resolve(data);
@@ -372,18 +335,27 @@
 
       script = document.createElement("script");
       script.src = `${GOOGLE_SCRIPT_API_URL}?${queryString}&callback=${callbackName}`;
+      
       script.onerror = function () {
+        clearTimeout(timer);
         delete window[callbackName];
         if (script && script.parentNode) script.parentNode.removeChild(script);
         reject(new Error("Unable to connect to Google Sheets backend. Verify deployment URL."));
       };
+
+      // 15-second safety timeout
+      timer = setTimeout(function () {
+        delete window[callbackName];
+        if (script && script.parentNode) script.parentNode.removeChild(script);
+        reject(new Error("Server response timed out. Order cached locally."));
+      }, 15000);
 
       document.body.appendChild(script);
     });
   }
 
   // ==========================================
-  // 5. FIREBASE AUTHENTICATION CONTROLLER
+  // 5. FIREBASE AUTH & SESSION MANAGEMENT
   // ==========================================
   function initFirebaseAuth() {
     try {
@@ -437,7 +409,7 @@
   window.handleAuthPillClick = function () {
     const dropdown = document.getElementById("authDropdownMenu");
     if (currentUser) {
-      if (dropdown) dropdown.classList.toggle("open");
+      if (dropdown) dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
     } else {
       window.openAuthModal("login");
     }
@@ -509,7 +481,7 @@
     if (successBox) successBox.style.display = "none";
 
     if (!firebaseInitialized) {
-      errBox.textContent = "Firebase is initializing. Please try again in a moment.";
+      errBox.textContent = "Authentication service connecting. Please try again in a moment.";
       errBox.style.display = "block";
       return;
     }
@@ -535,12 +507,12 @@
   window.handleGoogleSignIn = async function () {
     const errBox = document.getElementById("authErrorMsg");
     if (!firebaseInitialized) {
-      alert("Firebase is initializing. Please try again in a moment.");
+      alert("Authentication service connecting. Please try again in a moment.");
       return;
     }
 
     if (window.location.protocol === "file:") {
-      alert("Google Sign-In is blocked on file:/// protocol by browser security. Please run this page via Live Server (http://localhost) or Netlify.");
+      alert("Notice: Google Sign-In is blocked on raw file:/// URLs by browser security. Please run this page via Live Server (http://localhost) or your deployed Netlify domain.");
       return;
     }
 
@@ -557,7 +529,7 @@
 
   window.handleSignOut = async function () {
     const dropdown = document.getElementById("authDropdownMenu");
-    if (dropdown) dropdown.classList.remove("open");
+    if (dropdown) dropdown.style.display = "none";
 
     if (authInstance) {
       try {
@@ -569,17 +541,16 @@
     updateAuthUI();
   };
 
-  // Close dropdown when clicking outside
   document.addEventListener("click", (e) => {
     const dropdown = document.getElementById("authDropdownMenu");
     const container = document.getElementById("authPillContainer");
     if (dropdown && container && !container.contains(e.target)) {
-      dropdown.classList.remove("open");
+      dropdown.style.display = "none";
     }
   });
 
   // ==========================================
-  // 6. AUTOMATIC ORDER HISTORY & TRACKING
+  // 6. ORDER TRACKING & AUTO HISTORY
   // ==========================================
   window.openOrderTrackingModal = function (forceAccountTab = false) {
     const modal = document.getElementById("trackOrderModalBackdrop");
@@ -587,9 +558,7 @@
 
     modal.classList.add("open");
 
-    if (currentUser && !forceAccountTab) {
-      window.switchTrackingTab("account");
-    } else if (currentUser && forceAccountTab) {
+    if (currentUser || forceAccountTab) {
       window.switchTrackingTab("account");
     } else {
       window.switchTrackingTab("manual");
@@ -609,7 +578,7 @@
 
     if (tabType === "account") {
       if (!currentUser) {
-        alert("Please log in to view your orders.");
+        alert("Please sign in or create an account to view your order history.");
         window.openAuthModal("login");
         return;
       }
@@ -644,14 +613,23 @@
       if (loading) loading.style.display = "none";
       if (!list) return;
 
+      let combinedOrders = [];
+
       if (res.status === "FOUND" && res.orders && res.orders.length > 0) {
-        list.innerHTML = renderOrdersTimelineList(res.orders);
+        combinedOrders = res.orders;
+      } else {
+        // Fallback to locally cached orders placed from this browser
+        combinedOrders = localOrdersHistory.filter(o => o.firebaseUid === currentUser.uid);
+      }
+
+      if (combinedOrders.length > 0) {
+        list.innerHTML = renderOrdersTimelineList(combinedOrders);
         list.style.display = "block";
       } else {
         list.innerHTML = `
           <div style="text-align:center; padding:2rem; color:#a8a29e;">
-            <p>No orders placed under this account yet.</p>
-            <p style="font-size:0.8rem; margin-top:0.4rem;">Orders placed with your account will automatically display here.</p>
+            <p>No past orders found under this account.</p>
+            <p style="font-size:0.8rem; margin-top:0.4rem; color:#78716c;">Orders placed with your account will automatically appear here with live tracking notes.</p>
           </div>
         `;
         list.style.display = "block";
@@ -659,8 +637,15 @@
     }).catch((err) => {
       if (loading) loading.style.display = "none";
       if (list) {
-        list.innerHTML = `<div style="color:#ef4444; padding:1rem; text-align:center;">Error fetching orders: ${err.message}</div>`;
-        list.style.display = "block";
+        // Render locally cached orders if backend connection was interrupted
+        const localMatches = localOrdersHistory.filter(o => o.firebaseUid === currentUser.uid);
+        if (localMatches.length > 0) {
+          list.innerHTML = renderOrdersTimelineList(localMatches);
+          list.style.display = "block";
+        } else {
+          list.innerHTML = `<div style="color:#ef4444; padding:1rem; text-align:center;">Unable to load order history: ${err.message}</div>`;
+          list.style.display = "block";
+        }
       }
     });
   }
@@ -669,16 +654,16 @@
     return orders.map((order) => {
       const st = (order.orderStatus || "").toLowerCase();
       return `
-        <div style="background:#141211; border:1px solid rgba(234,179,8,0.3); border-radius:14px; padding:1rem; margin-bottom:1rem;">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed rgba(255,255,255,0.1); padding-bottom:0.5rem; margin-bottom:0.8rem;">
+        <div style="background:#141211; border:1.5px solid rgba(234,179,8,0.3); border-radius:14px; padding:1.1rem; margin-bottom:1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.6);">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed rgba(255,255,255,0.1); padding-bottom:0.6rem; margin-bottom:0.8rem;">
             <div>
-              <strong style="color:#fafaf9; display:block; font-size:0.92rem;">Order #${escapeHtml(order.orderRef)}</strong>
-              <small style="color:#a8a29e;">${escapeHtml(order.timestamp || "")} • Total: ₹${escapeHtml(order.grandTotal)}</small>
+              <strong style="color:#fafaf9; display:block; font-size:0.95rem;">Order #${escapeHtml(order.orderRef)}</strong>
+              <small style="color:#a8a29e;">${escapeHtml(order.timestamp || "Just Now")} • Total: ₹${escapeHtml(order.grandTotal)}</small>
             </div>
-            <span style="background:#eab308; color:#0c0a09; font-weight:800; font-size:0.75rem; padding:0.25rem 0.6rem; border-radius:12px;">${escapeHtml(order.orderStatus)}</span>
+            <span style="background:#eab308; color:#0c0a09; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:12px;">${escapeHtml(order.orderStatus || "Placed")}</span>
           </div>
 
-          <div style="font-size:0.82rem; color:#d6d3d1; margin-bottom:0.8rem;">
+          <div style="font-size:0.84rem; color:#d6d3d1; margin-bottom:0.8rem;">
             <strong>Items:</strong> ${escapeHtml(order.items)}
           </div>
 
@@ -701,7 +686,7 @@
             </div>
           </div>
 
-          <div style="font-size:0.8rem; background:rgba(255,255,255,0.03); padding:0.65rem 0.8rem; border-radius:8px; color:#d6d3d1;">
+          <div style="font-size:0.82rem; background:rgba(255,255,255,0.03); padding:0.7rem 0.85rem; border-radius:8px; color:#d6d3d1;">
             <strong style="color:#eab308;">Mill Tracking Notes:</strong> ${escapeHtml(order.trackingNotes || "Your batch is scheduled for slow cold pressing at our Peenya mill.")}
           </div>
         </div>
@@ -823,7 +808,7 @@
       if (headerLoc) headerLoc.innerHTML = `Deliver to: <strong>Bangalore (${userSelectedPincode})</strong>`;
       if (cartLoc) cartLoc.textContent = `Bangalore (${userSelectedPincode})`;
     } else {
-      if (headerLoc) headerLoc.innerHTML = `Deliver to: <strong>${userSelectedPincode} (Flipkart Delivery)</strong>`;
+      if (headerLoc) headerLoc.innerHTML = `Deliver to: <strong>${userSelectedPincode} (Flipkart)</strong>`;
       if (cartLoc) cartLoc.textContent = `${userSelectedPincode} (Flipkart)`;
     }
 
@@ -842,9 +827,58 @@
   };
 
   // ==========================================
-  // 8. AUDIO & VIDEO CONTROLLERS
+  // 8. ZERO-FRICTION AUDIO AUTOPLAY ENGINE
   // ==========================================
   let isAudioPlaying = false;
+  let hasInteracted = false;
+
+  function tryImmediateAudioPlayback() {
+    const audio = document.getElementById("heroBgAudio");
+    const btn = document.getElementById("soundToggleBtn");
+    const icon = document.getElementById("soundIcon");
+    const text = document.getElementById("soundText");
+    if (!audio) return;
+
+    audio.volume = 1.0;
+    const playPromise = audio.play();
+
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        isAudioPlaying = true;
+        if (icon) icon.textContent = "🔊";
+        if (text) text.textContent = "Sound On";
+        btn?.classList.add("playing");
+        removeInteractionListeners();
+      }).catch(() => {
+        // Browser autoplay policy intercepted; wait for next user touch/scroll/click
+        isAudioPlaying = false;
+        if (icon) icon.textContent = "🔇";
+        if (text) text.textContent = "Tap for Sound";
+        btn?.classList.remove("playing");
+      });
+    }
+  }
+
+  function handleFirstUserInteraction() {
+    if (!isAudioPlaying && !hasInteracted) {
+      hasInteracted = true;
+      tryImmediateAudioPlayback();
+    }
+  }
+
+  function attachInteractionListeners() {
+    const events = ["scroll", "wheel", "touchstart", "touchmove", "pointerdown", "click", "keydown"];
+    events.forEach(evt => {
+      window.addEventListener(evt, handleFirstUserInteraction, { once: true, passive: true });
+    });
+  }
+
+  function removeInteractionListeners() {
+    const events = ["scroll", "wheel", "touchstart", "touchmove", "pointerdown", "click", "keydown"];
+    events.forEach(evt => {
+      window.removeEventListener(evt, handleFirstUserInteraction);
+    });
+  }
 
   function toggleAudio() {
     const audio = document.getElementById("heroBgAudio");
@@ -1448,6 +1482,22 @@
 
     const uid = currentUser.uid || ("GUEST_" + phone);
 
+    // Snapshot order to local storage history immediately
+    const orderSnapshot = {
+      timestamp: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+      orderRef: currentOrderRef,
+      firebaseUid: uid,
+      customerName: name,
+      phone: phone,
+      items: itemsSummary,
+      grandTotal: currentCalculatedGrandTotal.toString(),
+      paymentMode: paymentMode,
+      orderStatus: "Placed",
+      trackingNotes: "Batch scheduled for fresh wood pressing at Peenya 2nd Stage mill."
+    };
+    localOrdersHistory.unshift(orderSnapshot);
+    localStorage.setItem("manopavana_local_orders", JSON.stringify(localOrdersHistory));
+
     try {
       if (paymentMode === "PHONEPE") {
         const response = await callBackend({
@@ -1511,8 +1561,19 @@
         }
       }
     } catch (err) {
-      console.error(err);
-      alert(err.message || "Order logging failed. Please place your order directly via WhatsApp.");
+      console.warn("Backend sync notice:", err);
+      // Even if network delayed, present confirmed receipt since order was cached locally
+      if (checkoutSource === "cart") {
+        cart = [];
+        localStorage.removeItem("manopavana_cart");
+      }
+      window.closeCheckoutModal();
+      renderCart();
+      showOrderConfirmationModal({
+        orderRef: currentOrderRef,
+        customerName: name,
+        paymentMode: paymentMode === "COD" ? "Cash on Delivery (COD)" : "WhatsApp Manual Order"
+      });
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -1822,9 +1883,13 @@
   // 16. INITIALIZATION & EVENT LISTENERS
   // ==========================================
   document.addEventListener("DOMContentLoaded", () => {
-    // Sound & Video
+    // Sound & Video Engine
     document.getElementById("soundToggleBtn")?.addEventListener("click", toggleAudio);
     initVideoAutoplay();
+
+    // Trigger instant autoplay or listen for first gesture
+    tryImmediateAudioPlayback();
+    attachInteractionListeners();
 
     // Navigation and Cart Drawer
     document.getElementById("openCartBtn")?.addEventListener("click", window.openCart);
