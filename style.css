@@ -21,69 +21,127 @@ html, body {
 }
 
 /* ==========================================
-   GLOBAL SECTION SPACING & WIDE CONTAINER
+   FLOATING SOUND CONTROLLER PILL
    ========================================== */
-.brand-intro-section,
-.products-section,
-.bottle-design-section,
-.combo-section,
-.culinary-section,
-.reviews-section,
-.loyalty-section,
-.benchmark-section,
-.faqs-section {
-  padding: 3rem 1.5rem;
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.section-title-wrap {
-  text-align: center;
-  max-width: 850px;
-  margin: 0 auto 2rem auto;
-  padding: 0 0.5rem;
-}
-
-.section-tag {
-  font-size: 0.78rem;
-  color: #eab308;
-  letter-spacing: 2.5px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.section-title-wrap h2 {
-  font-family: 'Cinzel', serif;
-  font-size: 2.2rem;
+.floating-sound-pill {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+  background: rgba(23, 20, 18, 0.92);
+  border: 1.5px solid rgba(234, 179, 8, 0.5);
   color: #fafaf9;
-  margin: 0.35rem 0 0.45rem 0;
+  padding: 0.55rem 1.1rem;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 14px rgba(234, 179, 8, 0.25);
+  transition: all 0.25s ease;
 }
 
-.section-title-wrap p {
-  color: #a8a29e;
-  font-size: 0.95rem;
+.floating-sound-pill:hover {
+  background: rgba(234, 179, 8, 0.2);
+  border-color: #eab308;
+  transform: translateY(-2px);
+}
+
+.floating-sound-pill.playing {
+  border-color: #22c55e;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 14px rgba(34, 197, 94, 0.3);
+}
+
+.floating-sound-pill.playing #soundText {
+  color: #4ade80;
 }
 
 /* ==========================================
-   TOP ANNOUNCEMENT BAR & COUNTDOWN PILL
+   TOP ANNOUNCEMENT BAR & UPFRONT LOCATION PILL
    ========================================== */
 .top-announcement-bar {
   background: linear-gradient(90deg, #ca8a04, #eab308, #ca8a04);
   color: #0c0a09;
-  text-align: center;
-  padding: 0.55rem 1rem;
+  padding: 0.5rem 1rem;
   font-size: 0.84rem;
   font-weight: 600;
   position: relative;
   z-index: 101;
-  transition: background 0.3s ease;
   width: 100%;
+  transition: background 0.3s ease;
 }
 
 .top-announcement-bar.loyal-banner {
   background: linear-gradient(90deg, #15803d, #22c55e, #15803d);
   color: #ffffff;
+}
+
+.announcement-content-wrap {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.top-bar-action-group {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+/* Persistent Header Location Button */
+.btn-location-pill {
+  background: rgba(12, 10, 9, 0.88);
+  color: #fafaf9;
+  border: 1px solid rgba(234, 179, 8, 0.6);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.28rem 0.85rem;
+  border-radius: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.btn-location-pill:hover {
+  background: #000000;
+  border-color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-location-pill strong {
+  color: #facc15;
+}
+
+.btn-claim-bottle-top {
+  background: rgba(12, 10, 9, 0.85);
+  color: #fef08a;
+  border: 1px solid rgba(254, 240, 138, 0.4);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.28rem 0.75rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-claim-bottle-top:hover {
+  background: #000000;
+  color: #ffffff;
+  border-color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .countdown-pill {
@@ -114,11 +172,10 @@ html, body {
   border-radius: 30px;
   padding: 0.75rem 1.2rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(234, 179, 8, 0.3);
-  z-index: 1050;
+  z-index: 1350;
   opacity: 0;
   pointer-events: none;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
-  box-sizing: border-box;
 }
 
 .reward-toast.show {
@@ -150,7 +207,7 @@ html, body {
 }
 
 /* ==========================================
-   SITE HEADER (SQUARE LOGO DESIGN)
+   SITE HEADER
    ========================================== */
 .site-header {
   position: sticky;
@@ -287,52 +344,60 @@ html, body {
 }
 
 /* ==========================================
-   1. FULL-WIDTH HERO VIDEO & CTA STRIP
+   HERO VIDEO & ROTATING KINETIC AURA
    ========================================== */
 .hero-clean-video-section {
   position: relative;
   width: 100%;
-  max-width: 100%;
   background: #000000;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-top: 1.5rem;
+  padding-bottom: 0.5rem;
 }
 
-.hero-clean-video {
-  width: 100%;
-  height: auto;
-  max-width: 100%;
-  display: block;
-  object-fit: cover;
-}
-
-.video-sound-pill {
+.golden-vortex-aura {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  z-index: 10;
-  background: rgba(12, 10, 9, 0.8);
-  border: 1px solid rgba(234, 179, 8, 0.6);
-  color: #fafaf9;
-  font-family: inherit;
-  font-size: 0.84rem;
-  font-weight: 600;
-  padding: 0.45rem 0.95rem;
-  border-radius: 20px;
-  cursor: pointer;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  transition: background 0.2s ease, transform 0.2s ease;
+  top: 36%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(234, 179, 8, 0.38) 90deg,
+    transparent 180deg,
+    rgba(250, 204, 21, 0.48) 270deg,
+    transparent 360deg
+  );
+  filter: blur(45px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: swirlGoldenRing 10s linear infinite;
+  z-index: 1;
 }
 
-.video-sound-pill:hover {
-  background: rgba(234, 179, 8, 0.25);
-  transform: scale(1.04);
+@keyframes swirlGoldenRing {
+  0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.96); opacity: 0.75; }
+  50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.06); opacity: 0.95; }
+  100% { transform: translate(-50%, -50%) rotate(360deg) scale(0.96); opacity: 0.75; }
+}
+
+.hero-clean-video,
+.hero-clean-image {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1440px;
+  height: auto;
+  max-height: 85vh;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
 }
 
 .video-cta-strip {
@@ -353,7 +418,6 @@ html, body {
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 20px rgba(234, 179, 8, 0.4);
   display: inline-block;
-  white-space: nowrap;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -363,8 +427,49 @@ html, body {
 }
 
 /* ==========================================
-   2. BRAND INTRO SECTION
+   GLOBAL SECTION WRAPPERS & TITLES
    ========================================== */
+.brand-intro-section,
+.products-section,
+.bottle-design-section,
+.combo-section,
+.culinary-section,
+.reviews-section,
+.loyalty-section,
+.benchmark-section,
+.faqs-section {
+  padding: 3rem 1.5rem;
+  width: 100%;
+  overflow: hidden;
+}
+
+.section-title-wrap {
+  text-align: center;
+  max-width: 850px;
+  margin: 0 auto 2rem auto;
+  padding: 0 0.5rem;
+}
+
+.section-tag {
+  font-size: 0.78rem;
+  color: #eab308;
+  letter-spacing: 2.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.section-title-wrap h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 2.2rem;
+  color: #fafaf9;
+  margin: 0.35rem 0 0.45rem 0;
+}
+
+.section-title-wrap p {
+  color: #a8a29e;
+  font-size: 0.95rem;
+}
+
 .brand-intro-section {
   background: #110e0c;
   border-bottom: 1px solid rgba(234, 179, 8, 0.15);
@@ -374,14 +479,6 @@ html, body {
 .intro-container {
   max-width: 960px;
   margin: 0 auto;
-}
-
-.intro-tag {
-  font-size: 0.78rem;
-  color: #eab308;
-  letter-spacing: 2.5px;
-  font-weight: 800;
-  text-transform: uppercase;
 }
 
 .intro-container h2 {
@@ -400,7 +497,7 @@ html, body {
 }
 
 /* ==========================================
-   3. PRODUCT GRID & CARD STYLING
+   PRODUCTS GRID & CARDS
    ========================================== */
 .products-section {
   background: #090907;
@@ -450,12 +547,6 @@ html, body {
   z-index: 10;
 }
 
-.card-badge.badge-preorder {
-  background: rgba(194, 65, 12, 0.88);
-  color: #ffedd5;
-  border-color: #ea580c;
-}
-
 .card-image-wrap {
   height: 290px;
   display: flex;
@@ -470,7 +561,6 @@ html, body {
 .oil-groundnut { background: radial-gradient(circle, rgba(234, 179, 8, 0.24) 0%, rgba(23, 20, 18, 1) 75%); }
 .oil-coconut   { background: radial-gradient(circle, rgba(245, 245, 244, 0.2) 0%, rgba(23, 20, 18, 1) 75%); }
 .oil-sesame    { background: radial-gradient(circle, rgba(245, 158, 11, 0.28) 0%, rgba(23, 20, 18, 1) 75%); }
-.oil-mustard   { background: radial-gradient(circle, rgba(202, 138, 4, 0.28) 0%, rgba(23, 20, 18, 1) 75%); }
 
 .product-img {
   height: 100%;
@@ -499,7 +589,6 @@ html, body {
   border-radius: 12px;
   backdrop-filter: blur(6px);
   pointer-events: none;
-  letter-spacing: 0.3px;
 }
 
 .card-content {
@@ -543,9 +632,6 @@ html, body {
   padding: 0.45rem 0.75rem;
   border-radius: 7px;
   line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .product-feature-list strong {
@@ -586,7 +672,7 @@ html, body {
 }
 
 /* ==========================================
-   INLINE STEPPER & ADD TO BAG CONTROLLER
+   STEPPERS & BUTTONS
    ========================================== */
 .stepper-wrap-inline {
   display: inline-flex;
@@ -606,7 +692,6 @@ html, body {
   border-radius: 9px;
   cursor: pointer;
   transition: transform 0.2s ease, background 0.2s ease;
-  white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -617,13 +702,25 @@ html, body {
   transform: scale(1.03);
 }
 
-.btn-buy.btn-preorder {
-  background: linear-gradient(135deg, #ea580c, #c2410c);
+.btn-buy-flipkart-inline {
+  width: 100%;
+  height: 100%;
+  background: #2874f0;
   color: #ffffff;
+  border: none;
+  padding: 0.55rem 0.8rem;
+  font-weight: 700;
+  font-size: 0.84rem;
+  border-radius: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
 }
 
-.btn-buy.btn-preorder:hover {
-  background: #f97316;
+.btn-buy-flipkart-inline:hover {
+  background: #1e5bc6;
 }
 
 .stepper-active-box {
@@ -652,7 +749,6 @@ html, body {
   align-items: center;
   justify-content: center;
   line-height: 1;
-  transition: background 0.15s ease;
 }
 
 .stepper-btn:hover {
@@ -667,7 +763,7 @@ html, body {
 }
 
 /* ==========================================
-   PRODUCT DETAIL MODAL
+   PRODUCT DETAIL MODAL & TRUST BADGES
    ========================================== */
 .product-detail-backdrop {
   z-index: 1300;
@@ -731,19 +827,20 @@ html, body {
 
 .detail-thumb-strip {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   overflow-x: auto;
-  padding-bottom: 6px;
+  padding-bottom: 8px;
 }
 
 .detail-thumb-img {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 10px;
   border: 1.5px solid rgba(255, 255, 255, 0.12);
   background: #171412;
   object-fit: contain;
-  padding: 6px;
+  padding: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -844,6 +941,75 @@ html, body {
   color: #eab308;
 }
 
+.modal-direct-buy-wrap {
+  margin-top: 1.1rem;
+  width: 100%;
+}
+
+.btn-direct-buy-now {
+  width: 100%;
+  padding: 0.95rem 1.4rem;
+  background: linear-gradient(135deg, #eab308, #ca8a04);
+  color: #0c0a09;
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 800;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(234, 179, 8, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-direct-buy-now:hover {
+  background: linear-gradient(135deg, #facc15, #eab308);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(234, 179, 8, 0.5);
+}
+
+.modal-trust-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.trust-badge-pill {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(234, 179, 8, 0.25);
+  border-radius: 12px;
+  padding: 0.75rem 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.trust-badge-pill .trust-icon {
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.trust-badge-pill strong {
+  display: block;
+  font-size: 0.78rem;
+  color: #fafaf9;
+  line-height: 1.2;
+}
+
+.trust-badge-pill small {
+  display: block;
+  font-size: 0.68rem;
+  color: #a8a29e;
+  line-height: 1.15;
+  margin-top: 2px;
+}
+
 .detail-spec-box {
   background: #171412;
   border: 1px solid rgba(234, 179, 8, 0.25);
@@ -889,8 +1055,8 @@ html, body {
 
 .detail-nutrition-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.85rem;
   margin-top: 0.8rem;
 }
 
@@ -916,7 +1082,7 @@ html, body {
 }
 
 /* ==========================================
-   4. BOTTLE DESIGN SHOWCASE
+   BOTTLE DESIGN SHOWCASE
    ========================================== */
 .bottle-design-section {
   background: #060504;
@@ -952,8 +1118,9 @@ html, body {
   object-fit: contain;
   display: block;
   z-index: 2;
-  margin: 0 auto;
-  filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.95));
+  mix-blend-mode: screen;
+  -webkit-mask-image: radial-gradient(circle at center, black 60%, transparent 95%);
+  mask-image: radial-gradient(circle at center, black 60%, transparent 95%);
 }
 
 .bottle-fallback-img {
@@ -961,21 +1128,19 @@ html, body {
   height: 100%;
   max-height: 440px;
   max-width: 100%;
-  width: auto;
-  object-fit: contain;
   display: none;
   z-index: 1;
-  margin: 0 auto;
+  mix-blend-mode: screen;
 }
 
 .bottle-radial-glow {
   position: absolute;
-  width: 320px;
-  height: 320px;
+  width: 360px;
+  height: 360px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(234, 179, 8, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
+  background: radial-gradient(circle, rgba(234, 179, 8, 0.22) 0%, rgba(6, 5, 4, 0) 70%);
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 
 .bottle-callouts-container {
@@ -1019,11 +1184,10 @@ html, body {
   font-size: 0.88rem;
   color: #d6d3d1;
   line-height: 1.55;
-  margin: 0;
 }
 
 /* ==========================================
-   5. 3-LITRE VALUE COMBO SECTION
+   COMBO VALUE SECTION (3L vs 1.5L)
    ========================================== */
 .combo-section {
   background: #110e0c;
@@ -1117,7 +1281,51 @@ html, body {
   font-size: 0.95rem;
   color: #d6d3d1;
   line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.combo-variant-toggle-wrap {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(234, 179, 8, 0.25);
+  border-radius: 14px;
+  padding: 1rem;
   margin-bottom: 1.2rem;
+}
+
+.combo-variant-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #eab308;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+
+.combo-variant-pills {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.combo-size-pill {
+  flex: 1;
+  background: #1c1917;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  color: #fafaf9;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.combo-size-pill.active {
+  border-color: #eab308;
+  background: #eab308;
+  color: #0c0a09;
 }
 
 .combo-list {
@@ -1125,13 +1333,9 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  margin-bottom: 1.8rem;
+  margin-bottom: 1.5rem;
   font-size: 0.9rem;
   color: #a8a29e;
-}
-
-.combo-list strong {
-  color: #10b981;
 }
 
 .combo-pricing-wrap {
@@ -1167,26 +1371,34 @@ html, body {
   color: #eab308;
 }
 
-.btn-buy-combo {
+.combo-btn-action-group {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.btn-buy-combo-direct {
   background: linear-gradient(135deg, #eab308, #ca8a04);
   color: #0c0a09;
   border: none;
-  font-weight: 700;
-  font-size: 0.98rem;
-  padding: 0.9rem 2rem;
-  border-radius: 10px;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.94rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 9px;
   cursor: pointer;
   box-shadow: 0 6px 20px rgba(234, 179, 8, 0.35);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
 }
 
-.btn-buy-combo:hover {
+.btn-buy-combo-direct:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 28px rgba(234, 179, 8, 0.5);
 }
 
 /* ==========================================
-   6. CULINARY SHOWCASE
+   CULINARY & REVIEWS SECTIONS
    ========================================== */
 .culinary-section {
   background: #090907;
@@ -1231,11 +1443,6 @@ html, body {
   height: 100%;
   object-fit: contain;
   border-radius: 14px;
-  transition: transform 0.3s ease;
-}
-
-.label-feature-card:hover .label-art-img {
-  transform: scale(1.03);
 }
 
 .label-info-box {
@@ -1260,7 +1467,6 @@ html, body {
 .groundnut-badge { background: rgba(140, 83, 62, 0.25); color: #eab308; border: 1px solid #8c533e; }
 .coconut-badge   { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
 .sesame-badge    { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
-.mustard-badge   { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid #eab308; }
 
 .label-info-box h3 {
   font-family: 'Cinzel', serif;
@@ -1275,9 +1481,6 @@ html, body {
   line-height: 1.55;
 }
 
-/* ==========================================
-   7. CUSTOMER REVIEWS & FEEDBACK SECTION
-   ========================================== */
 .reviews-section {
   background: #110e0c;
   border-top: 1px solid rgba(234, 179, 8, 0.15);
@@ -1313,11 +1516,6 @@ html, body {
   margin-bottom: 0.5rem;
 }
 
-.empty-reviews-notice p {
-  font-size: 0.92rem;
-  line-height: 1.55;
-}
-
 .review-card {
   background: rgba(23, 20, 18, 0.95);
   border: 1px solid rgba(234, 179, 8, 0.25);
@@ -1351,12 +1549,6 @@ html, body {
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.btn-admin-delete:hover {
-  background: #ef4444;
-  color: #ffffff;
 }
 
 .review-text {
@@ -1393,7 +1585,6 @@ html, body {
   max-width: 850px;
   margin: 0 auto;
   width: 100%;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85);
 }
 
 .feedback-form-box h3 {
@@ -1411,33 +1602,6 @@ html, body {
   margin-bottom: 1.6rem;
 }
 
-.review-form select,
-.modal-body select {
-  width: 100%;
-  background: #1c1917;
-  border: 1px solid rgba(234, 179, 8, 0.25);
-  border-radius: 9px;
-  padding: 0.6rem 0.8rem;
-  color: #fafaf9;
-  font-size: 0.88rem;
-  font-family: inherit;
-  outline: none;
-  box-sizing: border-box;
-}
-
-.review-form select option,
-.modal-body select option {
-  background: #1c1917;
-  color: #fafaf9;
-}
-
-.modal-body select:disabled {
-  background: #141211;
-  color: #a8a29e;
-  border-color: rgba(255, 255, 255, 0.1);
-  cursor: not-allowed;
-}
-
 .btn-submit-review {
   width: 100%;
   padding: 0.9rem;
@@ -1448,17 +1612,12 @@ html, body {
   border: none;
   border-radius: 9px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease;
   margin-top: 0.5rem;
 }
 
-.btn-submit-review:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(234, 179, 8, 0.4);
-}
-
 /* ==========================================
-   8. 10% QR LOYALTY SECTION
+   LOYALTY, BENCHMARK & FAQ
    ========================================== */
 .loyalty-section {
   background: #090907;
@@ -1473,7 +1632,6 @@ html, body {
   border-radius: 24px;
   padding: 2.8rem 2.4rem;
   text-align: center;
-  position: relative;
 }
 
 .loyalty-badge {
@@ -1516,13 +1674,6 @@ html, body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.loyalty-step-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(234, 179, 8, 0.6);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.7);
 }
 
 .step-image-box {
@@ -1531,9 +1682,6 @@ html, body {
   height: 190px;
   background: #0d0a08;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -1542,11 +1690,6 @@ html, body {
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.35s ease;
-}
-
-.loyalty-step-card:hover .step-guide-img {
-  transform: scale(1.04);
 }
 
 .step-num-pill {
@@ -1558,11 +1701,9 @@ html, body {
   font-size: 0.74rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1px;
   padding: 0.28rem 0.8rem;
   border-radius: 12px;
   z-index: 2;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
 }
 
 .step-card-content {
@@ -1583,7 +1724,6 @@ html, body {
   font-size: 0.88rem;
   color: #a8a29e;
   line-height: 1.55;
-  margin: 0;
 }
 
 .loyalty-footnote {
@@ -1593,9 +1733,6 @@ html, body {
   text-align: center;
 }
 
-/* ==========================================
-   9. BENCHMARK COMPARISON TABLE
-   ========================================== */
 .benchmark-section {
   background: #110e0c;
   border-top: 1px solid rgba(234, 179, 8, 0.15);
@@ -1645,9 +1782,6 @@ html, body {
   text-align: center;
 }
 
-/* ==========================================
-   10. FAQS SECTION
-   ========================================== */
 .faqs-section {
   background: #090907;
   border-top: 1px solid rgba(234, 179, 8, 0.15);
@@ -1679,7 +1813,7 @@ html, body {
   background: none;
   border: none;
   color: #fafaf9;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: inherit;
   font-size: 0.98rem;
   font-weight: 600;
   text-align: left;
@@ -1687,14 +1821,12 @@ html, body {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  gap: 1rem;
 }
 
 .faq-icon {
   font-size: 1.35rem;
   color: #eab308;
   transition: transform 0.3s ease;
-  flex-shrink: 0;
 }
 
 .faq-item.active .faq-icon {
@@ -1720,7 +1852,7 @@ html, body {
 }
 
 /* ==========================================
-   11. CART DRAWER
+   CART DRAWER & LOCATION CHIP
    ========================================== */
 .cart-backdrop {
   position: fixed;
@@ -1770,6 +1902,26 @@ html, body {
   font-family: 'Cinzel', serif;
   font-size: 1.2rem;
   color: #fafaf9;
+}
+
+.cart-loc-change-btn {
+  background: none;
+  border: none;
+  color: #a8a29e;
+  font-family: inherit;
+  font-size: 0.74rem;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 3px;
+  text-align: left;
+}
+
+.cart-loc-change-btn strong {
+  color: #eab308;
+}
+
+.cart-loc-change-btn:hover {
+  color: #ffffff;
 }
 
 .close-cart-btn {
@@ -1870,8 +2022,6 @@ html, body {
   padding: 1.25rem 1.5rem;
   background: #0d0c0b;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  position: relative;
-  z-index: 10;
 }
 
 .summary-row {
@@ -1923,11 +2073,130 @@ html, body {
   border: none;
   border-radius: 9px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* ==========================================
-   12. CHECKOUT MODAL & VALIDATIONS
+   UPFRONT LOCATION CHECKER MODAL
+   ========================================== */
+.location-modal-card {
+  max-width: 480px;
+  background: #141211;
+  border: 1.5px solid rgba(234, 179, 8, 0.4);
+  border-radius: 20px;
+}
+
+.location-modal-body {
+  padding: 1.6rem 1.8rem;
+}
+
+.location-check-sub {
+  font-size: 0.88rem;
+  color: #d6d3d1;
+  line-height: 1.55;
+  margin-bottom: 1.2rem;
+}
+
+.location-input-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.location-input-row input {
+  flex: 1;
+  background: #1c1917;
+  border: 1.5px solid rgba(234, 179, 8, 0.3);
+  color: #fafaf9;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  outline: none;
+  letter-spacing: 1px;
+}
+
+.location-input-row input:focus {
+  border-color: #eab308;
+}
+
+.btn-check-pincode {
+  background: #eab308;
+  color: #0c0a09;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  padding: 0 1.4rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-check-pincode:hover {
+  background: #facc15;
+}
+
+.pincode-result-box {
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  margin-bottom: 1.3rem;
+}
+
+.pincode-result-box.success {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1.5px solid #22c55e;
+  color: #4ade80;
+}
+
+.pincode-result-box.warning {
+  background: rgba(40, 116, 240, 0.12);
+  border: 1.5px solid #2874f0;
+  color: #60a5fa;
+}
+
+.pincode-result-box strong {
+  color: #fafaf9;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.location-info-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.info-loc-chip {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.info-loc-chip span {
+  font-size: 1.4rem;
+}
+
+.info-loc-chip strong {
+  display: block;
+  font-size: 0.84rem;
+  color: #fafaf9;
+}
+
+.info-loc-chip small {
+  color: #a8a29e;
+  font-size: 0.74rem;
+}
+
+/* ==========================================
+   CHECKOUT MODAL & PREVIEW STRIP
    ========================================== */
 .modal-backdrop {
   position: fixed;
@@ -1952,7 +2221,7 @@ html, body {
 
 .modal-card {
   width: 100%;
-  max-width: 520px;
+  max-width: 540px;
   background: #141211;
   border: 1px solid rgba(234, 179, 8, 0.35);
   border-radius: 18px;
@@ -1978,7 +2247,7 @@ html, body {
 
 .modal-header h3 {
   font-family: 'Cinzel', serif;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   color: #eab308;
 }
 
@@ -1995,54 +2264,110 @@ html, body {
   padding: 1.3rem 1.5rem 1.5rem 1.5rem;
 }
 
+.checkout-order-preview {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(234, 179, 8, 0.25);
+  border-radius: 14px;
+  padding: 0.9rem;
+  margin-bottom: 1.2rem;
+}
+
+.checkout-preview-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #eab308;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  margin-bottom: 0.6rem;
+}
+
+.checkout-preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.checkout-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.82rem;
+}
+
+.checkout-preview-thumb {
+  width: 36px;
+  height: 44px;
+  object-fit: contain;
+  background: #1c1917;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.checkout-preview-info {
+  flex: 1;
+}
+
+.checkout-preview-info strong {
+  display: block;
+  color: #fafaf9;
+  font-size: 0.82rem;
+}
+
+.checkout-preview-info span {
+  color: #a8a29e;
+  font-size: 0.74rem;
+}
+
+.checkout-preview-cost {
+  color: #eab308;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.checkout-preview-footer {
+  margin-top: 0.65rem;
+  padding-top: 0.55rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+}
+
+.checkout-row {
+  display: flex;
+  justify-content: space-between;
+  color: #d6d3d1;
+}
+
+.checkout-row.discount-text {
+  color: #10b981;
+}
+
+.checkout-row.total-highlight {
+  font-weight: 800;
+  color: #fafaf9;
+  font-size: 0.95rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.checkout-row.total-highlight span:last-child {
+  color: #eab308;
+  font-size: 1.1rem;
+}
+
 .modal-subtext {
   font-size: 0.82rem;
   color: #a8a29e;
   margin-bottom: 1.1rem;
   line-height: 1.45;
-}
-
-.order-intent-wrap {
-  margin-bottom: 1.1rem;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 0.7rem 0.9rem;
-  border-radius: 12px;
-  border: 1px solid rgba(234, 179, 8, 0.2);
-}
-
-.intent-label {
-  display: block;
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: #eab308;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  margin-bottom: 0.45rem;
-}
-
-.intent-pill-group {
-  display: flex;
-  gap: 0.6rem;
-}
-
-.intent-pill {
-  flex: 1;
-  background: #1c1917;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #d6d3d1;
-  font-family: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
-  padding: 0.5rem 0.65rem;
-  border-radius: 9px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.intent-pill.active {
-  background: linear-gradient(135deg, #eab308, #ca8a04);
-  color: #0c0a09;
-  border-color: #eab308;
 }
 
 .form-group {
@@ -2085,16 +2410,28 @@ html, body {
   box-sizing: border-box;
 }
 
-.modal-body input:focus,
-.modal-body textarea:focus,
-.review-form input:focus,
-.review-form textarea:focus,
-.review-form select:focus,
-.modal-body select:focus {
-  border-color: #eab308;
+.review-form select,
+.modal-body select {
+  width: 100%;
+  background: #1c1917;
+  border: 1px solid rgba(234, 179, 8, 0.25);
+  border-radius: 9px;
+  padding: 0.6rem 0.8rem;
+  color: #fafaf9;
+  font-size: 0.88rem;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.modal-body select option,
+.review-form select option {
+  background: #1c1917;
+  color: #fafaf9;
 }
 
 .modal-body input.input-error,
+.modal-body select.input-error,
 .modal-body textarea.input-error {
   border-color: #ef4444 !important;
   background: rgba(239, 68, 68, 0.05);
@@ -2114,6 +2451,7 @@ html, body {
   margin-top: 0.3rem;
 }
 
+/* 3 Payment Methods Grid */
 .payment-selection-wrap {
   margin: 1.1rem 0 0.9rem 0;
 }
@@ -2128,10 +2466,10 @@ html, body {
   margin-bottom: 0.55rem;
 }
 
-.payment-options-grid {
+.payment-options-grid.payment-options-three {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.7rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
 }
 
 .payment-radio-card {
@@ -2139,7 +2477,7 @@ html, body {
   background: rgba(255, 255, 255, 0.03);
   border: 1.5px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  padding: 0.75rem 0.7rem;
+  padding: 0.75rem 0.6rem;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -2164,13 +2502,13 @@ html, body {
 
 .pay-card-content strong {
   display: block;
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   color: #fafaf9;
   line-height: 1.2;
 }
 
 .pay-card-content small {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: #a8a29e;
 }
 
@@ -2183,82 +2521,36 @@ html, body {
   color: #eab308;
 }
 
-.upi-payment-box {
+.phonepe-info-box {
   background: #191614;
   border: 1px solid rgba(234, 179, 8, 0.35);
-  border-radius: 14px;
-  padding: 1.1rem;
-  margin: 0.9rem 0 1.1rem 0;
-  text-align: center;
-  transition: all 0.3s ease;
+  border-radius: 12px;
+  padding: 0.9rem;
+  margin: 0.8rem 0 1rem 0;
+  font-size: 0.78rem;
+  color: #d6d3d1;
+  line-height: 1.45;
 }
 
-.upi-pay-header {
+.pg-badge-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
-  padding-bottom: 0.65rem;
-  margin-bottom: 0.85rem;
-  font-size: 0.88rem;
+  margin-bottom: 0.5rem;
 }
 
-.upi-pay-header strong {
-  color: #eab308;
-  font-size: 1.15rem;
-}
-
-.upi-qr-display-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.55rem;
-  margin-bottom: 0.85rem;
-}
-
-.upi-qr-image {
-  width: 175px;
-  height: 175px;
-  background: #ffffff;
-  padding: 6px;
-  border-radius: 12px;
-  border: 2px solid #eab308;
-  display: block;
-}
-
-.upi-scan-note {
-  font-size: 0.74rem;
-  color: #a8a29e;
-}
-
-.upi-mobile-pay-wrap {
-  display: none;
-  margin: 0.45rem 0 0.65rem 0;
-}
-
-.btn-mobile-upi-pay {
-  display: inline-block;
-  width: 100%;
-  background: #22c55e;
-  color: #ffffff;
-  text-decoration: none;
-  font-size: 0.9rem;
+.pg-secure-badge {
+  color: #22c55e;
   font-weight: 700;
-  padding: 0.8rem 1rem;
-  border-radius: 9px;
-  box-sizing: border-box;
-  transition: background 0.2s ease;
 }
 
-.btn-mobile-upi-pay:hover {
-  background: #16a34a;
-}
-
-.upi-inst-note {
-  font-size: 0.74rem;
-  color: #d6d3d1;
-  line-height: 1.45;
-  margin: 0.45rem 0 0 0;
+.pg-provider-badge {
+  background: #5f259f;
+  color: #ffffff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.72rem;
 }
 
 .form-error-msg {
@@ -2283,10 +2575,9 @@ html, body {
 .btn-submit-order {
   width: 100%;
   padding: 0.9rem;
-  margin-top: 0.25rem;
   background: linear-gradient(135deg, #eab308, #ca8a04);
   color: #0c0a09;
-  font-size: 0.92rem;
+  font-size: 0.94rem;
   font-weight: 700;
   border: none;
   border-radius: 9px;
@@ -2298,8 +2589,425 @@ html, body {
   transform: scale(1.02);
 }
 
+/* =========================================================
+   FLIPKART NON-BANGALORE MODAL STYLING
+   ========================================================= */
+.flipkart-backdrop {
+  z-index: 1400;
+}
+
+.flipkart-modal-card {
+  max-width: 490px;
+  background: #141211;
+  border: 1.5px solid rgba(234, 179, 8, 0.4);
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95), 0 0 30px rgba(40, 116, 240, 0.15);
+}
+
+.flipkart-modal-body {
+  padding: 2rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.flipkart-modal-icon {
+  font-size: 3rem;
+  margin-bottom: 0.75rem;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+.flipkart-modal-body h4 {
+  font-family: 'Cinzel', serif;
+  font-size: 1.32rem;
+  color: #eab308;
+  margin-bottom: 0.8rem;
+  line-height: 1.3;
+}
+
+.flipkart-modal-body p {
+  color: #d6d3d1;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 0.9rem;
+}
+
+.flipkart-modal-body strong {
+  color: #fafaf9;
+}
+
+.flipkart-actions-wrap {
+  margin-top: 1.3rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.btn-continue-flipkart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: linear-gradient(135deg, #2874f0 0%, #1e5bc6 100%);
+  color: #ffffff !important;
+  text-decoration: none !important;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 0.9rem 1.2rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 22px rgba(40, 116, 240, 0.45);
+  transition: all 0.25s ease;
+  letter-spacing: 0.3px;
+}
+
+.btn-continue-flipkart:hover {
+  background: linear-gradient(135deg, #3884ff 0%, #2874f0 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(40, 116, 240, 0.6);
+  color: #ffffff !important;
+}
+
+.btn-cancel-flipkart {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  color: #a8a29e;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.btn-cancel-flipkart:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fafaf9;
+}
+
+/* =========================================================
+   BOTTLE LABEL VERIFICATION MODAL & INTERACTIVE LABEL QUIZ
+   ========================================================= */
+.bottle-claim-card {
+  max-width: 580px;
+}
+
+.bottle-claim-body {
+  padding: 1.6rem 1.8rem;
+  text-align: center;
+}
+
+.claim-instruction {
+  font-size: 0.9rem;
+  color: #d6d3d1;
+  line-height: 1.55;
+  margin-bottom: 1.3rem;
+}
+
+/* Bottle Selection Pills in Verification Modal */
+.bottle-quiz-type-selector {
+  margin-bottom: 1.4rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(234, 179, 8, 0.2);
+  border-radius: 14px;
+  padding: 0.9rem;
+  text-align: left;
+}
+
+.bottle-quiz-label {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #eab308;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+
+.bottle-quiz-pills {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+
+.quiz-bottle-pill {
+  background: #1c1917;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  color: #d6d3d1;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.6rem 0.4rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.quiz-bottle-pill:hover {
+  border-color: rgba(234, 179, 8, 0.5);
+  color: #fafaf9;
+}
+
+.quiz-bottle-pill.active {
+  border-color: #eab308;
+  background: #eab308;
+  color: #0c0a09;
+}
+
+/* Label Quiz Stage Container */
+.bottle-label-quiz-stage {
+  background: #191614;
+  border: 1.5px solid rgba(234, 179, 8, 0.35);
+  border-radius: 16px;
+  padding: 1.3rem 1.4rem;
+  margin-bottom: 1.2rem;
+  text-align: left;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.label-hint-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(234, 179, 8, 0.12);
+  border: 1px dashed rgba(234, 179, 8, 0.4);
+  padding: 0.55rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  color: #facc15;
+  margin-bottom: 1rem;
+}
+
+.label-hint-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.quiz-question-box {
+  margin-bottom: 1rem;
+}
+
+.quiz-question-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fafaf9;
+  line-height: 1.45;
+  margin-bottom: 0.85rem;
+}
+
+/* Interactive Multiple-Choice Option Cards */
+.quiz-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.quiz-option-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quiz-option-card input[type="radio"] {
+  accent-color: #eab308;
+  cursor: pointer;
+}
+
+.quiz-option-card span {
+  font-size: 0.84rem;
+  color: #d6d3d1;
+  font-weight: 500;
+}
+
+.quiz-option-card:hover {
+  border-color: rgba(234, 179, 8, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.quiz-option-card.selected {
+  border-color: #eab308;
+  background: rgba(234, 179, 8, 0.12);
+}
+
+.quiz-option-card.selected span {
+  color: #fef08a;
+  font-weight: 700;
+}
+
+.quiz-option-card.is-correct {
+  border-color: #22c55e !important;
+  background: rgba(34, 197, 94, 0.15) !important;
+}
+
+.quiz-option-card.is-correct span {
+  color: #4ade80 !important;
+  font-weight: 700;
+}
+
+.quiz-option-card.is-wrong {
+  border-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
+}
+
+.quiz-option-card.is-wrong span {
+  color: #f87171 !important;
+}
+
+.quiz-feedback-box {
+  margin-top: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  display: none;
+  line-height: 1.45;
+}
+
+.quiz-feedback-box.success {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid #22c55e;
+  color: #4ade80;
+}
+
+.quiz-feedback-box.error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
+  color: #f87171;
+}
+
+/* =========================================================
+   STYLISH VERIFY BUTTON & LOCKED DISCOUNT CARD
+   ========================================================= */
+.btn-verify-quiz-submit {
+  width: 100%;
+  padding: 1rem 1.4rem;
+  background: linear-gradient(135deg, #eab308 0%, #ca8a04 50%, #a16207 100%);
+  color: #0c0a09;
+  font-family: inherit;
+  font-size: 0.96rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(254, 240, 138, 0.4);
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(234, 179, 8, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: all 0.25s ease;
+  margin-top: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-verify-quiz-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #facc15 0%, #eab308 50%, #ca8a04 100%);
+  box-shadow: 0 12px 30px rgba(234, 179, 8, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border-color: #ffffff;
+}
+
+.btn-verify-quiz-submit:disabled {
+  background: #292524;
+  color: #a8a29e;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.already-claimed-card {
+  background: linear-gradient(145deg, rgba(20, 35, 22, 0.95), rgba(13, 23, 15, 0.95));
+  border: 1.5px solid #22c55e;
+  border-radius: 18px;
+  padding: 2rem 1.6rem;
+  text-align: center;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7), 0 0 25px rgba(34, 197, 94, 0.2);
+}
+
+.claimed-badge-icon {
+  font-size: 2.8rem;
+  margin-bottom: 0.6rem;
+  filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.5));
+}
+
+.already-claimed-card h4 {
+  font-family: 'Cinzel', serif;
+  font-size: 1.35rem;
+  color: #4ade80;
+  margin-bottom: 0.5rem;
+}
+
+.already-claimed-card p {
+  font-size: 0.88rem;
+  color: #d6d3d1;
+  line-height: 1.55;
+}
+
+.claimed-timer-display {
+  margin: 1.3rem auto;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px dashed rgba(74, 222, 128, 0.4);
+  padding: 0.8rem 1.2rem;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.claimed-timer-display span {
+  display: block;
+  font-size: 0.75rem;
+  color: #a8a29e;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 0.2rem;
+}
+
+.claimed-timer-display strong {
+  color: #facc15;
+  font-size: 1.05rem;
+  font-family: monospace;
+}
+
+.claimed-note {
+  font-size: 0.78rem !important;
+  color: #a8a29e !important;
+  margin-bottom: 1.4rem;
+}
+
+.btn-claimed-close {
+  background: #22c55e;
+  color: #0c0a09;
+  border: none;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  padding: 0.75rem 1.6rem;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-claimed-close:hover {
+  background: #16a34a;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
 /* ==========================================
-   LEGAL MODALS STYLING
+   LEGAL MODALS & FOOTER
    ========================================== */
 .legal-modal-card {
   max-width: 600px;
@@ -2325,9 +3033,6 @@ html, body {
   margin-bottom: 0.65rem;
 }
 
-/* ==========================================
-   13. SITE FOOTER
-   ========================================== */
 .site-footer {
   background: #050403;
   padding: 3.8rem 1.5rem 0 1.5rem;
@@ -2446,23 +3151,15 @@ html, body {
 }
 
 /* ==========================================
-   RESPONSIVE LAYOUT & MOBILE ADAPTATIONS
+   RESPONSIVE ADAPTATIONS
    ========================================== */
 @media (max-width: 1024px) {
   .detail-top-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
-
   .detail-main-img-box {
     height: 360px;
-  }
-}
-
-@media (max-width: 992px) {
-  .footer-inner {
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
   }
 }
 
@@ -2470,72 +3167,34 @@ html, body {
   .nav-links {
     display: none;
   }
-
-  .card-image-wrap {
-    height: 250px;
+  .announcement-content-wrap {
+    justify-content: center;
   }
-
+  .top-bar-action-group {
+    width: 100%;
+    justify-content: center;
+    margin-top: 4px;
+  }
   .bottle-stage-content {
     grid-template-columns: 1fr;
     gap: 2.4rem;
-    text-align: center;
-    justify-items: center;
   }
-
-  .bottle-video-wrapper {
-    height: 380px;
-    width: 100%;
-    max-width: 320px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: visible;
-  }
-
-  .bottle-showcase-video,
-  .bottle-fallback-img {
-    max-height: 360px;
-    max-width: 100%;
-    margin: 0 auto;
-    display: block;
-  }
-
-  .bottle-callouts-container {
-    width: 100%;
-    max-width: 580px;
-    margin: 0 auto;
-    text-align: left;
-  }
-
-  .design-feature-card:hover {
-    transform: none;
-  }
-
-  .label-img-box {
-    height: 310px;
-  }
-
-  .combo-card {
-    padding: 2rem 1.4rem;
-  }
-
-  .combo-badge {
-    left: 1.4rem;
-  }
-
   .combo-grid-layout {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
-
   .combo-pricing-wrap {
     flex-direction: column;
     align-items: stretch;
   }
-
-  .btn-buy-combo {
-    text-align: center;
+  .combo-btn-action-group {
+    width: 100%;
+  }
+  .btn-buy-combo-direct {
+    flex: 1;
+  }
+  .payment-options-grid.payment-options-three {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -2551,72 +3210,52 @@ html, body {
   .faqs-section {
     padding: 2.2rem 1rem;
   }
-
-  .section-title-wrap {
-    margin-bottom: 1.3rem;
+  .floating-sound-pill {
+    bottom: 18px;
+    right: 18px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.78rem;
   }
-
+  .golden-vortex-aura {
+    width: 260px;
+    height: 260px;
+  }
   .section-title-wrap h2 {
     font-size: 1.85rem;
   }
-
   .product-grid {
-    gap: 1.2rem;
     grid-template-columns: 1fr;
+    gap: 1.2rem;
   }
-
   .modal-detail-body {
     padding: 1.2rem;
   }
-
   .detail-main-img-box {
     height: 270px;
   }
-
   .detail-title {
     font-size: 1.35rem;
   }
-
+  .modal-trust-strip {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
   .bottle-video-wrapper {
     height: 320px;
   }
-
   .bottle-showcase-video,
   .bottle-fallback-img {
     max-height: 300px;
   }
-
   .bottle-radial-glow {
     width: 240px;
     height: 240px;
   }
-
-  .design-feature-card {
-    padding: 1.1rem 1.2rem;
-  }
-
-  .design-feature-card h3 {
-    font-size: 1.05rem;
-  }
-
-  .design-feature-card p {
-    font-size: 0.85rem;
-  }
-
   .footer-inner {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
-
-  .feedback-form-box {
-    padding: 1.4rem 1.1rem;
-  }
-
-  .upi-mobile-pay-wrap {
-    display: block;
-  }
-
-  .upi-qr-display-wrap {
-    display: none;
+  .bottle-quiz-pills {
+    grid-template-columns: 1fr;
   }
 }
