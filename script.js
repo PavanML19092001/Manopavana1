@@ -19,7 +19,7 @@
 
   // Google Apps Script Web App Deployment URL
   // IMPORTANT: Ensure this matches the latest Web App URL from Deploy > Manage deployments
-  const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbywg6x0ljh31_FyAwpaey3oJofB1uyQZj-9yB6j_FgURYtyX-BXtH5YjowuPTJHIspB/exec";
+  const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwC-clS4UPY6I7NklbonBBLF_z2rPMzPlF0KwEPFqg37uQByZaI6Vk5vsoQxEfhmyp-/exec";
 
   // Active Firebase Configuration
   const firebaseConfig = {
