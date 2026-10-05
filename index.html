@@ -70,7 +70,7 @@
         </button>
 
         <!-- Bottle QR Scan Discount Button -->
-        <button type="button" id="btnOpenBottleClaimModal" class="btn-claim-bottle-top" onclick="openBottleClaimModal()">
+        <button type="button" id="btnOpenBottleClaimModal" class="btn-claim-bottle-top" onclick="openOnboardingModal(1)">
           🏷️ Scanned our Bottle? Claim 10% Off
         </button>
       </div>
@@ -165,6 +165,96 @@
       </button>
     </div>
   </aside>
+
+  <!-- Upfront 2-Step Gatekeeper Onboarding Modal (First Visit) -->
+  <div id="onboardingModalBackdrop" class="modal-backdrop">
+    <div class="modal-card onboarding-modal-card">
+      <div class="modal-header">
+        <h3 id="onboardingModalTitle">🌿 Welcome to MANOPAVANA</h3>
+        <button class="close-modal-btn" onclick="closeOnboardingModal()" type="button">&times;</button>
+      </div>
+      <div class="modal-body onboarding-modal-body">
+        
+        <!-- Step 1: Bottle Scan & 10% Discount Verification -->
+        <div id="onboardingStep1" class="onboarding-step-view">
+          <div class="onboarding-badge-icon">🏷️</div>
+          <h4>Did you scan our bottle QR code?</h4>
+          <p class="onboarding-subtext">
+            If you already have a bottle, answer 1 quick label question to unlock <strong>10% OFF</strong> across all orders for 30 days!
+          </p>
+
+          <div id="onboardingQuizWrapper" class="onboarding-quiz-wrapper">
+            <div class="bottle-quiz-type-selector">
+              <label class="bottle-quiz-label">Select Your Bottle:</label>
+              <div class="bottle-quiz-pills">
+                <button type="button" class="quiz-bottle-pill active" id="onboardPillGroundnut" onclick="selectOnboardingQuizBottle('groundnut')">Groundnut Oil</button>
+                <button type="button" class="quiz-bottle-pill" id="onboardPillCoconut" onclick="selectOnboardingQuizBottle('coconut')">Coconut Oil</button>
+                <button type="button" class="quiz-bottle-pill" id="onboardPillSesame" onclick="selectOnboardingQuizBottle('sesame')">Sesame Oil</button>
+              </div>
+            </div>
+
+            <div class="bottle-label-quiz-stage">
+              <div class="label-hint-strip">
+                <span class="label-hint-icon">🔍</span>
+                <span id="onboardQuizHintText">Inspect your bottle label:</span>
+              </div>
+              <div class="quiz-question-box">
+                <p class="quiz-question-title" id="onboardQuizQuestionText">Loading label question...</p>
+                <div class="quiz-options-list" id="onboardQuizOptionsContainer"></div>
+              </div>
+              
+              <div class="quiz-attempt-strip">
+                <span id="onboardAttemptBadge" class="attempt-badge">⚠️ 2 chances left to claim 10% OFF</span>
+              </div>
+
+              <div id="onboardQuizFeedbackBox" class="quiz-feedback-box"></div>
+              
+              <button type="button" id="btnSubmitOnboardQuiz" class="btn-verify-quiz-submit" onclick="submitOnboardingBottleQuiz()">
+                Verify &amp; Claim 10% Off ⚡
+              </button>
+            </div>
+          </div>
+
+          <div class="onboarding-skip-row">
+            <button type="button" class="btn-skip-onboarding" onclick="goToOnboardingStep(2)">
+              I haven't scanned a bottle yet (Continue to Shop) &rarr;
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: Immediate Delivery Pincode Verification -->
+        <div id="onboardingStep2" class="onboarding-step-view" style="display: none;">
+          <div class="onboarding-badge-icon">📍</div>
+          <h4>Where should we deliver?</h4>
+          <p class="onboarding-subtext">
+            Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Enter your 6-digit delivery pincode:
+          </p>
+          <div class="location-input-row">
+            <input type="text" id="onboardPincodeInput" maxlength="6" placeholder="Enter 6-digit Pincode (e.g. 560058)" />
+            <button type="button" class="btn-check-pincode" onclick="submitOnboardingPincodeCheck()">Verify</button>
+          </div>
+          <div id="onboardPincodeResultBox" class="pincode-result-box" style="display: none;"></div>
+          <div class="location-info-pills">
+            <div class="info-loc-chip">
+              <span>🏡</span>
+              <div>
+                <strong>Bangalore (560xxx)</strong>
+                <small>Doorstep Delivery (48–72h) • Direct Website Checkout</small>
+              </div>
+            </div>
+            <div class="info-loc-chip">
+              <span>🛒</span>
+              <div>
+                <strong>Rest of Karnataka &amp; India</strong>
+                <small>Fulfilled securely via our Official Flipkart Store</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   <!-- Firebase Auth Modal (Login / Sign Up / Forgot Password) -->
   <div id="authModalBackdrop" class="modal-backdrop">
@@ -342,7 +432,7 @@
                 📍 Locate My Doorstep
               </button>
             </div>
-            <textarea id="custAddress" rows="2" placeholder="Flat / House No, Building, Street, Landmark" required autocomplete="street-address"></textarea>
+            <textarea id="custAddress" rows="2" placeholder="Flat / House No, Building, Street, Landmark" required autocomplete="street-address" oninput="handleAddressForwardGeocode(this.value)"></textarea>
             <small class="field-error-text" id="custAddressErr"></small>
           </div>
 
@@ -457,59 +547,6 @@
           <button type="button" class="btn-cancel-flipkart" onclick="closeFlipkartModal()">
             Change to Bangalore Pincode
           </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottle Scan Verification Modal (Label Quiz) -->
-  <div id="bottleClaimModalBackdrop" class="modal-backdrop">
-    <div class="modal-card bottle-claim-card">
-      <div class="modal-header">
-        <h3>🏷️ Verify Bottle &amp; Unlock 10% Off</h3>
-        <button class="close-modal-btn" onclick="closeBottleClaimModal()" type="button">&times;</button>
-      </div>
-      <div class="modal-body bottle-claim-body">
-        <div id="alreadyClaimedBox" class="already-claimed-card" style="display: none;">
-          <div class="claimed-badge-icon">🌿</div>
-          <h4>10% Loyalty Discount Already Active!</h4>
-          <p>Your verified bottle discount is currently applied across your order.</p>
-          <div class="claimed-timer-display">
-            <span>Remaining Validity:</span>
-            <strong id="claimedRemainingText">--</strong>
-          </div>
-          <p class="claimed-note">Discount applies automatically across all items in your bag. Re-verification will become available once this validity window expires.</p>
-          <button type="button" class="btn-claimed-close" onclick="closeBottleClaimModal()">
-            Continue Shopping &rarr;
-          </button>
-        </div>
-
-        <div id="quizVerificationBox">
-          <p class="claim-instruction">
-            Hold your MANOPAVANA bottle! Answer the quick verification question from the physical label to activate your <strong>10% repeat customer discount</strong> for 30 days.
-          </p>
-          <div class="bottle-quiz-type-selector">
-            <label class="bottle-quiz-label">Select Your Bottle:</label>
-            <div class="bottle-quiz-pills">
-              <button type="button" class="quiz-bottle-pill active" id="pillGroundnut" onclick="selectQuizBottle('groundnut')">Groundnut Oil</button>
-              <button type="button" class="quiz-bottle-pill" id="pillCoconut" onclick="selectQuizBottle('coconut')">Coconut Oil</button>
-              <button type="button" class="quiz-bottle-pill" id="pillSesame" onclick="selectQuizBottle('sesame')">Sesame Oil</button>
-            </div>
-          </div>
-          <div class="bottle-label-quiz-stage">
-            <div class="label-hint-strip" id="quizHintStrip">
-              <span class="label-hint-icon">🔍</span>
-              <span id="quizHintText">Inspect your bottle label:</span>
-            </div>
-            <div class="quiz-question-box">
-              <p class="quiz-question-title" id="quizQuestionText">Loading label question...</p>
-              <div class="quiz-options-list" id="quizOptionsContainer"></div>
-            </div>
-            <div id="quizFeedbackBox" class="quiz-feedback-box"></div>
-            <button type="button" id="btnSubmitQuiz" class="btn-verify-quiz-submit" onclick="submitBottleLabelQuiz()">
-              Verify &amp; Unlock 10% Discount ⚡
-            </button>
-          </div>
         </div>
       </div>
     </div>
