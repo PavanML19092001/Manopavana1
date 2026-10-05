@@ -17,7 +17,7 @@
   const QR_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 Days
   const ADMIN_PIN = "1234";
 
-  // Default Bangalore Landmark Center (Vidhana Soudha / Peenya corridor)
+  // Default Bangalore Landmark Center (Vidhana Soudha corridor)
   const DEFAULT_BANGALORE_COORDS = [12.9716, 77.5946];
 
   // Google Apps Script Web App Deployment URL
@@ -94,6 +94,23 @@
   let currentSelectedComboKey = "combo-3l";
   let currentDetailProductKey = null;
   let currentDetailSelectedSize = "1L";
+
+  // Onboarding state for Step 1
+  let onboardingQuizAttemptsLeft = 2;
+  let onboardingQuizPool = [
+    {
+      question: "Which tagline best describes our packaging and quality standard?",
+      options: [
+        { text: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.", correct: true },
+        { text: "Extracted on-site in industrial mills using heavy chemical solvents.", correct: false },
+        { text: "Processed in automated overseas industrial plants.", correct: false },
+        { text: "Refined and bleached with artificial preservatives.", correct: false },
+        { text: "Packaged directly at unverified roadside kiosks.", correct: false }
+      ]
+    }
+  ];
+  let onboardingActiveQuestion = null;
+  let onboardingSelectedOptionIndex = null;
 
   // ==========================================
   // 3. MASTER CATALOG & SPECIFICATIONS
@@ -532,6 +549,33 @@
       return;
     }
 
+    if (currentAuthMode === "reset") {
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending...";
+      }
+      try {
+        if (!firebaseInitialized) throw new Error("Authentication service connecting. Please try again.");
+        await authInstance.sendPasswordResetEmail(email);
+        if (successBox) {
+          successBox.textContent = "Password reset instructions sent! Please check your Inbox and Spam/Junk folder.";
+          successBox.style.display = "block";
+        }
+        window.showActionToast("Password Reset Sent", "✉️ Password reset instructions sent! Please check your Inbox and Spam/Junk folder.", "✉️", "success");
+      } catch (err) {
+        if (errBox) {
+          errBox.textContent = err.message || "Failed to send password reset email.";
+          errBox.style.display = "block";
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Send Reset Link";
+        }
+      }
+      return;
+    }
+
     if (!firebaseInitialized) {
       if (errBox) {
         errBox.textContent = "Authentication service connecting. Please try again in a moment.";
@@ -558,13 +602,6 @@
         const name = userCred.user.displayName || userCred.user.email.split("@")[0];
         window.closeAuthModal();
         window.showActionToast("Account Created", `🎉 Welcome to MANOPAVANA, ${name}!`, "🎉", "success");
-      } else if (currentAuthMode === "reset") {
-        await authInstance.sendPasswordResetEmail(email);
-        if (successBox) {
-          successBox.textContent = "Password reset instructions sent! Please check your Inbox and Spam/Junk folder.";
-          successBox.style.display = "block";
-        }
-        window.showActionToast("Password Reset Sent", "✉️ Password reset instructions sent! Please check your Inbox and Spam/Junk folder.", "✉️", "success");
       }
     } catch (err) {
       if (errBox) {
@@ -771,7 +808,7 @@
 
           <div class="history-card-footer">
             <span style="color:#eab308; font-weight:600;">Facility Status:</span>
-            <span style="color:#d6d3d1;">${escapeHtml(order.trackingNotes || "Packed hygienically at our Bangalore packaging and distribution facility.")}</span>
+            <span style="color:#d6d3d1;">${escapeHtml(order.trackingNotes || "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.")}</span>
           </div>
         </div>
       `;
@@ -1139,6 +1176,34 @@
       })
       .catch((e) => console.log("Reverse geocode notice:", e));
   }
+
+  // Dynamic Forward Geocoding Debounce & Nominatim Integration
+  let addressTypingTimer = null;
+  document.addEventListener("DOMContentLoaded", () => {
+    const addressInput = document.getElementById("custAddress");
+    if (addressInput) {
+      addressInput.addEventListener("input", (e) => {
+        const query = e.target.value.trim();
+        if (addressTypingTimer) clearTimeout(addressTypingTimer);
+        if (query.length < 5) return;
+
+        addressTypingTimer = setTimeout(() => {
+          const searchCity = document.getElementById("custCity")?.value || "Bengaluru";
+          const fullQuery = `${query}, ${searchCity}, Karnataka, India`;
+          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullQuery)}&limit=1`)
+            .then(res => res.json())
+            .then(results => {
+              if (results && results.length > 0) {
+                const lat = parseFloat(results[0].lat);
+                const lon = parseFloat(results[0].lon);
+                initOrUpdateDeliveryMap(lat, lon);
+              }
+            })
+            .catch(err => console.warn("Forward geocode notice:", err));
+        }, 800);
+      });
+    }
+  });
 
   // ==========================================
   // 11. SAVED ADDRESS ENGINE (NO RE-PROMPTING)
@@ -1719,7 +1784,10 @@
     }
 
     const discountedSubtotal = subtotal - discountAmount;
-    const deliveryFee = itemsCount > 0 && discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_DELIVERY_FEE;
+    let deliveryFee = 0;
+    if (itemsCount > 0) {
+      deliveryFee = discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_DELIVERY_FEE;
+    }
     const grandTotal = discountedSubtotal + (itemsCount > 0 ? deliveryFee : 0);
     currentCalculatedGrandTotal = grandTotal;
 
@@ -1835,7 +1903,7 @@
       grandTotal: currentCalculatedGrandTotal.toString(),
       paymentMode: paymentMode,
       orderStatus: "Placed",
-      trackingNotes: "Packed hygienically at our Bangalore packaging and distribution facility.",
+      trackingNotes: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.",
       latitude: latitude,
       longitude: longitude
     };
@@ -1964,7 +2032,7 @@
   };
 
   // ==========================================
-  // 16. BOTTLE LABEL QUIZ
+  // 16. BOTTLE LABEL QUIZ & UPFRONT 2-STEP ONBOARDING
   // ==========================================
   const BOTTLE_QUIZ_POOLS = {
     groundnut: [
@@ -2049,7 +2117,7 @@
         const seconds = totalSeconds % 60;
 
         const formatted = `${days}d ${String(hours).padStart(2, "0")}h ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
-        announcementText.innerHTML = `🏷️️ <strong>Bottle Scan Verified:</strong> 10% Loyalty Discount Active! <span class="countdown-pill">⏱ ${formatted}</span>`;
+        announcementText.innerHTML = `🏷 <strong>Bottle Scan Verified:</strong> 10% Loyalty Discount Active! <span class="countdown-pill">⏱ ${formatted}</span>`;
         topBar.classList.add("loyal-banner");
       } else {
         announcementText.innerHTML = `🚚 <strong>FREE Doorstep Delivery</strong> on all orders above ₹500 across Bangalore (Delivered in 48–72 hrs)`;
@@ -2157,6 +2225,158 @@
         feedback.textContent = "❌ That doesn't match the bottle label. Inspect your bottle and try again!";
         feedback.style.display = "block";
       }
+    }
+  };
+
+  // Upfront 2-Step Gatekeeper Onboarding Flow
+  function checkAndTriggerUpfrontOnboarding() {
+    const completed = localStorage.getItem("manopavana_onboarding_completed");
+    if (!completed) {
+      const modal = document.getElementById("onboardingModalBackdrop");
+      if (modal) {
+        modal.classList.add("open");
+        initOnboardingStep1();
+      }
+    }
+  }
+
+  function initOnboardingStep1() {
+    onboardingActiveQuestion = onboardingQuizPool[0];
+    onboardingSelectedOptionIndex = null;
+    onboardingQuizAttemptsLeft = 2;
+
+    const step1El = document.getElementById("onboardingStep1Container");
+    const step2El = document.getElementById("onboardingStep2Container");
+    if (step1El) step1El.style.display = "block";
+    if (step2El) step2El.style.display = "none";
+
+    renderOnboardingQuiz();
+  }
+
+  function renderOnboardingQuiz() {
+    const qText = document.getElementById("onboardingQuizQuestion");
+    const optsContainer = document.getElementById("onboardingQuizOptions");
+    const badge = document.getElementById("onboardingAttemptsBadge");
+    const feedback = document.getElementById("onboardingQuizFeedback");
+
+    if (badge) badge.textContent = `⚠️ ${onboardingQuizAttemptsLeft} chance${onboardingQuizAttemptsLeft === 1 ? '' : 's'} left`;
+    if (feedback) feedback.style.display = "none";
+    if (qText) qText.textContent = onboardingActiveQuestion.question;
+
+    if (optsContainer) {
+      optsContainer.innerHTML = onboardingActiveQuestion.options.map((opt, idx) => `
+        <label class="quiz-option-card" onclick="selectOnboardingOption(${idx})" style="padding:0.8rem; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.5rem; cursor:pointer; background:#1c1917; border:1px solid #44403c; border-radius:8px;">
+          <input type="radio" name="onboardingQuizChoice" value="${idx}" />
+          <span style="color:#f5f5f4; font-size:0.9rem;">${opt.text}</span>
+        </label>
+      `).join("");
+    }
+  }
+
+  window.selectOnboardingOption = function (idx) {
+    onboardingSelectedOptionIndex = idx;
+    document.querySelectorAll("#onboardingQuizOptions .quiz-option-card").forEach((card, i) => {
+      card.classList.toggle("selected", i === idx);
+    });
+  };
+
+  window.submitOnboardingQuiz = function () {
+    const feedback = document.getElementById("onboardingQuizFeedback");
+    if (onboardingSelectedOptionIndex === null) {
+      if (feedback) {
+        feedback.className = "quiz-feedback-box error";
+        feedback.textContent = "Please select an option before submitting.";
+        feedback.style.display = "block";
+      }
+      return;
+    }
+
+    const isCorrect = onboardingActiveQuestion.options[onboardingSelectedOptionIndex].correct;
+    if (isCorrect) {
+      if (feedback) {
+        feedback.className = "quiz-feedback-box success";
+        feedback.innerHTML = "✅ <strong>Bottle Scan Verified!</strong> 10% Loyalty discount unlocked.";
+        feedback.style.display = "block";
+      }
+      activeBottleCode = "VERIFIED_ONBOARDING_BOTTLE";
+      bottleScanTimestampMs = Date.now();
+      localStorage.setItem("manopavana_bottle_code", activeBottleCode);
+      localStorage.setItem("manopavana_bottle_scan_time", bottleScanTimestampMs.toString());
+      renderCart();
+      startLiveCountdown();
+      renderComboSection();
+      window.showActionToast("Loyalty Unlocked", "🎉 10% Reorder Loyalty Discount is now active!", "✨", "success");
+      setTimeout(window.transitionOnboardingToStep2, 1200);
+    } else {
+      onboardingQuizAttemptsLeft--;
+      if (onboardingQuizAttemptsLeft > 0) {
+        if (feedback) {
+          feedback.className = "quiz-feedback-box error";
+          feedback.textContent = `❌ Incorrect answer. You have ${onboardingQuizAttemptsLeft} chance left.`;
+          feedback.style.display = "block";
+        }
+        const badge = document.getElementById("onboardingAttemptsBadge");
+        if (badge) badge.textContent = `⚠️ ${onboardingQuizAttemptsLeft} chance left`;
+      } else {
+        if (feedback) {
+          feedback.className = "quiz-feedback-box error";
+          feedback.textContent = "❌ Attempts exhausted. Proceeding to delivery pincode check.";
+          feedback.style.display = "block";
+        }
+        setTimeout(window.transitionOnboardingToStep2, 1500);
+      }
+    }
+  };
+
+  window.skipOnboardingStep1 = function () {
+    window.transitionOnboardingToStep2();
+  };
+
+  window.transitionOnboardingToStep2 = function () {
+    const step1El = document.getElementById("onboardingStep1Container");
+    const step2El = document.getElementById("onboardingStep2Container");
+    if (step1El) step1El.style.display = "none";
+    if (step2El) step2El.style.display = "block";
+  };
+
+  window.submitOnboardingPincodeCheck = function () {
+    const pinInput = document.getElementById("onboardingPincodeInput");
+    const resultBox = document.getElementById("onboardingPincodeResult");
+    if (!pinInput || !resultBox) return;
+
+    const enteredPin = pinInput.value.trim();
+    if (!/^\d{6}$/.test(enteredPin)) {
+      resultBox.className = "pincode-result-box warning";
+      resultBox.innerHTML = "<strong>Invalid Pincode</strong>Please enter a valid 6-digit Indian pincode.";
+      resultBox.style.display = "block";
+      return;
+    }
+
+    userSelectedPincode = enteredPin;
+    isBangalorePincode = enteredPin.startsWith("560");
+    localStorage.setItem("manopavana_user_pincode", enteredPin);
+    updateLocationUI();
+
+    if (isBangalorePincode) {
+      resultBox.className = "pincode-result-box success";
+      resultBox.innerHTML = `<strong>✅ Delivering to Bangalore (${enteredPin})</strong>Direct doorstep delivery enabled!`;
+      resultBox.style.display = "block";
+      setTimeout(() => {
+        localStorage.setItem("manopavana_onboarding_completed", "true");
+        const modal = document.getElementById("onboardingModalBackdrop");
+        if (modal) modal.classList.remove("open");
+      }, 1200);
+    } else {
+      resultBox.className = "pincode-result-box warning";
+      resultBox.innerHTML = `<strong>📍 Outside Bangalore (${enteredPin})</strong>Direct doorstep delivery is exclusive to Bangalore (560xxx). Orders for your location are fulfilled securely via our <strong>Official Flipkart Store</strong>.<br><br>
+      <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" class="btn-continue-flipkart" style="display:inline-flex; width:auto; padding:0.6rem 1.2rem; margin-top:0.5rem;">
+        🛒 Shop on Flipkart &rarr;
+      </a>`;
+      resultBox.style.display = "block";
+      setTimeout(() => {
+        localStorage.setItem("manopavana_onboarding_completed", "true");
+        window.openFlipkartModal();
+      }, 1500);
     }
   };
 
@@ -2281,6 +2501,9 @@
     document.getElementById("custPincode")?.addEventListener("input", (e) => {
       e.target.value = e.target.value.replace(/\D/g, "");
     });
+    document.getElementById("onboardingPincodeInput")?.addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/\D/g, "");
+    });
 
     // Review Form Submission
     document.getElementById("productReviewForm")?.addEventListener("submit", (e) => {
@@ -2347,5 +2570,6 @@
     renderCart();
     renderReviews();
     initFirebaseAuth();
+    checkAndTriggerUpfrontOnboarding();
   });
 })();
