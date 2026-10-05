@@ -18,7 +18,7 @@
   const ADMIN_PIN = "1234";
 
   // Google Apps Script Web App Deployment URL
-  const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwC-clS4UPY6I7NklbonBBLF_z2rPMzPlF0KwEPFqg37uQByZaI6Vk5vsoQxEfhmyp-/exec";
+  const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbxPePx4ZObkga_S8ZHL5br35_BG4Cf8smpc5xmsNuP9LYEmvGtCfyWZon7BXskVq5YQ/exec";
 
   // Active Firebase Configuration
   const firebaseConfig = {
