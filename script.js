@@ -18,7 +18,6 @@
   const ADMIN_PIN = "1234";
 
   // Google Apps Script Web App Deployment URL
-  // IMPORTANT: Ensure this matches the latest Web App URL from Deploy > Manage deployments
   const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwC-clS4UPY6I7NklbonBBLF_z2rPMzPlF0KwEPFqg37uQByZaI6Vk5vsoQxEfhmyp-/exec";
 
   // Active Firebase Configuration
@@ -53,6 +52,7 @@
   let currentOrderRef = "";
   let checkoutSource = "cart";
   let buyNowItem = null;
+  let toastTimeoutTimer = null;
 
   let userSelectedPincode = localStorage.getItem("manopavana_user_pincode") || "560058";
   let isBangalorePincode = userSelectedPincode.startsWith("560");
@@ -102,7 +102,7 @@
       bgClass: "oil-groundnut",
       img: `${R2_PUBLIC_BASE_URL}/groundnut-1.png`,
       gallery: createGallery("groundnut", 11),
-      shortDesc: "Traditional single slow-press extraction using heavy wooden pestles (<45°C). Triple cotton cloth filtered with zero chemical bleaches, giving unadulterated nutty aroma and high smoke-point performance.",
+      shortDesc: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Unrefined and unbleached, retaining authentic aroma and high smoke-point performance.",
       features: [
         { icon: "🌾", label: "Aroma", val: "Naturally Nutty" },
         { icon: "🫓", label: "Texture", val: "Light & Non-Sticky" },
@@ -112,6 +112,7 @@
         "Extraction Method": "Traditional Wooden Marachekku (<45°C)",
         "Processing Type": "Unrefined, Unbleached & Non-Deodorized",
         "FSSAI License": "Reg. No. 21226008004689",
+        "Packaging Facility": "Bangalore Packaging & Distribution Facility",
         "Container Type": "Food-Grade Shatterproof Bottle + Drip-Free Spout",
         "Best For": "Daily Curries, Crispy Dosas, Deep Frying, Sautéing",
         "Shelf Life": "9-12 Months (Store in cool, dark place)",
@@ -144,7 +145,7 @@
       bgClass: "oil-coconut",
       img: `${R2_PUBLIC_BASE_URL}/coconut-1.png`,
       gallery: createGallery("coconut", 11),
-      shortDesc: "Extracted from 100% sulfur-free, sun-dried copra. Packed with natural medium-chain fatty acids (MCTs). 100% edible-grade with unrefined natural coconut fragrance.",
+      shortDesc: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Extracted from sulfur-free copra with wholesome MCTs.",
       features: [
         { icon: "🥥", label: "Aroma", val: "Fresh Copra Scent" },
         { icon: "✨", label: "Extraction", val: "Slow Wood Chekku" },
@@ -154,6 +155,7 @@
         "Extraction Method": "Traditional Wood Chekku (<40°C)",
         "Processing Type": "Raw, Unrefined & Natural Settling",
         "FSSAI License": "Reg. No. 21226008004689",
+        "Packaging Facility": "Bangalore Packaging & Distribution Facility",
         "Container Type": "Food-Grade Shatterproof Bottle + Drip-Free Spout",
         "Best For": "Coastal Curries, Kerala Avial, Vegetable Stew, Hair Care",
         "Shelf Life": "9-12 Months",
@@ -186,7 +188,7 @@
       bgClass: "oil-sesame",
       img: `${R2_PUBLIC_BASE_URL}/sesame-1.png`,
       gallery: createGallery("sesame", 11),
-      shortDesc: "Authentic wood-pressed Gingelly oil extracted with natural palm jaggery to harmonize the deep nutty bite. Rich in Sesamol antioxidants, zinc, and heart-healthy unsaturated lipids.",
+      shortDesc: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Ground with pure palm jaggery for traditional nutty warmth.",
       features: [
         { icon: "🍯", label: "Aroma", val: "Chekku Scent" },
         { icon: "🪵", label: "Process", val: "Slow Crushed" },
@@ -196,6 +198,7 @@
         "Extraction Method": "Slow Wooden Press with Palm Jaggery",
         "Processing Type": "Unbleached, Natural Cloth Filtration",
         "FSSAI License": "Reg. No. 21226008004689",
+        "Packaging Facility": "Bangalore Packaging & Distribution Facility",
         "Container Type": "Food-Grade Shatterproof Bottle + Drip-Free Spout",
         "Best For": "Authentic Idli Podi, Puliogare, Rasam Tadka, Oil Pulling",
         "Shelf Life": "9-12 Months",
@@ -230,7 +233,7 @@
       volume: "3 Litres",
       badgeText: "3 x 1 Litre Kitchen Trio",
       headingText: "Complete Kitchen 3-Oil Essential Box (3 Litres)",
-      descText: "Equip your kitchen with South India's 3 core traditional wood-pressed oils. Includes brand-new sealed 1L Groundnut Oil (₹399), 1L Coconut Oil (₹499), and 1L Sesame Oil (₹499).",
+      descText: "Equip your kitchen with South India's 3 core traditional wood-pressed oils. Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Includes 1L Groundnut Oil, 1L Coconut Oil, and 1L Sesame Oil.",
       price: 1299,
       originalPrice: 1397,
       qrPrice: 1169,
@@ -242,7 +245,7 @@
       volume: "1.5 Litres",
       badgeText: "3 x 500ml Kitchen Trio",
       headingText: "Complete Kitchen 3-Oil Starter Box (1.5 Litres)",
-      descText: "Compact starter box containing 500ml Groundnut Oil (₹189), 500ml Coconut Oil (₹269), and 500ml Sesame Oil (₹269).",
+      descText: "Compact kitchen starter box containing 500ml Groundnut Oil, 500ml Coconut Oil, and 500ml Sesame Oil, packed fresh at our Bangalore packaging and distribution facility.",
       price: 699,
       originalPrice: 727,
       qrPrice: 629,
@@ -314,7 +317,35 @@
   }
 
   // ==========================================
-  // 4. ROBUST BACKEND JSONP CALLER
+  // 4. ACTION TOAST ENGINE
+  // ==========================================
+  window.showActionToast = function (title, message, icon = "✨", type = "info") {
+    const toast = document.getElementById("actionToast");
+    const titleEl = document.getElementById("actionToastTitle");
+    const msgEl = document.getElementById("actionToastMessage");
+    const iconEl = document.getElementById("actionToastIcon");
+
+    if (!toast) return;
+
+    if (toastTimeoutTimer) clearTimeout(toastTimeoutTimer);
+
+    toast.className = "action-toast";
+    if (type === "success") toast.classList.add("toast-success");
+    if (type === "error") toast.classList.add("toast-error");
+
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message;
+    if (iconEl) iconEl.textContent = icon;
+
+    toast.classList.add("show");
+
+    toastTimeoutTimer = setTimeout(() => {
+      toast.classList.remove("show");
+    }, 4000);
+  };
+
+  // ==========================================
+  // 5. ROBUST BACKEND JSONP CALLER
   // ==========================================
   function callBackend(params) {
     return new Promise((resolve, reject) => {
@@ -335,7 +366,7 @@
 
       script = document.createElement("script");
       script.src = `${GOOGLE_SCRIPT_API_URL}?${queryString}&callback=${callbackName}`;
-      
+
       script.onerror = function () {
         clearTimeout(timer);
         delete window[callbackName];
@@ -355,7 +386,7 @@
   }
 
   // ==========================================
-  // 5. FIREBASE AUTH & SESSION MANAGEMENT
+  // 6. FIREBASE AUTH & SESSION MANAGEMENT
   // ==========================================
   function initFirebaseAuth() {
     try {
@@ -409,7 +440,7 @@
   window.handleAuthPillClick = function () {
     const dropdown = document.getElementById("authDropdownMenu");
     if (currentUser) {
-      if (dropdown) dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+      if (dropdown) dropdown.classList.toggle("open");
     } else {
       window.openAuthModal("login");
     }
@@ -438,6 +469,7 @@
 
     if (errBox) errBox.style.display = "none";
     if (successBox) successBox.style.display = "none";
+    if (submitBtn) submitBtn.disabled = false;
 
     if (mode === "login") {
       if (title) title.textContent = "Sign In to MANOPAVANA";
@@ -469,6 +501,10 @@
     }
   };
 
+  function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
   window.handleEmailAuthSubmit = async function (e) {
     if (e && e.preventDefault) e.preventDefault();
 
@@ -476,31 +512,65 @@
     const password = document.getElementById("authPassword")?.value;
     const errBox = document.getElementById("authErrorMsg");
     const successBox = document.getElementById("authSuccessMsg");
+    const submitBtn = document.getElementById("btnAuthSubmit");
 
     if (errBox) errBox.style.display = "none";
     if (successBox) successBox.style.display = "none";
 
-    if (!firebaseInitialized) {
-      errBox.textContent = "Authentication service connecting. Please try again in a moment.";
-      errBox.style.display = "block";
+    if (!email || !validateEmail(email)) {
+      if (errBox) {
+        errBox.textContent = "Please enter a valid email address.";
+        errBox.style.display = "block";
+      }
       return;
+    }
+
+    if (!firebaseInitialized) {
+      if (errBox) {
+        errBox.textContent = "Authentication service connecting. Please try again in a moment.";
+        errBox.style.display = "block";
+      }
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Processing...";
     }
 
     try {
       if (currentAuthMode === "login") {
-        await authInstance.signInWithEmailAndPassword(email, password);
+        if (!password) throw new Error("Password is required to sign in.");
+        const userCred = await authInstance.signInWithEmailAndPassword(email, password);
+        const name = userCred.user.displayName || userCred.user.email.split("@")[0];
         window.closeAuthModal();
+        window.showActionToast("Sign In Successful", `🎉 Welcome back, ${name}!`, "🎉", "success");
       } else if (currentAuthMode === "register") {
-        await authInstance.createUserWithEmailAndPassword(email, password);
+        if (!password || password.length < 6) throw new Error("Password must be at least 6 characters.");
+        const userCred = await authInstance.createUserWithEmailAndPassword(email, password);
+        const name = userCred.user.displayName || userCred.user.email.split("@")[0];
         window.closeAuthModal();
+        window.showActionToast("Account Created", `🎉 Welcome to MANOPAVANA, ${name}!`, "🎉", "success");
       } else if (currentAuthMode === "reset") {
         await authInstance.sendPasswordResetEmail(email);
-        successBox.textContent = "Password reset email sent! Check your inbox.";
-        successBox.style.display = "block";
+        if (successBox) {
+          successBox.textContent = "Password reset instructions sent! Please check your Inbox and Spam/Junk folder.";
+          successBox.style.display = "block";
+        }
+        window.showActionToast("Password Reset Sent", "✉️ Password reset instructions sent! Please check your Inbox and Spam/Junk folder.", "✉️", "success");
       }
     } catch (err) {
-      errBox.textContent = err.message || "Authentication error.";
-      errBox.style.display = "block";
+      if (errBox) {
+        errBox.textContent = err.message || "Authentication error.";
+        errBox.style.display = "block";
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        if (currentAuthMode === "login") submitBtn.textContent = "Sign In";
+        else if (currentAuthMode === "register") submitBtn.textContent = "Register Account";
+        else submitBtn.textContent = "Send Reset Link";
+      }
     }
   };
 
@@ -517,8 +587,10 @@
     }
 
     try {
-      await authInstance.signInWithPopup(googleAuthProvider);
+      const result = await authInstance.signInWithPopup(googleAuthProvider);
+      const name = result.user.displayName || result.user.email.split("@")[0];
       window.closeAuthModal();
+      window.showActionToast("Sign In Successful", `🎉 Welcome back, ${name}!`, "🎉", "success");
     } catch (err) {
       if (errBox) {
         errBox.textContent = err.message || "Google Sign-In failed.";
@@ -529,7 +601,7 @@
 
   window.handleSignOut = async function () {
     const dropdown = document.getElementById("authDropdownMenu");
-    if (dropdown) dropdown.style.display = "none";
+    if (dropdown) dropdown.classList.remove("open");
 
     if (authInstance) {
       try {
@@ -539,18 +611,19 @@
     currentUser = null;
     localStorage.removeItem("manopavana_active_user");
     updateAuthUI();
+    window.showActionToast("Signed Out", "👋 You have logged out successfully.", "👋", "info");
   };
 
   document.addEventListener("click", (e) => {
     const dropdown = document.getElementById("authDropdownMenu");
     const container = document.getElementById("authPillContainer");
     if (dropdown && container && !container.contains(e.target)) {
-      dropdown.style.display = "none";
+      dropdown.classList.remove("open");
     }
   });
 
   // ==========================================
-  // 6. ORDER TRACKING & AUTO HISTORY
+  // 7. ORDER TRACKING & AUTO HISTORY
   // ==========================================
   window.openOrderTrackingModal = function (forceAccountTab = false) {
     const modal = document.getElementById("trackOrderModalBackdrop");
@@ -578,8 +651,8 @@
 
     if (tabType === "account") {
       if (!currentUser) {
-        alert("Please sign in or create an account to view your order history.");
         window.openAuthModal("login");
+        window.showActionToast("Sign In Required", "Please sign in to view your account order history.", "👤", "info");
         return;
       }
       if (accountView) accountView.style.display = "block";
@@ -601,7 +674,7 @@
 
     if (loading) {
       loading.style.display = "block";
-      loading.textContent = "🔍 Fetching your orders from our Bangalore mill...";
+      loading.textContent = "🔍 Fetching your orders from our Bangalore facility...";
     }
     if (list) list.style.display = "none";
 
@@ -618,8 +691,8 @@
       if (res.status === "FOUND" && res.orders && res.orders.length > 0) {
         combinedOrders = res.orders;
       } else {
-        // Fallback to locally cached orders placed from this browser
-        combinedOrders = localOrdersHistory.filter(o => o.firebaseUid === currentUser.uid);
+        // Fallback to locally cached snapshot orders placed from this browser
+        combinedOrders = localOrdersHistory.filter(o => o.firebaseUid === currentUser.uid || (currentUser.email && o.email === currentUser.email));
       }
 
       if (combinedOrders.length > 0) {
@@ -629,7 +702,7 @@
         list.innerHTML = `
           <div style="text-align:center; padding:2rem; color:#a8a29e;">
             <p>No past orders found under this account.</p>
-            <p style="font-size:0.8rem; margin-top:0.4rem; color:#78716c;">Orders placed with your account will automatically appear here with live tracking notes.</p>
+            <p style="font-size:0.8rem; margin-top:0.4rem; color:#78716c;">Orders placed with your account will automatically appear here with 4-stage tracking nodes.</p>
           </div>
         `;
         list.style.display = "block";
@@ -637,8 +710,7 @@
     }).catch((err) => {
       if (loading) loading.style.display = "none";
       if (list) {
-        // Render locally cached orders if backend connection was interrupted
-        const localMatches = localOrdersHistory.filter(o => o.firebaseUid === currentUser.uid);
+        const localMatches = localOrdersHistory.filter(o => o.firebaseUid === currentUser.uid || (currentUser.email && o.email === currentUser.email));
         if (localMatches.length > 0) {
           list.innerHTML = renderOrdersTimelineList(localMatches);
           list.style.display = "block";
@@ -653,41 +725,47 @@
   function renderOrdersTimelineList(orders) {
     return orders.map((order) => {
       const st = (order.orderStatus || "").toLowerCase();
+      const isStep1 = true;
+      const isStep2 = st.includes("pack") || st.includes("process") || st.includes("settl") || st.includes("dispatch") || st.includes("deliver");
+      const isStep3 = st.includes("dispatch") || st.includes("transit") || st.includes("out") || st.includes("deliver");
+      const isStep4 = st.includes("deliver");
+
       return `
-        <div style="background:#141211; border:1.5px solid rgba(234,179,8,0.3); border-radius:14px; padding:1.1rem; margin-bottom:1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.6);">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed rgba(255,255,255,0.1); padding-bottom:0.6rem; margin-bottom:0.8rem;">
+        <div class="history-order-card">
+          <div class="history-card-header">
             <div>
-              <strong style="color:#fafaf9; display:block; font-size:0.95rem;">Order #${escapeHtml(order.orderRef)}</strong>
-              <small style="color:#a8a29e;">${escapeHtml(order.timestamp || "Just Now")} • Total: ₹${escapeHtml(order.grandTotal)}</small>
+              <strong>Order #${escapeHtml(order.orderRef)}</strong>
+              <small style="color:#a8a29e; display:block;">${escapeHtml(order.timestamp || "Recent")} • ₹${escapeHtml(order.grandTotal)}</small>
             </div>
-            <span style="background:#eab308; color:#0c0a09; font-weight:800; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:12px;">${escapeHtml(order.orderStatus || "Placed")}</span>
+            <span class="track-status-pill">${escapeHtml(order.orderStatus || "Placed")}</span>
           </div>
 
-          <div style="font-size:0.84rem; color:#d6d3d1; margin-bottom:0.8rem;">
+          <div class="history-card-items">
             <strong>Items:</strong> ${escapeHtml(order.items)}
           </div>
 
-          <div class="track-timeline-progress" style="display:flex; justify-content:space-between; margin:1rem 0;">
-            <div class="track-step-node" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-              <span class="node-dot active">✓</span>
-              <span class="node-lbl" style="font-size:0.68rem; color:#a8a29e;">Placed</span>
+          <div class="track-timeline-progress">
+            <div class="track-step-node node-step ${isStep1 ? 'active' : ''}">
+              <span class="node-dot ${isStep1 ? 'active' : ''}">✓</span>
+              <span class="node-lbl">Placed</span>
             </div>
-            <div class="track-step-node" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-              <span class="node-dot ${st.includes('press') || st.includes('dispatch') || st.includes('deliver') ? 'active' : ''}">⚙</span>
-              <span class="node-lbl" style="font-size:0.68rem; color:#a8a29e;">Mill Pressing</span>
+            <div class="track-step-node node-step ${isStep2 ? 'active' : ''}">
+              <span class="node-dot ${isStep2 ? 'active' : ''}">⚙</span>
+              <span class="node-lbl">Packed &amp; Sealed</span>
             </div>
-            <div class="track-step-node" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-              <span class="node-dot ${st.includes('dispatch') || st.includes('deliver') ? 'active' : ''}">🚚</span>
-              <span class="node-lbl" style="font-size:0.68rem; color:#a8a29e;">Out for Delivery</span>
+            <div class="track-step-node node-step ${isStep3 ? 'active' : ''}">
+              <span class="node-dot ${isStep3 ? 'active' : ''}">🚚</span>
+              <span class="node-lbl">Dispatched</span>
             </div>
-            <div class="track-step-node" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-              <span class="node-dot ${st.includes('deliver') ? 'active' : ''}">🏡</span>
-              <span class="node-lbl" style="font-size:0.68rem; color:#a8a29e;">Delivered</span>
+            <div class="track-step-node node-step ${isStep4 ? 'active' : ''}">
+              <span class="node-dot ${isStep4 ? 'active' : ''}">🏡</span>
+              <span class="node-lbl">Delivered</span>
             </div>
           </div>
 
-          <div style="font-size:0.82rem; background:rgba(255,255,255,0.03); padding:0.7rem 0.85rem; border-radius:8px; color:#d6d3d1;">
-            <strong style="color:#eab308;">Mill Tracking Notes:</strong> ${escapeHtml(order.trackingNotes || "Your batch is scheduled for slow cold pressing at our Peenya mill.")}
+          <div class="history-card-footer">
+            <span style="color:#eab308; font-weight:600;">Facility Status:</span>
+            <span style="color:#d6d3d1;">${escapeHtml(order.trackingNotes || "Packed hygienically at our Bangalore packaging and distribution facility.")}</span>
           </div>
         </div>
       `;
@@ -710,7 +788,7 @@
 
     if (btn) {
       btn.disabled = true;
-      btn.textContent = "Checking Mill Records...";
+      btn.textContent = "Checking Facility Records...";
     }
     if (resultBox) resultBox.style.display = "none";
 
@@ -729,8 +807,15 @@
         resultBox.innerHTML = renderOrdersTimelineList(res.orders);
         resultBox.style.display = "block";
       } else {
-        resultBox.innerHTML = `<span style="color:#ef4444;">❌ No matching orders found. Please verify your details.</span>`;
-        resultBox.style.display = "block";
+        // Check local storage fallback for guest checkout
+        const localMatches = localOrdersHistory.filter(o => (orderRef && o.orderRef === orderRef) || (phone && o.phone === phone));
+        if (localMatches.length > 0) {
+          resultBox.innerHTML = renderOrdersTimelineList(localMatches);
+          resultBox.style.display = "block";
+        } else {
+          resultBox.innerHTML = `<span style="color:#ef4444;">❌ No matching orders found. Please verify your details.</span>`;
+          resultBox.style.display = "block";
+        }
       }
     }).catch((err) => {
       if (btn) {
@@ -738,14 +823,20 @@
         btn.textContent = "Fetch Live Status 🔍";
       }
       if (resultBox) {
-        resultBox.innerHTML = `<span style="color:#ef4444;">Error checking orders: ${err.message}</span>`;
-        resultBox.style.display = "block";
+        const localMatches = localOrdersHistory.filter(o => (orderRef && o.orderRef === orderRef) || (phone && o.phone === phone));
+        if (localMatches.length > 0) {
+          resultBox.innerHTML = renderOrdersTimelineList(localMatches);
+          resultBox.style.display = "block";
+        } else {
+          resultBox.innerHTML = `<span style="color:#ef4444;">Error checking orders: ${err.message}</span>`;
+          resultBox.style.display = "block";
+        }
       }
     });
   };
 
   // ==========================================
-  // 7. LOCATION & PINCODE CONTROLLER
+  // 8. LOCATION & PINCODE CONTROLLER
   // ==========================================
   window.openLocationCheckModal = function () {
     const modal = document.getElementById("locationModalBackdrop");
@@ -784,12 +875,12 @@
 
     if (isBangalorePincode) {
       resultBox.className = "pincode-result-box success";
-      resultBox.innerHTML = `<strong>✅ Delivering to Bangalore (${enteredPin})</strong>Fresh batches will be delivered in 48–72 hours from our Peenya mill. Free delivery on ₹500+ orders.`;
+      resultBox.innerHTML = `<strong>✅ Delivering to Bangalore (${enteredPin})</strong>Direct doorstep delivery in 48–72 hours from our Bangalore packaging and distribution facility. Free delivery on ₹500+ orders.`;
       resultBox.style.display = "block";
       setTimeout(window.closeLocationCheckModal, 1300);
     } else {
       resultBox.className = "pincode-result-box warning";
-      resultBox.innerHTML = `<strong>📍 Outside Bangalore (${enteredPin})</strong>Direct doorstep delivery from our mill is exclusive to Bangalore (560xxx). Orders for your location are fulfilled via our <strong>Official Flipkart Store</strong>.<br><br>
+      resultBox.innerHTML = `<strong>📍 Outside Bangalore (${enteredPin})</strong>Direct doorstep delivery is exclusive to Bangalore (560xxx). Orders for your location are fulfilled securely via our <strong>Official Flipkart Store</strong>.<br><br>
       <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" class="btn-continue-flipkart" style="display:inline-flex; width:auto; padding:0.6rem 1.2rem; margin-top:0.5rem;">
         🛒 Shop on Flipkart &rarr;
       </a>`;
@@ -827,7 +918,7 @@
   };
 
   // ==========================================
-  // 8. ZERO-FRICTION AUDIO AUTOPLAY ENGINE
+  // 9. ZERO-FRICTION AUDIO AUTOPLAY ENGINE
   // ==========================================
   let isAudioPlaying = false;
   let hasInteracted = false;
@@ -850,7 +941,7 @@
         btn?.classList.add("playing");
         removeInteractionListeners();
       }).catch(() => {
-        // Browser autoplay policy intercepted; wait for next user touch/scroll/click
+        // Autoplay policy prevented immediate playback; wait for interaction
         isAudioPlaying = false;
         if (icon) icon.textContent = "🔇";
         if (text) text.textContent = "Tap for Sound";
@@ -921,20 +1012,31 @@
   }
 
   // ==========================================
-  // 9. CART OPERATIONS
+  // 10. CART OPERATIONS ("SILENT ADD TO BAG")
   // ==========================================
   function isLoyaltyDiscountValid() {
     if (!bottleScanTimestampMs) return false;
     return (Date.now() - bottleScanTimestampMs) < QR_EXPIRY_MS;
   }
 
-  function saveCart() {
+  function triggerBadgeAnimation() {
+    const badge = document.getElementById("cartCountBadge");
+    if (badge) {
+      badge.classList.remove("badge-pop");
+      void badge.offsetWidth; // Trigger reflow
+      badge.classList.add("badge-pop");
+      setTimeout(() => badge.classList.remove("badge-pop"), 250);
+    }
+  }
+
+  function saveCart(silent = false) {
     localStorage.setItem("manopavana_cart", JSON.stringify(cart));
     renderCart();
     renderProductsGrid();
     if (currentDetailProductKey) {
       renderProductDetailModalContent();
     }
+    triggerBadgeAnimation();
   }
 
   window.openCart = function () {
@@ -956,6 +1058,7 @@
     return item ? item.quantity : 0;
   }
 
+  // Silent Add: Does NOT force drawer open, triggers toast and counter update
   window.handleDirectAdd = function (id, title, price, img) {
     if (!isBangalorePincode) {
       window.openFlipkartModal();
@@ -967,8 +1070,8 @@
     } else {
       cart.push({ id, title, price: parseInt(price, 10), img, quantity: 1 });
     }
-    saveCart();
-    window.openCart();
+    saveCart(true);
+    window.showActionToast("Added to Bag", `🛒 Added ${title} to your bag.`, "🛒", "success");
   };
 
   window.updateQuantity = function (id, delta) {
@@ -978,12 +1081,14 @@
         if (COMBO_CATALOG[id]) {
           const combo = COMBO_CATALOG[id];
           cart.push({ id: combo.id, title: combo.title, price: combo.price, img: combo.img, quantity: 1 });
+          window.showActionToast("Added to Bag", `🛒 Added ${combo.title} to your bag.`, "🛒", "success");
         } else {
           const [prodKey, sizeKey] = id.split("-");
           const formattedSize = sizeKey === "1l" ? "1L" : "500ml";
           const catItem = PRODUCT_CATALOG[prodKey]?.sizes[formattedSize];
           if (catItem) {
             cart.push({ id: catItem.id, title: catItem.title, price: catItem.price, img: PRODUCT_CATALOG[prodKey].img, quantity: 1 });
+            window.showActionToast("Added to Bag", `🛒 Added ${catItem.title} to your bag.`, "🛒", "success");
           }
         }
       }
@@ -993,12 +1098,12 @@
         cart = cart.filter((i) => i.id !== id);
       }
     }
-    saveCart();
+    saveCart(true);
   };
 
   window.removeItem = function (id) {
     cart = cart.filter((item) => item.id !== id);
-    saveCart();
+    saveCart(true);
   };
 
   function renderCart() {
@@ -1082,7 +1187,7 @@
   }
 
   // ==========================================
-  // 10. PRODUCT GRID & COMBOS
+  // 11. PRODUCT GRID & COMBOS
   // ==========================================
   function renderStepperButtonHTML(id, title, price, img, quantity) {
     if (!isBangalorePincode) {
@@ -1215,7 +1320,7 @@
   };
 
   // ==========================================
-  // 11. PRODUCT DETAIL MODAL CONTROLLER
+  // 12. PRODUCT DETAIL MODAL CONTROLLER
   // ==========================================
   window.openProductDetailModal = function (productKey) {
     const product = PRODUCT_CATALOG[productKey];
@@ -1320,7 +1425,7 @@
   }
 
   // ==========================================
-  // 12. CHECKOUT & SUBMISSION
+  // 13. CHECKOUT & SUBMISSION
   // ==========================================
   window.handleDirectBuyNow = function (id, title, price, img) {
     if (!isBangalorePincode) {
@@ -1482,18 +1587,19 @@
 
     const uid = currentUser.uid || ("GUEST_" + phone);
 
-    // Snapshot order to local storage history immediately
+    // Snapshot order to local storage history immediately for offline/lag resilience
     const orderSnapshot = {
       timestamp: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
       orderRef: currentOrderRef,
       firebaseUid: uid,
       customerName: name,
       phone: phone,
+      email: currentUser.email || "",
       items: itemsSummary,
       grandTotal: currentCalculatedGrandTotal.toString(),
       paymentMode: paymentMode,
       orderStatus: "Placed",
-      trackingNotes: "Batch scheduled for fresh wood pressing at Peenya 2nd Stage mill."
+      trackingNotes: "Packed hygienically at our Bangalore packaging and distribution facility."
     };
     localOrdersHistory.unshift(orderSnapshot);
     localStorage.setItem("manopavana_local_orders", JSON.stringify(localOrdersHistory));
@@ -1507,6 +1613,7 @@
           amount: currentCalculatedGrandTotal,
           name: name,
           phone: phone,
+          email: currentUser.email || "",
           address: `${address}, ${city}`,
           state: state,
           district: district,
@@ -1529,6 +1636,7 @@
           grandTotal: currentCalculatedGrandTotal,
           name: name,
           phone: phone,
+          email: currentUser.email || "",
           address: `${address}, ${city}`,
           state: state,
           district: district,
@@ -1562,7 +1670,6 @@
       }
     } catch (err) {
       console.warn("Backend sync notice:", err);
-      // Even if network delayed, present confirmed receipt since order was cached locally
       if (checkoutSource === "cart") {
         cart = [];
         localStorage.removeItem("manopavana_cart");
@@ -1592,7 +1699,7 @@
         <div class="confirm-receipt-row"><span>Order Reference:</span><strong>#${details.orderRef}</strong></div>
         <div class="confirm-receipt-row"><span>Payment Method:</span><strong>${details.paymentMode}</strong></div>
         <div class="confirm-receipt-row"><span>Estimated Delivery:</span><strong style="color:#4ade80;">48 – 72 Hours (Bangalore)</strong></div>
-        <div class="confirm-receipt-row total-row"><span>Status:</span><strong style="color:#eab308;">Confirmed &amp; Queued for Mill Extraction</strong></div>
+        <div class="confirm-receipt-row total-row"><span>Status:</span><strong style="color:#eab308;">Confirmed &amp; Queued for Packaging</strong></div>
       `;
     }
 
@@ -1614,7 +1721,7 @@
   };
 
   // ==========================================
-  // 13. BOTTLE LABEL QUIZ
+  // 14. BOTTLE LABEL QUIZ
   // ==========================================
   const BOTTLE_QUIZ_POOLS = {
     groundnut: [
@@ -1799,6 +1906,7 @@
       renderCart();
       startLiveCountdown();
       renderComboSection();
+      window.showActionToast("Loyalty Unlocked", "🎉 10% Reorder Loyalty Discount is now active for 30 days!", "✨", "success");
       setTimeout(window.closeBottleClaimModal, 1500);
     } else {
       if (feedback) {
@@ -1810,7 +1918,7 @@
   };
 
   // ==========================================
-  // 14. CUSTOMER REVIEWS & ADMIN DELETION
+  // 15. CUSTOMER REVIEWS & ADMIN DELETION
   // ==========================================
   function renderReviews() {
     const grid = document.getElementById("reviewsDisplayGrid");
@@ -1867,7 +1975,7 @@
   };
 
   // ==========================================
-  // 15. LEGAL MODALS CONTROLLER
+  // 16. LEGAL MODALS CONTROLLER
   // ==========================================
   window.openLegalModal = function (modalId) {
     const modal = document.getElementById(modalId);
@@ -1880,7 +1988,7 @@
   };
 
   // ==========================================
-  // 16. INITIALIZATION & EVENT LISTENERS
+  // 17. INITIALIZATION & EVENT LISTENERS
   // ==========================================
   document.addEventListener("DOMContentLoaded", () => {
     // Sound & Video Engine
@@ -1958,7 +2066,7 @@
       localStorage.setItem("manopavana_user_reviews", JSON.stringify(reviewsList));
       renderReviews();
       e.target.reset();
-      alert("✨ Thank you! Your review has been posted.");
+      window.showActionToast("Review Submitted", "✨ Thank you! Your review has been posted.", "✨", "success");
     });
 
     // FAQ Accordion
