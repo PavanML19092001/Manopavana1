@@ -2451,10 +2451,16 @@
   };
 
   // Upfront 2-Step Gatekeeper Onboarding Flow
+  window.closeOnboardingModal = function () {
+    const modal = document.getElementById("onboardingModalBackdrop") || document.getElementById("bottleClaimModalBackdrop");
+    if (modal) modal.classList.remove("open");
+    localStorage.setItem("manopavana_onboarding_completed", "true");
+  };
+
   function checkAndTriggerUpfrontOnboarding() {
     const completed = localStorage.getItem("manopavana_onboarding_completed");
     if (!completed) {
-      const modal = document.getElementById("onboardingModalBackdrop");
+      const modal = document.getElementById("onboardingModalBackdrop") || document.getElementById("bottleClaimModalBackdrop");
       if (modal) {
         modal.classList.add("open");
         initOnboardingStep1();
@@ -2463,7 +2469,6 @@
   }
 
   function initOnboardingStep1() {
-    onboardingActiveQuestion = ONBOARDING_QUIZ_POOL[Math.floor(Math.random() * ONBOARDING_QUIZ_POOL.length)];
     onboardingSelectedOptionIndex = null;
     onboardingQuizAttemptsLeft = 2;
 
@@ -2472,44 +2477,139 @@
     if (step1El) step1El.style.display = "block";
     if (step2El) step2El.style.display = "none";
 
-    renderOnboardingQuiz();
+    // Bind Close "X" button inside onboarding modal
+    const closeBtns = document.querySelectorAll("#onboardingModalBackdrop .modal-close, #onboardingModalBackdrop [data-modal-close], .onboarding-close-btn");
+    closeBtns.forEach(btn => {
+      btn.onclick = window.closeOnboardingModal;
+    });
+
+    // Populate question for the initially active bottle (default: groundnut)
+    window.selectOnboardingBottle("groundnut");
   }
 
-  function renderOnboardingQuiz() {
-    const qText = document.getElementById("onboardingQuizQuestion");
-    const optsContainer = document.getElementById("onboardingQuizOptions");
-    const badge = document.getElementById("onboardingAttemptsBadge");
-    const feedback = document.getElementById("onboardingQuizFeedback");
+  window.selectOnboardingBottle = function (bottleKey) {
+    selectedQuizBottleKey = bottleKey;
+    onboardingSelectedOptionIndex = null;
 
-    if (badge) badge.textContent = `⚠️ ${onboardingQuizAttemptsLeft} chance${onboardingQuizAttemptsLeft === 1 ? '' : 's'} left`;
+    // Highlight selected bottle button
+    const buttons = document.querySelectorAll(".quiz-bottle-pill, [onclick*='selectQuizBottle'], [onclick*='selectOnboardingBottle']");
+    buttons.forEach((btn) => {
+      const txt = (btn.textContent || "").toLowerCase();
+      if (txt.includes(bottleKey)) {
+        btn.classList.add("active");
+        btn.style.backgroundColor = "#eab308";
+        btn.style.color = "#0c0a09";
+        btn.style.borderColor = "#eab308";
+      } else {
+        btn.classList.remove("active");
+        btn.style.backgroundColor = "";
+        btn.style.color = "";
+        btn.style.borderColor = "";
+      }
+    });
+
+    const pool = BOTTLE_QUIZ_POOLS[bottleKey] || BOTTLE_QUIZ_POOLS.groundnut;
+    const baseQuestion = pool[Math.floor(Math.random() * pool.length)];
+
+    // Generate 5 options (1 correct, 4 distractors)
+    const distractors = [
+      "Extracted using industrial thermal chemical solvents",
+      "Refined, bleached, and chemically deodorized",
+      "Blended with synthetic liquid paraffin wax",
+      "Processed with artificial preservatives and coloring agents",
+      "Diluted with argemone seeds for consistency"
+    ].filter(d => d !== baseQuestion.options[0].text);
+
+    const generatedOptions = [
+      { text: baseQuestion.options[0].text, correct: true },
+      { text: distractors[0], correct: false },
+      { text: distractors[1], correct: false },
+      { text: distractors[2], correct: false },
+      { text: distractors[3], correct: false }
+    ].sort(() => Math.random() - 0.5);
+
+    onboardingActiveQuestion = {
+      hint: baseQuestion.hint,
+      question: baseQuestion.question,
+      options: generatedOptions
+    };
+
+    renderOnboardingQuiz();
+  };
+
+  // Alias for backward compatibility if HTML buttons call selectQuizBottle
+  const originalSelectQuizBottle = window.selectQuizBottle;
+  window.selectQuizBottle = function (bottleKey) {
+    if (typeof originalSelectQuizBottle === "function") {
+      try { originalSelectQuizBottle(bottleKey); } catch (e) {}
+    }
+    window.selectOnboardingBottle(bottleKey);
+  };
+
+  function renderOnboardingQuiz() {
+    const qText = document.getElementById("onboardingQuizQuestion") || document.getElementById("quizQuestionText");
+    const hintEl = document.getElementById("onboardingQuizHint") || document.getElementById("quizHintText");
+    const optsContainer = document.getElementById("onboardingQuizOptions") || document.getElementById("quizOptionsContainer");
+    const badge = document.getElementById("onboardingAttemptsBadge") || document.querySelector(".quiz-chance-badge, .attempts-badge");
+    const feedback = document.getElementById("onboardingQuizFeedback") || document.getElementById("quizFeedbackBox");
+
+    if (badge) badge.textContent = `⚠️ ${onboardingQuizAttemptsLeft} chance${onboardingQuizAttemptsLeft === 1 ? '' : 's'} left to claim 10% OFF`;
     if (feedback) feedback.style.display = "none";
+    if (hintEl && onboardingActiveQuestion.hint) hintEl.textContent = onboardingActiveQuestion.hint;
     if (qText) qText.textContent = onboardingActiveQuestion.question;
 
-    if (optsContainer) {
+    if (optsContainer && onboardingActiveQuestion.options) {
       optsContainer.innerHTML = onboardingActiveQuestion.options.map((opt, idx) => `
-        <label class="quiz-option-card" onclick="selectOnboardingOption(${idx})" style="padding:0.8rem; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.5rem; cursor:pointer; background:#1c1917; border:1px solid #44403c; border-radius:8px;">
-          <input type="radio" name="onboardingQuizChoice" value="${idx}" />
-          <span style="color:#f5f5f4; font-size:0.9rem;">${opt.text}</span>
+        <label class="quiz-option-card" onclick="selectOnboardingOption(${idx})" style="padding:0.75rem 1rem; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.75rem; cursor:pointer; background:#1c1917; border:1px solid #44403c; border-radius:8px; transition:all 0.2s ease;">
+          <input type="radio" name="onboardingQuizChoice" value="${idx}" style="accent-color:#eab308; width:16px; height:16px; cursor:pointer;" />
+          <span style="color:#f5f5f4; font-size:0.875rem; text-align:left; line-height:1.4;">${opt.text}</span>
         </label>
       `).join("");
+    }
+
+    // Attach skip link handler
+    const skipLink = document.querySelector("#onboardingModalBackdrop a, .onboarding-skip-link");
+    if (skipLink) {
+      skipLink.onclick = function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        window.skipOnboardingStep1();
+      };
+    }
+
+    // Bind submit button
+    const submitBtn = document.querySelector("#onboardingModalBackdrop button[type='submit'], #btnSubmitBottleQuiz, .btn-claim-discount");
+    if (submitBtn) {
+      submitBtn.onclick = function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        window.submitOnboardingQuiz();
+      };
     }
   }
 
   window.selectOnboardingOption = function (idx) {
     onboardingSelectedOptionIndex = idx;
-    document.querySelectorAll("#onboardingQuizOptions .quiz-option-card").forEach((card, i) => {
-      card.classList.toggle("selected", i === idx);
+    const cards = document.querySelectorAll("#onboardingQuizOptions .quiz-option-card, #quizOptionsContainer .quiz-option-card");
+    cards.forEach((card, i) => {
+      const radio = card.querySelector("input[type='radio']");
+      if (i === idx) {
+        card.classList.add("selected");
+        card.style.borderColor = "#eab308";
+        card.style.background = "#292524";
+        if (radio) radio.checked = true;
+      } else {
+        card.classList.remove("selected");
+        card.style.borderColor = "#44403c";
+        card.style.background = "#1c1917";
+        if (radio) radio.checked = false;
+      }
     });
   };
 
   window.submitOnboardingQuiz = function () {
-    const feedback = document.getElementById("onboardingQuizFeedback");
+    const feedback = document.getElementById("onboardingQuizFeedback") || document.getElementById("quizFeedbackBox");
+
     if (onboardingSelectedOptionIndex === null) {
-      if (feedback) {
-        feedback.className = "quiz-feedback-box error";
-        feedback.textContent = "Please select an option before submitting.";
-        feedback.style.display = "block";
-      }
+      alert("Please select one of the options from your bottle label.");
       return;
     }
 
@@ -2517,13 +2617,15 @@
     if (isCorrect) {
       if (feedback) {
         feedback.className = "quiz-feedback-box success";
-        feedback.innerHTML = "✅ <strong>Bottle Scan Verified!</strong> 10% Loyalty discount unlocked.";
+        feedback.innerHTML = "✅ <strong>Label Verified!</strong> 10% Loyalty discount unlocked for 30 days.";
         feedback.style.display = "block";
       }
-      activeBottleCode = "VERIFIED_ONBOARDING_BOTTLE";
+
+      activeBottleCode = `VERIFIED_${selectedQuizBottleKey.toUpperCase()}_BOTTLE`;
       bottleScanTimestampMs = Date.now();
       localStorage.setItem("manopavana_bottle_code", activeBottleCode);
       localStorage.setItem("manopavana_bottle_scan_time", bottleScanTimestampMs.toString());
+
       renderCart();
       startLiveCountdown();
       renderComboSection();
@@ -2534,18 +2636,18 @@
       if (onboardingQuizAttemptsLeft > 0) {
         if (feedback) {
           feedback.className = "quiz-feedback-box error";
-          feedback.textContent = `❌ Incorrect answer. You have ${onboardingQuizAttemptsLeft} chance left.`;
+          feedback.textContent = `❌ That doesn't match the bottle label. You have ${onboardingQuizAttemptsLeft} chance left.`;
           feedback.style.display = "block";
         }
-        const badge = document.getElementById("onboardingAttemptsBadge");
-        if (badge) badge.textContent = `⚠️ ${onboardingQuizAttemptsLeft} chance left`;
+        const badge = document.getElementById("onboardingAttemptsBadge") || document.querySelector(".quiz-chance-badge, .attempts-badge");
+        if (badge) badge.textContent = `⚠️ ${onboardingQuizAttemptsLeft} chance left to claim 10% OFF`;
       } else {
         if (feedback) {
           feedback.className = "quiz-feedback-box error";
-          feedback.textContent = "❌ Attempts exhausted. Proceeding to delivery pincode check.";
+          feedback.textContent = "❌ Attempts exhausted. Proceeding to delivery check...";
           feedback.style.display = "block";
         }
-        setTimeout(window.transitionOnboardingToStep2, 1500);
+        setTimeout(window.transitionOnboardingToStep2, 1400);
       }
     }
   };
@@ -2557,20 +2659,31 @@
   window.transitionOnboardingToStep2 = function () {
     const step1El = document.getElementById("onboardingStep1Container");
     const step2El = document.getElementById("onboardingStep2Container");
-    if (step1El) step1El.style.display = "none";
-    if (step2El) step2El.style.display = "block";
+
+    if (step1El && step2El) {
+      step1El.style.display = "none";
+      step2El.style.display = "block";
+    } else {
+      // If Step 2 markup is in the location modal, switch smoothly
+      window.closeOnboardingModal();
+      window.openLocationCheckModal();
+    }
   };
 
   window.submitOnboardingPincodeCheck = function () {
-    const pinInput = document.getElementById("onboardingPincodeInput");
-    const resultBox = document.getElementById("onboardingPincodeResult");
-    if (!pinInput || !resultBox) return;
+    const pinInput = document.getElementById("onboardingPincodeInput") || document.getElementById("pincodeCheckInput");
+    const resultBox = document.getElementById("onboardingPincodeResult") || document.getElementById("pincodeCheckResultBox");
+    if (!pinInput) return;
 
     const enteredPin = pinInput.value.trim();
     if (!/^\d{6}$/.test(enteredPin)) {
-      resultBox.className = "pincode-result-box warning";
-      resultBox.innerHTML = "<strong>Invalid Pincode</strong>Please enter a valid 6-digit Indian pincode.";
-      resultBox.style.display = "block";
+      if (resultBox) {
+        resultBox.className = "pincode-result-box warning";
+        resultBox.innerHTML = "<strong>Invalid Pincode</strong>Please enter a valid 6-digit Indian pincode.";
+        resultBox.style.display = "block";
+      } else {
+        alert("Please enter a valid 6-digit Indian pincode.");
+      }
       return;
     }
 
@@ -2580,23 +2693,25 @@
     updateLocationUI();
 
     if (isBangalorePincode) {
-      resultBox.className = "pincode-result-box success";
-      resultBox.innerHTML = `<strong>✅ Delivering to Bangalore (${enteredPin})</strong>Direct doorstep delivery enabled!`;
-      resultBox.style.display = "block";
+      if (resultBox) {
+        resultBox.className = "pincode-result-box success";
+        resultBox.innerHTML = `<strong>✅ Delivering to Bangalore (${enteredPin})</strong>Direct doorstep delivery enabled!`;
+        resultBox.style.display = "block";
+      }
       setTimeout(() => {
-        localStorage.setItem("manopavana_onboarding_completed", "true");
-        const modal = document.getElementById("onboardingModalBackdrop");
-        if (modal) modal.classList.remove("open");
-      }, 1200);
+        window.closeOnboardingModal();
+      }, 1100);
     } else {
-      resultBox.className = "pincode-result-box warning";
-      resultBox.innerHTML = `<strong>📍 Outside Bangalore (${enteredPin})</strong>Direct doorstep delivery is exclusive to Bangalore (560xxx). Orders for your location are fulfilled securely via our <strong>Official Flipkart Store</strong>.<br><br>
-      <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" class="btn-continue-flipkart" style="display:inline-flex; width:auto; padding:0.6rem 1.2rem; margin-top:0.5rem;">
-        🛒 Shop on Flipkart &rarr;
-      </a>`;
-      resultBox.style.display = "block";
+      if (resultBox) {
+        resultBox.className = "pincode-result-box warning";
+        resultBox.innerHTML = `<strong>📍 Outside Bangalore (${enteredPin})</strong>Direct doorstep delivery is exclusive to Bangalore (560xxx). Orders for your location are fulfilled securely via our <strong>Official Flipkart Store</strong>.<br><br>
+        <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" class="btn-continue-flipkart" style="display:inline-flex; width:auto; padding:0.6rem 1.2rem; margin-top:0.5rem; background:#2874f0; color:#fff; border-radius:6px; text-decoration:none; font-weight:600;">
+          🛒 Shop on Flipkart &rarr;
+        </a>`;
+        resultBox.style.display = "block";
+      }
       setTimeout(() => {
-        localStorage.setItem("manopavana_onboarding_completed", "true");
+        window.closeOnboardingModal();
         window.openFlipkartModal();
       }, 1500);
     }
