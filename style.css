@@ -4034,3 +4034,53 @@ html, body {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
+
+/* =========================================================
+   MOBILE PERFORMANCE & FLICKER PREVENTION OVERRIDES
+   ========================================================= */
+
+@media (max-width: 768px) {
+  /* 1. Eliminate heavy Gaussian blur & vortex thrashing on mobile GPU */
+  .golden-vortex-aura {
+    display: none !important; /* Disables heavy blur recalculation */
+    animation: none !important;
+  }
+
+  /* 2. Prevent backdrop-filter layering collisions with video */
+  .site-header,
+  .floating-sound-pill,
+  .modal-backdrop,
+  .cart-drawer,
+  .action-toast {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .site-header {
+    background: #0c0a09 !important;
+  }
+
+  .floating-sound-pill {
+    background: #171412 !important;
+  }
+
+  /* 3. Promote elements to composite layers to stop flickering */
+  .hero-clean-video,
+  .bottle-showcase-video,
+  .product-card,
+  .action-toast,
+  .modal-card {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: auto;
+  }
+
+  /* 4. Stop overflow lockups on mobile bodies */
+  body.modal-open {
+    position: fixed;
+    width: 100%;
+    overflow: hidden;
+  }
+}
