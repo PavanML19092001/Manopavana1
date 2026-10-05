@@ -17,8 +17,11 @@
   const QR_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 Days
   const ADMIN_PIN = "1234";
 
+  // Default Bangalore Landmark Center (Vidhana Soudha / Peenya corridor)
+  const DEFAULT_BANGALORE_COORDS = [12.9716, 77.5946];
+
   // Google Apps Script Web App Deployment URL
-  const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbxPePx4ZObkga_S8ZHL5br35_BG4Cf8smpc5xmsNuP9LYEmvGtCfyWZon7BXskVq5YQ/exec";
+  const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwC-clS4UPY6I7NklbonBBLF_z2rPMzPlF0KwEPFqg37uQByZaI6Vk5vsoQxEfhmyp-/exec";
 
   // Active Firebase Configuration
   const firebaseConfig = {
@@ -53,6 +56,10 @@
   let checkoutSource = "cart";
   let buyNowItem = null;
   let toastTimeoutTimer = null;
+
+  // Leaflet Map & Marker Instances
+  let leafletMap = null;
+  let mapMarker = null;
 
   let userSelectedPincode = localStorage.getItem("manopavana_user_pincode") || "560058";
   let isBangalorePincode = userSelectedPincode.startsWith("560");
@@ -691,7 +698,6 @@
       if (res.status === "FOUND" && res.orders && res.orders.length > 0) {
         combinedOrders = res.orders;
       } else {
-        // Fallback to locally cached snapshot orders placed from this browser
         combinedOrders = localOrdersHistory.filter(o => o.firebaseUid === currentUser.uid || (currentUser.email && o.email === currentUser.email));
       }
 
@@ -807,7 +813,6 @@
         resultBox.innerHTML = renderOrdersTimelineList(res.orders);
         resultBox.style.display = "block";
       } else {
-        // Check local storage fallback for guest checkout
         const localMatches = localOrdersHistory.filter(o => (orderRef && o.orderRef === orderRef) || (phone && o.phone === phone));
         if (localMatches.length > 0) {
           resultBox.innerHTML = renderOrdersTimelineList(localMatches);
@@ -941,7 +946,6 @@
         btn?.classList.add("playing");
         removeInteractionListeners();
       }).catch(() => {
-        // Autoplay policy prevented immediate playback; wait for interaction
         isAudioPlaying = false;
         if (icon) icon.textContent = "🔇";
         if (text) text.textContent = "Tap for Sound";
@@ -1012,7 +1016,219 @@
   }
 
   // ==========================================
-  // 10. CART OPERATIONS ("SILENT ADD TO BAG")
+  // 10. LEAFLET INTERACTIVE MAP & PIN DROP
+  // ==========================================
+  function initOrUpdateDeliveryMap(lat = DEFAULT_BANGALORE_COORDS[0], lng = DEFAULT_BANGALORE_COORDS[1]) {
+    const mapElement = document.getElementById("deliveryMap");
+    if (!mapElement || typeof L === "undefined") return;
+
+    const coordsBadge = document.getElementById("mapCoordsBadge");
+    const latInput = document.getElementById("custLatitude");
+    const lngInput = document.getElementById("custLongitude");
+
+    if (!leafletMap) {
+      leafletMap = L.map("deliveryMap", {
+        center: [lat, lng],
+        zoom: 14,
+        zoomControl: true,
+        scrollWheelZoom: false
+      });
+
+      // Free, open OpenStreetMap Tiles
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19
+      }).addTo(leafletMap);
+
+      // Create Draggable Pin Marker
+      mapMarker = L.marker([lat, lng], { draggable: true }).addTo(leafletMap);
+
+      mapMarker.on("dragend", function (e) {
+        const position = e.target.getLatLng();
+        setMapCoordinates(position.lat, position.lng);
+      });
+
+      leafletMap.on("click", function (e) {
+        mapMarker.setLatLng(e.latlng);
+        setMapCoordinates(e.latlng.lat, e.latlng.lng);
+      });
+    } else {
+      leafletMap.setView([lat, lng], 14);
+      if (mapMarker) mapMarker.setLatLng([lat, lng]);
+    }
+
+    setMapCoordinates(lat, lng);
+
+    // Give Leaflet time to size properly inside the opened modal
+    setTimeout(() => {
+      if (leafletMap) leafletMap.invalidateSize();
+    }, 250);
+  }
+
+  function setMapCoordinates(lat, lng) {
+    const latInput = document.getElementById("custLatitude");
+    const lngInput = document.getElementById("custLongitude");
+    const coordsBadge = document.getElementById("mapCoordsBadge");
+
+    const roundLat = parseFloat(lat).toFixed(5);
+    const roundLng = parseFloat(lng).toFixed(5);
+
+    if (latInput) latInput.value = roundLat;
+    if (lngInput) lngInput.value = roundLng;
+    if (coordsBadge) coordsBadge.textContent = `GPS: ${roundLat}, ${roundLng}`;
+  }
+
+  // HTML5 Native Geolocation (100% Free - No Google API Key required)
+  window.detectUserGeolocation = function () {
+    const btn = document.querySelector(".btn-gps-locate");
+    const origText = btn ? btn.innerHTML : "";
+
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your current browser.");
+      return;
+    }
+
+    if (btn) btn.innerHTML = "⏳ Locating...";
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        initOrUpdateDeliveryMap(lat, lng);
+        reverseGeocodeOpenStreetMap(lat, lng);
+
+        if (btn) btn.innerHTML = "✅ Located!";
+        setTimeout(() => { if (btn) btn.innerHTML = origText; }, 2000);
+      },
+      (err) => {
+        console.warn("Geolocation prompt was dismissed or failed:", err);
+        alert("Could not retrieve exact location. Please drag the marker pin manually to your gate or building.");
+        if (btn) btn.innerHTML = origText;
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
+  };
+
+  // Reverse geocoding to auto-fill pincode and address area
+  function reverseGeocodeOpenStreetMap(lat, lng) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data || !data.address) return;
+        const addr = data.address;
+
+        const pin = addr.postcode || "";
+        const city = addr.city || addr.town || addr.suburb || addr.neighbourhood || "Bengaluru";
+
+        const custCity = document.getElementById("custCity");
+        const custPin = document.getElementById("custPincode");
+        const custAddress = document.getElementById("custAddress");
+
+        if (custCity && !custCity.value) custCity.value = city;
+        if (custPin && pin && /^\d{6}$/.test(pin)) {
+          custPin.value = pin;
+          userSelectedPincode = pin;
+          isBangalorePincode = pin.startsWith("560");
+          updateLocationUI();
+        }
+
+        if (custAddress && !custAddress.value && data.display_name) {
+          custAddress.value = data.display_name.split(",").slice(0, 3).join(",").trim();
+        }
+      })
+      .catch((e) => console.log("Reverse geocode notice:", e));
+  }
+
+  // ==========================================
+  // 11. SAVED ADDRESS ENGINE (NO RE-PROMPTING)
+  // ==========================================
+  function loadSavedDeliveryDetails() {
+    let saved = null;
+    try {
+      saved = JSON.parse(localStorage.getItem("manopavana_saved_delivery"));
+    } catch (e) {
+      saved = null;
+    }
+
+    const summaryCard = document.getElementById("savedAddressSummaryCard");
+    const fieldsContainer = document.getElementById("deliveryFieldsContainer");
+
+    if (saved && saved.name && saved.phone && saved.address) {
+      // Pre-fill existing inputs
+      const custName = document.getElementById("custName");
+      const custPhone = document.getElementById("custPhone");
+      const custAddress = document.getElementById("custAddress");
+      const custState = document.getElementById("custState");
+      const custDistrict = document.getElementById("custDistrict");
+      const custCity = document.getElementById("custCity");
+      const custPincode = document.getElementById("custPincode");
+
+      if (custName) custName.value = saved.name;
+      if (custPhone) custPhone.value = saved.phone;
+      if (custAddress) custAddress.value = saved.address;
+      if (custCity) custCity.value = saved.city || "Bengaluru";
+      if (custPincode) custPincode.value = saved.pincode || "560058";
+
+      if (custState && saved.state) {
+        custState.value = saved.state;
+        populateDistrictsForState(saved.state);
+      }
+      if (custDistrict && saved.district) {
+        custDistrict.value = saved.district;
+      }
+
+      // Populate preview card
+      const addrName = document.getElementById("savedAddrName");
+      const addrText = document.getElementById("savedAddrText");
+      const addrPhone = document.getElementById("savedAddrPhone");
+      const gpsNotice = document.getElementById("savedAddrGpsNotice");
+
+      if (addrName) addrName.textContent = saved.name;
+      if (addrText) addrText.textContent = `${saved.address}, ${saved.city || "Bengaluru"} - ${saved.pincode || "560058"}`;
+      if (addrPhone) addrPhone.textContent = `📞 ${saved.phone}`;
+
+      const savedLat = parseFloat(saved.latitude) || DEFAULT_BANGALORE_COORDS[0];
+      const savedLng = parseFloat(saved.longitude) || DEFAULT_BANGALORE_COORDS[1];
+
+      if (gpsNotice) {
+        gpsNotice.style.display = (saved.latitude && saved.longitude) ? "inline-block" : "none";
+      }
+
+      // Display the 1-click summary card and collapse form fields
+      if (summaryCard) summaryCard.style.display = "block";
+      if (fieldsContainer) fieldsContainer.style.display = "none";
+
+      initOrUpdateDeliveryMap(savedLat, savedLng);
+    } else {
+      // No saved details: show full input form
+      if (summaryCard) summaryCard.style.display = "none";
+      if (fieldsContainer) fieldsContainer.style.display = "block";
+
+      const currentLat = parseFloat(document.getElementById("custLatitude")?.value) || DEFAULT_BANGALORE_COORDS[0];
+      const currentLng = parseFloat(document.getElementById("custLongitude")?.value) || DEFAULT_BANGALORE_COORDS[1];
+      initOrUpdateDeliveryMap(currentLat, currentLng);
+    }
+  }
+
+  window.toggleEditAddress = function (showForm = true) {
+    const summaryCard = document.getElementById("savedAddressSummaryCard");
+    const fieldsContainer = document.getElementById("deliveryFieldsContainer");
+
+    if (showForm) {
+      if (summaryCard) summaryCard.style.display = "none";
+      if (fieldsContainer) fieldsContainer.style.display = "block";
+      setTimeout(() => {
+        if (leafletMap) leafletMap.invalidateSize();
+      }, 200);
+    } else {
+      if (summaryCard) summaryCard.style.display = "block";
+      if (fieldsContainer) fieldsContainer.style.display = "none";
+    }
+  };
+
+  // ==========================================
+  // 12. CART OPERATIONS ("SILENT ADD TO BAG")
   // ==========================================
   function isLoyaltyDiscountValid() {
     if (!bottleScanTimestampMs) return false;
@@ -1187,7 +1403,7 @@
   }
 
   // ==========================================
-  // 11. PRODUCT GRID & COMBOS
+  // 13. PRODUCT GRID & COMBOS
   // ==========================================
   function renderStepperButtonHTML(id, title, price, img, quantity) {
     if (!isBangalorePincode) {
@@ -1320,7 +1536,7 @@
   };
 
   // ==========================================
-  // 12. PRODUCT DETAIL MODAL CONTROLLER
+  // 14. PRODUCT DETAIL MODAL CONTROLLER
   // ==========================================
   window.openProductDetailModal = function (productKey) {
     const product = PRODUCT_CATALOG[productKey];
@@ -1425,7 +1641,7 @@
   }
 
   // ==========================================
-  // 13. CHECKOUT & SUBMISSION
+  // 15. CHECKOUT & SUBMISSION (SAVED ADDRESS & MAPS)
   // ==========================================
   window.handleDirectBuyNow = function (id, title, price, img) {
     if (!isBangalorePincode) {
@@ -1463,6 +1679,7 @@
 
     updateCheckoutFinancials();
     updatePaymentModeUI();
+    loadSavedDeliveryDetails();
 
     const modal = document.getElementById("checkoutModalBackdrop");
     if (modal) modal.classList.add("open");
@@ -1555,6 +1772,9 @@
     const district = document.getElementById("custDistrict")?.value.trim();
     const city = document.getElementById("custCity")?.value.trim();
     const pincode = document.getElementById("custPincode")?.value.trim();
+    const latitude = document.getElementById("custLatitude")?.value || DEFAULT_BANGALORE_COORDS[0];
+    const longitude = document.getElementById("custLongitude")?.value || DEFAULT_BANGALORE_COORDS[1];
+    const chkSave = document.getElementById("chkSaveAddress")?.checked;
     const errBox = document.getElementById("formError");
 
     if (!name || phone.length < 10 || !address || !state || !district || !city || pincode.length !== 6) {
@@ -1571,6 +1791,22 @@
     }
 
     if (errBox) errBox.style.display = "none";
+
+    // Persist delivery details if save checkbox is checked
+    if (chkSave) {
+      const deliveryPayload = {
+        name,
+        phone,
+        address,
+        state,
+        district,
+        city,
+        pincode,
+        latitude,
+        longitude
+      };
+      localStorage.setItem("manopavana_saved_delivery", JSON.stringify(deliveryPayload));
+    }
 
     const itemsToCheckout = checkoutSource === "buynow" && buyNowItem ? [buyNowItem] : cart;
     const itemsSummary = itemsToCheckout.map((i) => `${i.title} (x${i.quantity})`).join(", ");
@@ -1599,7 +1835,9 @@
       grandTotal: currentCalculatedGrandTotal.toString(),
       paymentMode: paymentMode,
       orderStatus: "Placed",
-      trackingNotes: "Packed hygienically at our Bangalore packaging and distribution facility."
+      trackingNotes: "Packed hygienically at our Bangalore packaging and distribution facility.",
+      latitude: latitude,
+      longitude: longitude
     };
     localOrdersHistory.unshift(orderSnapshot);
     localStorage.setItem("manopavana_local_orders", JSON.stringify(localOrdersHistory));
@@ -1619,7 +1857,9 @@
           district: district,
           pincode: pincode,
           items: itemsSummary,
-          bottleCode: activeBottleCode || ""
+          bottleCode: activeBottleCode || "",
+          latitude: latitude,
+          longitude: longitude
         });
 
         if (response && response.redirectUrl) {
@@ -1643,7 +1883,9 @@
           pincode: pincode,
           items: itemsSummary,
           paymentMode: paymentMode,
-          bottleCode: activeBottleCode || ""
+          bottleCode: activeBottleCode || "",
+          latitude: latitude,
+          longitude: longitude
         });
 
         if (checkoutSource === "cart") {
@@ -1664,6 +1906,7 @@
           let msg = `🌿 *New Order - MANOPAVANA Wood-Pressed Oils*\n`;
           msg += `*Ref:* #${currentOrderRef}\n*UID:* ${uid}\n`;
           msg += `*Name:* ${name}\n*Phone:* ${phone}\n*Address:* ${address}, ${city} - ${pincode}\n`;
+          msg += `*Location:* https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}\n`;
           msg += `*Items:* ${itemsSummary}\n*Total:* ₹${currentCalculatedGrandTotal}\n*Payment:* WhatsApp Manual`;
           window.open(`https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
         }
@@ -1721,7 +1964,7 @@
   };
 
   // ==========================================
-  // 14. BOTTLE LABEL QUIZ
+  // 16. BOTTLE LABEL QUIZ
   // ==========================================
   const BOTTLE_QUIZ_POOLS = {
     groundnut: [
@@ -1806,7 +2049,7 @@
         const seconds = totalSeconds % 60;
 
         const formatted = `${days}d ${String(hours).padStart(2, "0")}h ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
-        announcementText.innerHTML = `🏷️ <strong>Bottle Scan Verified:</strong> 10% Loyalty Discount Active! <span class="countdown-pill">⏱ ${formatted}</span>`;
+        announcementText.innerHTML = `🏷️️ <strong>Bottle Scan Verified:</strong> 10% Loyalty Discount Active! <span class="countdown-pill">⏱ ${formatted}</span>`;
         topBar.classList.add("loyal-banner");
       } else {
         announcementText.innerHTML = `🚚 <strong>FREE Doorstep Delivery</strong> on all orders above ₹500 across Bangalore (Delivered in 48–72 hrs)`;
@@ -1918,7 +2161,7 @@
   };
 
   // ==========================================
-  // 15. CUSTOMER REVIEWS & ADMIN DELETION
+  // 17. CUSTOMER REVIEWS & ADMIN DELETION
   // ==========================================
   function renderReviews() {
     const grid = document.getElementById("reviewsDisplayGrid");
@@ -1975,7 +2218,7 @@
   };
 
   // ==========================================
-  // 16. LEGAL MODALS CONTROLLER
+  // 18. LEGAL MODALS CONTROLLER
   // ==========================================
   window.openLegalModal = function (modalId) {
     const modal = document.getElementById(modalId);
@@ -1988,7 +2231,7 @@
   };
 
   // ==========================================
-  // 17. INITIALIZATION & EVENT LISTENERS
+  // 19. INITIALIZATION & EVENT LISTENERS
   // ==========================================
   document.addEventListener("DOMContentLoaded", () => {
     // Sound & Video Engine
