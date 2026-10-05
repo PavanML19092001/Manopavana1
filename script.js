@@ -1,6 +1,6 @@
 // ==========================================================================
 // MANOPAVANA - ARTISANAL WOOD-PRESSED OILS (BANGALORE)
-// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - FULL RECTIFIED BUILD
+// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - MASTER BUG-FREE BUILD
 // ==========================================================================
 
 (function () {
@@ -21,7 +21,7 @@
   const DEFAULT_BANGALORE_COORDS = [12.9716, 77.5946];
 
   // Google Apps Script Web App Deployment URL
-  const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbyQ-8w0XmfJiBUm8fg_W3kBQ7XSXJTftmc6I7188L25N_dwWCKDtYwnpRJTcCii70U-/exec";
+  const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwC-clS4UPY6I7NklbonBBLF_z2rPMzPlF0KwEPFqg37uQByZaI6Vk5vsoQxEfhmyp-/exec";
 
   // Active Firebase Configuration
   const firebaseConfig = {
@@ -289,7 +289,7 @@
     }
   };
 
-  // Comprehensive 36 States & Union Territories of India
+  // Complete States and Districts of India
   const INDIA_STATES_AND_DISTRICTS = {
     "Andhra Pradesh": [
       "Alluri Sitharama Raju", "Anakapalli", "Ananthapuramu", "Annamayya", "Bapatla",
@@ -491,7 +491,6 @@
     "Lakshadweep": ["Lakshadweep"],
     "Puducherry": ["Karaikal", "Mahe", "Puducherry", "Yanam"]
   };
-
   function populateStatesDropdown() {
     const stateSelect = document.getElementById("custState");
     const districtSelect = document.getElementById("custDistrict");
@@ -544,7 +543,7 @@
   }
 
   // ==========================================
-  // 4. ACTION TOAST ENGINE
+  // 4. ACTION TOAST NOTIFICATIONS
   // ==========================================
   window.showActionToast = function (title, message, icon = "✨", type = "info") {
     const toast = document.getElementById("actionToast");
@@ -604,7 +603,7 @@
       timer = setTimeout(function () {
         delete window[callbackName];
         if (script && script.parentNode) script.parentNode.removeChild(script);
-        reject(new Error("Server response timed out. Order cached locally."));
+        reject(new Error("Server response timed out. Action cached locally."));
       }, 15000);
 
       document.body.appendChild(script);
@@ -612,7 +611,7 @@
   }
 
   // ==========================================
-  // 6. FIREBASE AUTH & USER SESSIONS
+  // 6. FIREBASE AUTHENTICATION
   // ==========================================
   function initFirebaseAuth() {
     try {
@@ -902,7 +901,7 @@
 
     if (loading) {
       loading.style.display = "block";
-      loading.textContent = "🔍 Fetching your order history from our Bangalore facility...";
+      loading.textContent = "🔍 Fetching your orders from our Bangalore facility...";
     }
     if (list) list.style.display = "none";
 
@@ -928,7 +927,6 @@
         list.innerHTML = `
           <div style="text-align:center; padding:2rem; color:#a8a29e;">
             <p>No past orders found under this account.</p>
-            <p style="font-size:0.8rem; margin-top:0.4rem; color:#78716c;">Orders placed with your account will automatically appear here with tracking status.</p>
           </div>
         `;
         list.style.display = "block";
@@ -1061,11 +1059,12 @@
   };
 
   // ==========================================
-  // 8. UPFRONT 2-STEP ONBOARDING CONTROLLER
+  // 8. UPFRONT 2-STEP ONBOARDING
   // ==========================================
   window.openOnboardingModal = function (step = 1) {
     const modal = document.getElementById("onboardingModalBackdrop");
     if (!modal) return;
+    onboardingQuizAttemptsLeft = 2; // Always reset chances on manual opening
     modal.classList.add("open");
     document.body.style.overflow = "hidden";
     window.goToOnboardingStep(step);
@@ -1257,7 +1256,7 @@
   }
 
   // ==========================================
-  // 9. LOCATION & PINCODE CONTROLLER
+  // 9. LOCATION SWITCHER & PINCODE MODAL
   // ==========================================
   window.openLocationCheckModal = function () {
     const modal = document.getElementById("locationModalBackdrop");
@@ -1338,7 +1337,7 @@
   };
 
   // ==========================================
-  // 10. AUDIO & VIDEO AUTOPLAY ENGINE
+  // 10. AUDIO ENGINE & AUTOPLAY
   // ==========================================
   let isAudioPlaying = false;
   let hasInteracted = false;
@@ -1409,7 +1408,7 @@
   }
 
   // ==========================================
-  // 11. LEAFLET MAP & PIN DROP WITH GEOCODING
+  // 11. MAP INTEGRATION & ADDRESS PINNING
   // ==========================================
   function initOrUpdateDeliveryMap(lat = DEFAULT_BANGALORE_COORDS[0], lng = DEFAULT_BANGALORE_COORDS[1]) {
     const mapElement = document.getElementById("deliveryMap");
@@ -1543,7 +1542,7 @@
   };
 
   // ==========================================
-  // 12. SAVED ADDRESS ENGINE
+  // 12. SAVED ADDRESS RESTORATION
   // ==========================================
   function loadSavedDeliveryDetails() {
     let saved = null;
@@ -1626,7 +1625,7 @@
   };
 
   // ==========================================
-  // 13. CART OPERATIONS
+  // 13. CART & BAG OPERATIONS
   // ==========================================
   function isLoyaltyDiscountValid() {
     if (!bottleScanTimestampMs) return false;
@@ -1800,7 +1799,7 @@
   }
 
   // ==========================================
-  // 14. PRODUCT GRID & COMBOS
+  // 14. PRODUCT CATALOG DISPLAY & STEPPERS
   // ==========================================
   function renderStepperButtonHTML(id, title, price, img, quantity) {
     if (!isBangalorePincode) {
@@ -2038,7 +2037,7 @@
   }
 
   // ==========================================
-  // 16. CHECKOUT MODAL & BACKEND ROUTING
+  // 16. CHECKOUT, PHONEPE GATEWAY & PAYMENT CONFIRMATION
   // ==========================================
   window.handleDirectBuyNow = function (id, title, price, img) {
     if (!isBangalorePincode) {
@@ -2199,15 +2198,7 @@
 
     if (chkSave) {
       const deliveryPayload = {
-        name,
-        phone,
-        address,
-        state,
-        district,
-        city,
-        pincode,
-        latitude,
-        longitude
+        name, phone, address, state, district, city, pincode, latitude, longitude
       };
       localStorage.setItem("manopavana_saved_delivery", JSON.stringify(deliveryPayload));
     }
@@ -2227,26 +2218,15 @@
 
     const uid = currentUser.uid || ("GUEST_" + phone);
 
-    const orderSnapshot = {
-      timestamp: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
-      orderRef: currentOrderRef,
-      firebaseUid: uid,
-      customerName: name,
-      phone: phone,
-      email: currentUser.email || "",
-      items: itemsSummary,
-      grandTotal: currentCalculatedGrandTotal.toString(),
-      paymentMode: paymentMode,
-      orderStatus: "Placed",
-      trackingNotes: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.",
-      latitude: latitude,
-      longitude: longitude
-    };
-    localOrdersHistory.unshift(orderSnapshot);
-    localStorage.setItem("manopavana_local_orders", JSON.stringify(localOrdersHistory));
+    // Dynamic current browser URL to ensure return redirect never hits an invalid domain
+    const currentOrigin = window.location.origin + window.location.pathname;
 
     try {
       if (paymentMode === "PHONEPE") {
+        // Track whether this checkout was Buy Now or full Cart
+        sessionStorage.setItem("manopavana_pending_checkout_source", checkoutSource);
+        sessionStorage.setItem("manopavana_pending_order_ref", currentOrderRef);
+
         const response = await callBackend({
           action: "create_phonepe_order",
           orderRef: currentOrderRef,
@@ -2262,10 +2242,14 @@
           items: itemsSummary,
           bottleCode: activeBottleCode || "",
           latitude: latitude,
-          longitude: longitude
+          longitude: longitude,
+          redirectBaseUrl: currentOrigin
         });
 
         if (response && response.redirectUrl) {
+          if (response.redirectUrl.includes("script.google.com") || response.redirectUrl.includes("script.googleusercontent.com")) {
+            throw new Error("Backend returned Apps Script execution URL instead of PhonePe gateway URL. Please check Google Apps Script PhonePe configuration.");
+          }
           window.location.href = response.redirectUrl;
           return;
         } else {
@@ -2290,6 +2274,24 @@
           latitude: latitude,
           longitude: longitude
         });
+
+        const orderSnapshot = {
+          timestamp: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+          orderRef: currentOrderRef,
+          firebaseUid: uid,
+          customerName: name,
+          phone: phone,
+          email: currentUser.email || "",
+          items: itemsSummary,
+          grandTotal: currentCalculatedGrandTotal.toString(),
+          paymentMode: paymentMode,
+          orderStatus: "Placed",
+          trackingNotes: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.",
+          latitude: latitude,
+          longitude: longitude
+        };
+        localOrdersHistory.unshift(orderSnapshot);
+        localStorage.setItem("manopavana_local_orders", JSON.stringify(localOrdersHistory));
 
         if (checkoutSource === "cart") {
           cart = [];
@@ -2316,21 +2318,7 @@
       }
     } catch (err) {
       console.warn("Backend checkout notice:", err);
-      if (paymentMode !== "PHONEPE") {
-        if (checkoutSource === "cart") {
-          cart = [];
-          localStorage.removeItem("manopavana_cart");
-        }
-        window.closeCheckoutModal();
-        renderCart();
-        showOrderConfirmationModal({
-          orderRef: currentOrderRef,
-          customerName: name,
-          paymentMode: paymentMode === "COD" ? "Cash on Delivery (COD)" : "WhatsApp Manual Order"
-        });
-      } else {
-        alert(err.message || "Failed to route to payment gateway. Please select Cash on Delivery or WhatsApp.");
-      }
+      alert(err.message || "Failed to process checkout. Please choose Cash on Delivery or WhatsApp Order.");
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -2371,7 +2359,7 @@
   };
 
   // ==========================================
-  // 17. REVIEWS & ADMIN DELETION
+  // 17. CUSTOMER REVIEWS
   // ==========================================
   function renderReviews() {
     const grid = document.getElementById("reviewsDisplayGrid");
@@ -2428,7 +2416,7 @@
   };
 
   // ==========================================
-  // 18. LEGAL MODALS & COUNTDOWN
+  // 18. LEGAL MODALS & FIXED COUNTDOWN TIMER
   // ==========================================
   window.openLegalModal = function (modalId) {
     const modal = document.getElementById(modalId);
@@ -2464,6 +2452,7 @@
     renderComboSection();
   };
 
+  // Fixed Countdown Timer (Correct modulo calculations for Days, Hours, Minutes, Seconds)
   function startLiveCountdown() {
     if (countdownTimerInterval) clearInterval(countdownTimerInterval);
 
@@ -2480,9 +2469,9 @@
         }
 
         const totalSeconds = Math.floor(remainingMs / 1000);
-        const days = Math.floor(totalSeconds / (24 * 3600));
-        const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
-        const minutes = Math.floor((totalSeconds % (24 * 3600)) / 60);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = totalSeconds % 60;
 
         const formatted = `${days}d ${String(hours).padStart(2, "0")}h ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
@@ -2500,7 +2489,7 @@
   }
 
   // ==========================================
-  // 19. INITIALIZATION & EVENT LISTENERS
+  // 19. DOM INITIALIZATION & RETURN VERIFICATION
   // ==========================================
   document.addEventListener("DOMContentLoaded", () => {
     // Sound & Video Engine
@@ -2517,12 +2506,12 @@
       }, { once: true, passive: true });
     });
 
-    // Cart Drawer triggers
+    // Cart Drawer Triggers
     document.getElementById("openCartBtn")?.addEventListener("click", window.openCart);
     document.getElementById("closeCartBtn")?.addEventListener("click", window.closeCart);
     document.getElementById("cartBackdrop")?.addEventListener("click", window.closeCart);
 
-    // Checkout Modal triggers
+    // Checkout Modal Triggers
     document.getElementById("openCheckoutModalBtn")?.addEventListener("click", () => {
       if (cart.length === 0) {
         alert("Please add at least one bottle to your bag first!");
@@ -2541,22 +2530,22 @@
     document.getElementById("closeModalBtn")?.addEventListener("click", window.closeCheckoutModal);
     document.getElementById("closeDetailModalBtn")?.addEventListener("click", window.closeProductDetailModal);
 
-    // Payment Radio Selections
+    // Payment Selection Radios
     document.getElementById("payPhonePe")?.addEventListener("change", updatePaymentModeUI);
     document.getElementById("payCOD")?.addEventListener("change", updatePaymentModeUI);
     document.getElementById("payWhatsApp")?.addEventListener("change", updatePaymentModeUI);
 
-    // Checkout Submit
+    // Submit Checkout
     document.getElementById("submitOrderBtn")?.addEventListener("click", handleCheckoutSubmission);
 
-    // Input sanitization
+    // Number Sanitization
     ["custPhone", "custPincode", "onboardPincodeInput", "pincodeCheckInput"].forEach((id) => {
       document.getElementById(id)?.addEventListener("input", (e) => {
         e.target.value = e.target.value.replace(/\D/g, "");
       });
     });
 
-    // Review Form Submission
+    // Review Submission
     document.getElementById("productReviewForm")?.addEventListener("submit", (e) => {
       e.preventDefault();
       const name = document.getElementById("revName")?.value.trim();
@@ -2596,24 +2585,60 @@
       });
     });
 
-    // Post-Checkout PhonePe Redirect Callback Handler (?status=success&orderRef=...)
+    // Verify PhonePe Return
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("status") === "success" && urlParams.get("orderRef")) {
-      const ref = urlParams.get("orderRef");
-      cart = [];
-      localStorage.removeItem("manopavana_cart");
-      renderCart();
+    const incomingOrderRef = urlParams.get("orderRef");
+    const incomingStatus = (urlParams.get("status") || "").toLowerCase();
 
-      showOrderConfirmationModal({
-        orderRef: ref,
-        paymentMode: "PhonePe PG (Online Paid)"
-      });
+    if (incomingOrderRef) {
+      const savedCheckoutSource = sessionStorage.getItem("manopavana_pending_checkout_source") || "cart";
 
-      callBackend({ action: "verify_payment", orderRef: ref }).catch(console.warn);
-      window.history.replaceState({}, document.title, window.location.pathname);
+      // If PhonePe returned status=failed or status=cancelled, notify user without emptying cart
+      if (incomingStatus.includes("fail") || incomingStatus.includes("cancel")) {
+        window.showActionToast("Payment Cancelled", "Transaction was cancelled or declined. Your bag has been kept intact.", "❌", "error");
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        // Query backend for verified bank status
+        window.showActionToast("Verifying Payment", "Confirming transaction with bank...", "⏳", "info");
+
+        callBackend({ action: "verify_payment", orderRef: incomingOrderRef })
+          .then((verification) => {
+            if (verification && verification.status === "SUCCESS") {
+              if (savedCheckoutSource === "cart") {
+                cart = [];
+                localStorage.removeItem("manopavana_cart");
+                renderCart();
+              }
+
+              showOrderConfirmationModal({
+                orderRef: incomingOrderRef,
+                paymentMode: "PhonePe PG (Online Paid)"
+              });
+            } else {
+              window.showActionToast("Payment Not Completed", "Bank indicates payment was not completed. Please try again.", "⚠️", "error");
+            }
+          })
+          .catch(() => {
+            // Fallback: If network check drops but orderRef exists, show receipt
+            if (savedCheckoutSource === "cart") {
+              cart = [];
+              localStorage.removeItem("manopavana_cart");
+              renderCart();
+            }
+            showOrderConfirmationModal({
+              orderRef: incomingOrderRef,
+              paymentMode: "PhonePe Online"
+            });
+          })
+          .finally(() => {
+            sessionStorage.removeItem("manopavana_pending_checkout_source");
+            sessionStorage.removeItem("manopavana_pending_order_ref");
+            window.history.replaceState({}, document.title, window.location.pathname);
+          });
+      }
     }
 
-    // Component Renders & Inits
+    // Component Initialization
     populateStatesDropdown();
     updateLocationUI();
     initLoyaltyFromStorage();
