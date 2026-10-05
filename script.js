@@ -1,6 +1,6 @@
 // ==========================================================================
 // MANOPAVANA - ARTISANAL WOOD-PRESSED OILS (BANGALORE)
-// COMPLETE PRODUCTION CLIENT SCRIPT (script.js)
+// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - FIXED
 // ==========================================================================
 
 (function () {
@@ -49,7 +49,6 @@
   }
 
   let currentAuthMode = "login"; // "login" | "register" | "reset"
-
   let countdownTimerInterval = null;
   let currentCalculatedGrandTotal = 0;
   let currentOrderRef = "";
@@ -76,7 +75,6 @@
     cart = [];
   }
 
-  // Local mirror of orders to guarantee instant display even with network delays
   let localOrdersHistory = [];
   try {
     localOrdersHistory = JSON.parse(localStorage.getItem("manopavana_local_orders")) || [];
@@ -95,34 +93,35 @@
   let currentDetailProductKey = null;
   let currentDetailSelectedSize = "1L";
 
-  // Upfront Onboarding State (Step 1 Quiz)
+  // Upfront Onboarding State
   let onboardingQuizAttemptsLeft = 2;
-  const ONBOARDING_QUIZ_POOL = [
-    {
-      hint: "Quality & Packaging Authenticity Question:",
-      question: "Which statement accurately describes MANOPAVANA's sourcing and packaging standard?",
-      options: [
-        { text: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.", correct: true },
-        { text: "Crushed with industrial chemical solvents at high temperature.", correct: false },
-        { text: "Refined, bleached, and deodorized using heavy machinery.", correct: false },
-        { text: "Imported from foreign synthetic bulk suppliers.", correct: false },
-        { text: "Blended with artificial petroleum mineral oils.", correct: false }
-      ]
-    },
-    {
-      hint: "Production Process Verification:",
-      question: "How are MANOPAVANA wood-pressed oils prepared before distribution?",
-      options: [
-        { text: "Cold pressed in traditional wooden chekkus, allowed natural sedimentation, and packed at our Bangalore packaging facility.", correct: true },
-        { text: "Heated over 200°C in thermal refining columns.", correct: false },
-        { text: "Preserved with added chemical antioxidants and dyes.", correct: false },
-        { text: "Blended with argemone oil for consistency.", correct: false },
-        { text: "Diluted with liquid paraffin.", correct: false }
-      ]
-    }
-  ];
-  let onboardingActiveQuestion = null;
-  let onboardingSelectedOptionIndex = null;
+  let selectedQuizBottleKey = "groundnut";
+  let activeQuizData = null;
+  let selectedQuizOptionText = null;
+
+  const BOTTLE_QUIZ_POOLS = {
+    groundnut: [
+      {
+        hint: "Look at the front label right below 'GROUNDNUT OIL':",
+        question: "What tagline is printed right below 'GROUNDNUT OIL' on the front label?",
+        correct: "Perfect for Everyday Indian Cooking"
+      }
+    ],
+    coconut: [
+      {
+        hint: "Look at the front label right below 'COCONUT OIL':",
+        question: "What tagline is printed right below 'COCONUT OIL' on the front label?",
+        correct: "Made for Authentic Flavours"
+      }
+    ],
+    sesame: [
+      {
+        hint: "Look at the front label right below 'SESAME OIL':",
+        question: "What tagline is printed right below 'SESAME OIL' on the front label?",
+        correct: "The Traditional Choice for Rich Flavour"
+      }
+    ]
+  };
 
   // ==========================================
   // 3. MASTER CATALOG & SPECIFICATIONS
@@ -289,73 +288,8 @@
     }
   };
 
-  // Comprehensive 36 States & Union Territories of India
+  // Indian States & Districts mapping
   const INDIA_STATES_AND_DISTRICTS = {
-    "Andhra Pradesh": [
-      "Alluri Sitharama Raju", "Anakapalli", "Ananthapuramu", "Annamayya", "Bapatla",
-      "Chittoor", "Dr. B.R. Ambedkar Konaseema", "East Godavari", "Eluru", "Guntur",
-      "Kakinada", "Krishna", "Kurnool", "Nandyal", "NTR", "Palnadu",
-      "Parvathipuram Manyam", "Prakasam", "Sri Potti Sriramulu Nellore", "Sri Sathya Sai",
-      "Srikakulam", "Tirupati", "Visakhapatnam", "Vizianagaram", "West Godavari", "YSR Kadapa"
-    ],
-    "Arunachal Pradesh": [
-      "Anjaw", "Bichom", "Changlang", "Dibang Valley", "East Kameng", "East Siang",
-      "Kamle", "Keyi Panyor", "Kra Daadi", "Kurung Kumey", "Lepa Rada", "Lohit",
-      "Longding", "Lower Dibang Valley", "Lower Siang", "Lower Subansiri", "Namsai",
-      "Pakke Kessang", "Papum Pare", "Shi Yomi", "Siang", "Tawang", "Tirap",
-      "Upper Siang", "Upper Subansiri", "West Kameng", "West Siang"
-    ],
-    "Assam": [
-      "Baksa", "Barpeta", "Biswanath", "Bongaigaon", "Cachar", "Charaideo",
-      "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao",
-      "Goalpara", "Golaghat", "Hailakandi", "Hojai", "Jorhat", "Kamrup",
-      "Kamrup Metropolitan", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur",
-      "Majuli", "Morigaon", "Nagaon", "Nalbari", "Sivasagar", "Sonitpur",
-      "South Salmara-Mankachar", "Tamulpur", "Tinsukia", "Udalguri", "West Karbi Anglong"
-    ],
-    "Bihar": [
-      "Araria", "Arwal", "Aurangabad", "Banka", "Begusarai", "Bhagalpur", "Bhojpur",
-      "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad",
-      "Kaimur", "Katihar", "Khagaria", "Kishanganj", "Lakhisarai", "Madhepura",
-      "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia",
-      "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi",
-      "Siwan", "Supaul", "Vaishali", "West Champaran"
-    ],
-    "Chhattisgarh": [
-      "Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur",
-      "Bilaspur", "Dantewada", "Dhamtari", "Durg", "Gariaband", "Gaurela-Pendra-Marwahi",
-      "Janjgir-Champa", "Jashpur", "Kabirdham", "Kanker", "Khairagarh-Chhuikhadan-Gandai",
-      "Kondagaon", "Korba", "Koriya", "Mahasamund", "Manendragarh-Chirmiri-Bharatpur",
-      "Mohla-Manpur-Ambagarh Chowki", "Mungeli", "Narayanpur", "Raigarh", "Raipur",
-      "Rajnandgaon", "Sakti", "Sarangarh-Bilaigarh", "Sukma", "Surajpur", "Surguja"
-    ],
-    "Goa": [
-      "North Goa", "South Goa"
-    ],
-    "Gujarat": [
-      "Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch",
-      "Bhavnagar", "Botad", "Chhota Udaipur", "Dahod", "Dang", "Devbhumi Dwarka",
-      "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch",
-      "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal",
-      "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar",
-      "Tapi", "Vadodara", "Valsad"
-    ],
-    "Haryana": [
-      "Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurugram",
-      "Hisar", "Jhajjar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Mahendragarh",
-      "Nuh", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa",
-      "Sonipat", "Yamunanagar"
-    ],
-    "Himachal Pradesh": [
-      "Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu",
-      "Lahaul and Spiti", "Mandi", "Shimla", "Sirmaur", "Solan", "Una"
-    ],
-    "Jharkhand": [
-      "Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum",
-      "Garhwa", "Giridih", "Godda", "Gumla", "Hazaribagh", "Jamtara",
-      "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu",
-      "Ramgarh", "Ranchi", "Sahebganj", "Seraikela Kharsawan", "Simdega", "West Singhbhum"
-    ],
     "Karnataka": [
       "Bagalkote", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar",
       "Chamarajanagara", "Chikkaballapura", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada",
@@ -363,194 +297,30 @@
       "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru",
       "Udupi", "Uttara Kannada", "Vijayanagara", "Vijayapura", "Yadgir"
     ],
-    "Kerala": [
-      "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam",
-      "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta",
-      "Thiruvananthapuram", "Thrissur", "Wayanad"
-    ],
-    "Madhya Pradesh": [
-      "Agar Malwa", "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani",
-      "Betul", "Bhind", "Bhopal", "Burhanpur", "Chhatarpur", "Chhindwara",
-      "Damoh", "Datia", "Dewas", "Dhar", "Dindori", "Guna", "Gwalior",
-      "Harda", "Indore", "Jabalpur", "Jhabua", "Katni", "Khandwa",
-      "Khargone", "Maihar", "Mandla", "Mandsaur", "Morena", "Narsinghpur",
-      "Neemuch", "Niwari", "Panna", "Pandhurna", "Raisen", "Rajgarh",
-      "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol",
-      "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
-      "Ujjain", "Umaria", "Vidisha"
-    ],
-    "Maharashtra": [
-      "Ahmednagar", "Akola", "Amravati", "Chhatrapati Sambhajinagar", "Beed", "Bhandara",
-      "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli",
-      "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban",
-      "Nagpur", "Nanded", "Nandurbar", "Nashik", "Dharashiv", "Palghar",
-      "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara",
-      "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal"
-    ],
-    "Manipur": [
-      "Bishnupur", "Chandel", "Churachandpur", "Imphal East", "Imphal West",
-      "Jiribam", "Kakching", "Kamjong", "Kangpokpi", "Noney", "Pherzawl",
-      "Senapati", "Tamenglong", "Tengnoupal", "Thoubal", "Ukhrul"
-    ],
-    "Meghalaya": [
-      "East Garo Hills", "East Jaintia Hills", "East Khasi Hills", "Eastern West Khasi Hills",
-      "North Garo Hills", "Ri Bhoi", "South Garo Hills", "South West Garo Hills",
-      "South West Khasi Hills", "West Garo Hills", "West Jaintia Hills", "West Khasi Hills"
-    ],
-    "Mizoram": [
-      "Aizawl", "Champhai", "Hnahthial", "Khawzawl", "Kolasib", "Lawngtlai",
-      "Lunglei", "Mamit", "Saitual", "Serchhip", "Siaha"
-    ],
-    "Nagaland": [
-      "Chümoukedima", "Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung",
-      "Mon", "Niuland", "Noklak", "Peren", "Phek", "Shamator", "Tseminyü",
-      "Tuensang", "Wokha", "Zünheboto"
-    ],
-    "Odisha": [
-      "Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Boudh",
-      "Cuttack", "Deogarh", "Dhenkanal", "Gajapati", "Ganjam", "Jagatsinghpur",
-      "Jajpur", "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar",
-      "Khordha", "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh",
-      "Nuapada", "Puri", "Rayagada", "Sambalpur", "Subarnapur", "Sundargarh"
-    ],
-    "Punjab": [
-      "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka",
-      "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Ludhiana",
-      "Malerkotla", "Mansa", "Moga", "Muktsar", "Pathankot", "Patiala",
-      "Rupnagar", "Sahibzada Ajit Singh Nagar", "Sangrur", "Shahid Bhagat Singh Nagar", "Tarn Taran"
-    ],
-    "Rajasthan": [
-      "Ajmer", "Alwar", "Anupgarh", "Balotra", "Banswara", "Baran", "Barmer",
-      "Beawar", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh",
-      "Churu", "Dausa", "Deeg", "Dholpur", "Didwana-Kuchaman", "Dudu", "Dungarpur",
-      "Gangapur City", "Hanumangarh", "Jaipur", "Jaipur Rural", "Jaisalmer",
-      "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", "Jodhpur Rural", "Karauli",
-      "Kekri", "Khairthal-Tijara", "Kota", "Kotputli-Behror", "Nagaur", "Neem Ka Thana",
-      "Pali", "Phalodi", "Pratapgarh", "Rajsamand", "Salumbar", "Sanchore",
-      "Sawai Madhopur", "Shahpura", "Sikar", "Sirohi", "Sri Ganganagar", "Tonk", "Udaipur"
-    ],
-    "Sikkim": [
-      "Gangtok", "Gyalshing", "Mangan", "Namchi", "Pakyong", "Soreng"
-    ],
     "Tamil Nadu": [
-      "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri",
-      "Dindigul", "Erode", "Kallakurichi", "Kanchipuram", "Kanyakumari", "Karur",
-      "Krishnagiri", "Madurai", "Mayiladuthurai", "Nagapattinam", "Namakkal", "Nilgiris",
-      "Perambalur", "Pudukkottai", "Ramanathapuram", "Ranipet", "Salem", "Sivaganga",
-      "Tenkasi", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli",
-      "Tirupathur", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore",
-      "Viluppuram", "Virudhunagar"
+      "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kanchipuram",
+      "Madurai", "Salem", "Tiruchirappalli", "Tirunelveli", "Vellore"
+    ],
+    "Kerala": [
+      "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam", "Kottayam",
+      "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad"
+    ],
+    "Andhra Pradesh": [
+      "Ananthapuramu", "Chittoor", "East Godavari", "Guntur", "Kakinada", "Krishna", "Kurnool",
+      "Nellore", "Tirupati", "Visakhapatnam", "West Godavari", "YSR Kadapa"
     ],
     "Telangana": [
-      "Adilabad", "Bhadradri Kothagudem", "Hanamkonda", "Hyderabad", "Jagtial",
-      "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar",
-      "Khammam", "Kumuram Bheem Asifabad", "Mahabubabad", "Mahabubnagar", "Mancherial",
-      "Medak", "Medchal-Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda",
-      "Narayanpet", "Nirmal", "Nizamabad", "Peddapalli", "Rajanna Sircilla",
-      "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad",
-      "Wanaparthy", "Warangal", "Yadadri Bhuvanagiri"
+      "Adilabad", "Bhadradri Kothagudem", "Hyderabad", "Karimnagar", "Khammam", "Mahabubnagar",
+      "Medak", "Nalgonda", "Nizamabad", "Rangareddy", "Warangal"
     ],
-    "Tripura": [
-      "Dhalai", "Gomati", "Khowai", "North Tripura", "Sepahijala",
-      "South Tripura", "Unakoti", "West Tripura"
-    ],
-    "Uttar Pradesh": [
-      "Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya",
-      "Ayodhya", "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur",
-      "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor",
-      "Budaun", "Bulandshahr", "Chandauli", "Chitrakoot", "Deoria", "Etah",
-      "Etawah", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar", "Ghaziabad",
-      "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi",
-      "Hathras", "Jalaun", "Jaunpur", "Jhansi", "Kannauj", "Kanpur Dehat",
-      "Kanpur Nagar", "Kasganj", "Kaushambi", "Kheri", "Kushinagar", "Lalitpur",
-      "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau",
-      "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit", "Pratapgarh",
-      "Prayagraj", "Raebareli", "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar",
-      "Shahjahanpur", "Shamli", "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra",
-      "Sultanpur", "Unnao", "Varanasi"
-    ],
-    "Uttarakhand": [
-      "Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar",
-      "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal",
-      "Udham Singh Nagar", "Uttarkashi"
-    ],
-    "West Bengal": [
-      "Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur",
-      "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong",
-      "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas",
-      "Paschim Bardhaman", "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur",
-      "Purulia", "South 24 Parganas", "Uttar Dinajpur"
-    ],
-    "Andaman and Nicobar Islands": [
-      "Nicobar", "North and Middle Andaman", "South Andaman"
-    ],
-    "Chandigarh": [
-      "Chandigarh"
-    ],
-    "Dadra and Nagar Haveli and Daman and Diu": [
-      "Dadra and Nagar Haveli", "Daman", "Diu"
+    "Maharashtra": [
+      "Ahmednagar", "Akola", "Chhatrapati Sambhajinagar", "Kolhapur", "Mumbai City", "Mumbai Suburban",
+      "Nagpur", "Nashik", "Pune", "Solapur", "Thane"
     ],
     "Delhi": [
-      "Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi",
-      "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi"
-    ],
-    "Jammu and Kashmir": [
-      "Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal",
-      "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch",
-      "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian",
-      "Srinagar", "Udhampur"
-    ],
-    "Ladakh": [
-      "Kargil", "Leh"
-    ],
-    "Lakshadweep": [
-      "Lakshadweep"
-    ],
-    "Puducherry": [
-      "Karaikal", "Mahe", "Puducherry", "Yanam"
+      "Central Delhi", "East Delhi", "New Delhi", "North Delhi", "South Delhi", "West Delhi"
     ]
   };
-
-  function populateStatesDropdown() {
-    const stateSelect = document.getElementById("custState");
-    const districtSelect = document.getElementById("custDistrict");
-    if (!stateSelect || !districtSelect) return;
-
-    stateSelect.innerHTML = `<option value="">-- Select State / UT --</option>`;
-    Object.keys(INDIA_STATES_AND_DISTRICTS).sort().forEach((stateName) => {
-      const opt = document.createElement("option");
-      opt.value = stateName;
-      opt.textContent = stateName;
-      stateSelect.appendChild(opt);
-    });
-
-    stateSelect.value = "Karnataka";
-    populateDistrictsForState("Karnataka");
-
-    stateSelect.onchange = function (e) {
-      populateDistrictsForState(e.target.value);
-    };
-  }
-
-  function populateDistrictsForState(stateName) {
-    const districtSelect = document.getElementById("custDistrict");
-    if (!districtSelect) return;
-
-    districtSelect.innerHTML = `<option value="">-- Select District --</option>`;
-    if (!stateName || !INDIA_STATES_AND_DISTRICTS[stateName]) return;
-
-    const districts = [...INDIA_STATES_AND_DISTRICTS[stateName]].sort();
-    districts.forEach((dist) => {
-      const opt = document.createElement("option");
-      opt.value = dist;
-      opt.textContent = dist;
-      districtSelect.appendChild(opt);
-    });
-
-    if (stateName === "Karnataka" && districts.includes("Bengaluru Urban")) {
-      districtSelect.value = "Bengaluru Urban";
-    }
-  }
 
   function escapeHtml(text) {
     if (!text) return "";
@@ -591,7 +361,7 @@
   };
 
   // ==========================================
-  // 5. ROBUST BACKEND JSONP CALLER
+  // 5. JSONP BACKEND CALLER
   // ==========================================
   function callBackend(params) {
     return new Promise((resolve, reject) => {
@@ -620,7 +390,6 @@
         reject(new Error("Unable to connect to Google Sheets backend. Verify deployment URL."));
       };
 
-      // 15-second safety timeout
       timer = setTimeout(function () {
         delete window[callbackName];
         if (script && script.parentNode) script.parentNode.removeChild(script);
@@ -632,7 +401,7 @@
   }
 
   // ==========================================
-  // 6. FIREBASE AUTH & SESSION MANAGEMENT
+  // 6. FIREBASE AUTH & USER SESSIONS
   // ==========================================
   function initFirebaseAuth() {
     try {
@@ -747,10 +516,6 @@
     }
   };
 
-  function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
-
   window.handleEmailAuthSubmit = async function (e) {
     if (e && e.preventDefault) e.preventDefault();
 
@@ -763,7 +528,7 @@
     if (errBox) errBox.style.display = "none";
     if (successBox) successBox.style.display = "none";
 
-    if (!email || !validateEmail(email)) {
+    if (!email) {
       if (errBox) {
         errBox.textContent = "Please enter a valid email address.";
         errBox.style.display = "block";
@@ -780,13 +545,12 @@
         if (!firebaseInitialized) throw new Error("Authentication service connecting. Please try again.");
         await authInstance.sendPasswordResetEmail(email);
         if (successBox) {
-          successBox.textContent = "Password reset instructions sent! Please check your Inbox and Spam/Junk folder.";
+          successBox.textContent = "Password reset instructions sent! Please check your Inbox and Spam.";
           successBox.style.display = "block";
         }
-        window.showActionToast("Password Reset Sent", "✉️ Password reset instructions sent! Please check your Inbox and Spam/Junk folder.", "✉️", "success");
       } catch (err) {
         if (errBox) {
-          errBox.textContent = err.message || "Failed to send password reset email.";
+          errBox.textContent = err.message || "Failed to send reset email.";
           errBox.style.display = "block";
         }
       } finally {
@@ -833,9 +597,7 @@
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        if (currentAuthMode === "login") submitBtn.textContent = "Sign In";
-        else if (currentAuthMode === "register") submitBtn.textContent = "Register Account";
-        else submitBtn.textContent = "Send Reset Link";
+        submitBtn.textContent = currentAuthMode === "login" ? "Sign In" : "Register Account";
       }
     }
   };
@@ -846,12 +608,6 @@
       alert("Authentication service connecting. Please try again in a moment.");
       return;
     }
-
-    if (window.location.protocol === "file:") {
-      alert("Notice: Google Sign-In is blocked on raw file:/// URLs by browser security. Please run this page via Live Server (http://localhost) or your deployed Netlify domain.");
-      return;
-    }
-
     try {
       const result = await authInstance.signInWithPopup(googleAuthProvider);
       const name = result.user.displayName || result.user.email.split("@")[0];
@@ -868,11 +624,8 @@
   window.handleSignOut = async function () {
     const dropdown = document.getElementById("authDropdownMenu");
     if (dropdown) dropdown.classList.remove("open");
-
     if (authInstance) {
-      try {
-        await authInstance.signOut();
-      } catch (e) {}
+      try { await authInstance.signOut(); } catch (e) {}
     }
     currentUser = null;
     localStorage.removeItem("manopavana_active_user");
@@ -889,14 +642,12 @@
   });
 
   // ==========================================
-  // 7. ORDER TRACKING & AUTO HISTORY
+  // 7. ORDER TRACKING MODAL & HISTORY
   // ==========================================
   window.openOrderTrackingModal = function (forceAccountTab = false) {
     const modal = document.getElementById("trackOrderModalBackdrop");
     if (!modal) return;
-
     modal.classList.add("open");
-
     if (currentUser || forceAccountTab) {
       window.switchTrackingTab("account");
     } else {
@@ -953,7 +704,6 @@
       if (!list) return;
 
       let combinedOrders = [];
-
       if (res.status === "FOUND" && res.orders && res.orders.length > 0) {
         combinedOrders = res.orders;
       } else {
@@ -967,12 +717,11 @@
         list.innerHTML = `
           <div style="text-align:center; padding:2rem; color:#a8a29e;">
             <p>No past orders found under this account.</p>
-            <p style="font-size:0.8rem; margin-top:0.4rem; color:#78716c;">Orders placed with your account will automatically appear here with 4-stage tracking nodes.</p>
           </div>
         `;
         list.style.display = "block";
       }
-    }).catch((err) => {
+    }).catch(() => {
       if (loading) loading.style.display = "none";
       if (list) {
         const localMatches = localOrdersHistory.filter(o => o.firebaseUid === currentUser.uid || (currentUser.email && o.email === currentUser.email));
@@ -980,7 +729,7 @@
           list.innerHTML = renderOrdersTimelineList(localMatches);
           list.style.display = "block";
         } else {
-          list.innerHTML = `<div style="color:#ef4444; padding:1rem; text-align:center;">Unable to load order history: ${err.message}</div>`;
+          list.innerHTML = `<div style="color:#ef4444; padding:1rem; text-align:center;">Unable to load order history.</div>`;
           list.style.display = "block";
         }
       }
@@ -989,12 +738,6 @@
 
   function renderOrdersTimelineList(orders) {
     return orders.map((order) => {
-      const st = (order.orderStatus || "").toLowerCase();
-      const isStep1 = true;
-      const isStep2 = st.includes("pack") || st.includes("process") || st.includes("settl") || st.includes("dispatch") || st.includes("deliver");
-      const isStep3 = st.includes("dispatch") || st.includes("transit") || st.includes("out") || st.includes("deliver");
-      const isStep4 = st.includes("deliver");
-
       return `
         <div class="history-order-card">
           <div class="history-card-header">
@@ -1004,33 +747,8 @@
             </div>
             <span class="track-status-pill">${escapeHtml(order.orderStatus || "Placed")}</span>
           </div>
-
           <div class="history-card-items">
             <strong>Items:</strong> ${escapeHtml(order.items)}
-          </div>
-
-          <div class="track-timeline-progress">
-            <div class="track-step-node node-step ${isStep1 ? 'active' : ''}">
-              <span class="node-dot ${isStep1 ? 'active' : ''}">✓</span>
-              <span class="node-lbl">Placed</span>
-            </div>
-            <div class="track-step-node node-step ${isStep2 ? 'active' : ''}">
-              <span class="node-dot ${isStep2 ? 'active' : ''}">⚙</span>
-              <span class="node-lbl">Packed &amp; Sealed</span>
-            </div>
-            <div class="track-step-node node-step ${isStep3 ? 'active' : ''}">
-              <span class="node-dot ${isStep3 ? 'active' : ''}">🚚</span>
-              <span class="node-lbl">Dispatched</span>
-            </div>
-            <div class="track-step-node node-step ${isStep4 ? 'active' : ''}">
-              <span class="node-dot ${isStep4 ? 'active' : ''}">🏡</span>
-              <span class="node-lbl">Delivered</span>
-            </div>
-          </div>
-
-          <div class="history-card-footer">
-            <span style="color:#eab308; font-weight:600;">Facility Status:</span>
-            <span style="color:#d6d3d1;">${escapeHtml(order.trackingNotes || "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.")}</span>
           </div>
         </div>
       `;
@@ -1053,9 +771,8 @@
 
     if (btn) {
       btn.disabled = true;
-      btn.textContent = "Checking Facility Records...";
+      btn.textContent = "Checking Records...";
     }
-    if (resultBox) resultBox.style.display = "none";
 
     callBackend({
       action: "track_orders",
@@ -1077,7 +794,7 @@
           resultBox.innerHTML = renderOrdersTimelineList(localMatches);
           resultBox.style.display = "block";
         } else {
-          resultBox.innerHTML = `<span style="color:#ef4444;">❌ No matching orders found. Please verify your details.</span>`;
+          resultBox.innerHTML = `<span style="color:#ef4444;">❌ No matching orders found.</span>`;
           resultBox.style.display = "block";
         }
       }
@@ -1087,27 +804,217 @@
         btn.textContent = "Fetch Live Status 🔍";
       }
       if (resultBox) {
-        const localMatches = localOrdersHistory.filter(o => (orderRef && o.orderRef === orderRef) || (phone && o.phone === phone));
-        if (localMatches.length > 0) {
-          resultBox.innerHTML = renderOrdersTimelineList(localMatches);
-          resultBox.style.display = "block";
-        } else {
-          resultBox.innerHTML = `<span style="color:#ef4444;">Error checking orders: ${err.message}</span>`;
-          resultBox.style.display = "block";
-        }
+        resultBox.innerHTML = `<span style="color:#ef4444;">Error checking orders: ${err.message}</span>`;
+        resultBox.style.display = "block";
       }
     });
   };
 
   // ==========================================
-  // 8. LOCATION & PINCODE CONTROLLER
+  // 8. UPFRONT ONBOARDING FLOW (STEP 1 QUIZ -> STEP 2 PINCODE)
+  // ==========================================
+  window.openOnboardingModal = function (step = 1) {
+    const modal = document.getElementById("onboardingModalBackdrop");
+    if (!modal) return;
+    modal.classList.add("open");
+    document.body.style.overflow = "hidden";
+    window.goToOnboardingStep(step);
+  };
+
+  window.closeOnboardingModal = function () {
+    const modal = document.getElementById("onboardingModalBackdrop");
+    if (modal) modal.classList.remove("open");
+    document.body.style.overflow = "";
+    localStorage.setItem("manopavana_onboarding_completed", "true");
+  };
+
+  window.goToOnboardingStep = function (stepNumber) {
+    const s1 = document.getElementById("onboardingStep1");
+    const s2 = document.getElementById("onboardingStep2");
+    const title = document.getElementById("onboardingModalTitle");
+
+    if (stepNumber === 1) {
+      if (s1) s1.style.display = "flex";
+      if (s2) s2.style.display = "none";
+      if (title) title.innerHTML = "🏷️ Scanned our Bottle?";
+      window.selectOnboardingQuizBottle(selectedQuizBottleKey);
+    } else {
+      if (s1) s1.style.display = "none";
+      if (s2) s2.style.display = "flex";
+      if (title) title.innerHTML = "📍 Where should we deliver?";
+      const pinInput = document.getElementById("onboardPincodeInput");
+      if (pinInput) {
+        pinInput.value = userSelectedPincode || "";
+        pinInput.focus();
+      }
+    }
+  };
+
+  window.selectOnboardingQuizBottle = function (bottleKey) {
+    selectedQuizBottleKey = bottleKey;
+    selectedQuizOptionText = null;
+
+    // Toggle active classes on pill buttons
+    ["groundnut", "coconut", "sesame"].forEach((k) => {
+      const pill = document.getElementById("onboardPill" + k.charAt(0).toUpperCase() + k.slice(1));
+      if (pill) {
+        pill.classList.toggle("active", k === bottleKey);
+      }
+    });
+
+    const quizData = BOTTLE_QUIZ_POOLS[bottleKey][0];
+    const hintText = document.getElementById("onboardQuizHintText");
+    const qTitle = document.getElementById("onboardQuizQuestionText");
+    const optionsContainer = document.getElementById("onboardQuizOptionsContainer");
+    const feedbackBox = document.getElementById("onboardQuizFeedbackBox");
+
+    if (hintText) hintText.textContent = quizData.hint;
+    if (qTitle) qTitle.textContent = quizData.question;
+    if (feedbackBox) feedbackBox.style.display = "none";
+
+    const distractors = [
+      "Extracted using industrial chemical solvents",
+      "Refined, bleached, and chemically deodorized",
+      "Blended with synthetic liquid paraffin wax",
+      "Processed with artificial preservatives and dyes"
+    ];
+
+    const options = [
+      { text: quizData.correct, correct: true },
+      { text: distractors[0], correct: false },
+      { text: distractors[1], correct: false },
+      { text: distractors[2], correct: false },
+      { text: distractors[3], correct: false }
+    ].sort(() => Math.random() - 0.5);
+
+    activeQuizData = {
+      correct: quizData.correct,
+      options: options
+    };
+
+    if (optionsContainer) {
+      optionsContainer.innerHTML = options.map((opt, i) => `
+        <label class="quiz-option-card" id="quizOptCard_${i}" onclick="window.chooseOnboardingQuizOption('${escapeHtml(opt.text)}', ${i})">
+          <input type="radio" name="bottleQuizRadio" value="${escapeHtml(opt.text)}" />
+          <span>${escapeHtml(opt.text)}</span>
+        </label>
+      `).join("");
+    }
+  };
+
+  window.chooseOnboardingQuizOption = function (text, idx) {
+    selectedQuizOptionText = text;
+    document.querySelectorAll(".quiz-option-card").forEach((card, i) => {
+      card.classList.toggle("selected", i === idx);
+      const radio = card.querySelector("input[type='radio']");
+      if (radio) radio.checked = i === idx;
+    });
+  };
+
+  window.submitOnboardingBottleQuiz = function () {
+    const feedbackBox = document.getElementById("onboardQuizFeedbackBox");
+    const attemptBadge = document.getElementById("onboardAttemptBadge");
+
+    if (!selectedQuizOptionText) {
+      alert("Please select one option printed on your bottle label.");
+      return;
+    }
+
+    if (selectedQuizOptionText === activeQuizData.correct) {
+      activeBottleCode = `VERIFIED_${selectedQuizBottleKey.toUpperCase()}_BOTTLE`;
+      bottleScanTimestampMs = Date.now();
+      localStorage.setItem("manopavana_bottle_code", activeBottleCode);
+      localStorage.setItem("manopavana_bottle_scan_time", bottleScanTimestampMs.toString());
+
+      if (feedbackBox) {
+        feedbackBox.className = "quiz-feedback-box success";
+        feedbackBox.innerHTML = "✅ <strong>Label verified!</strong> 10% Loyalty Discount unlocked for 30 days!";
+        feedbackBox.style.display = "block";
+      }
+
+      renderCart();
+      startLiveCountdown();
+      renderComboSection();
+      window.showActionToast("Discount Activated", "🎉 10% Bottle Reorder Discount is active!", "✨", "success");
+
+      setTimeout(() => {
+        window.goToOnboardingStep(2);
+      }, 1200);
+    } else {
+      onboardingQuizAttemptsLeft--;
+      if (attemptBadge) {
+        attemptBadge.textContent = `⚠️ ${onboardingQuizAttemptsLeft} chance${onboardingQuizAttemptsLeft === 1 ? '' : 's'} left to claim 10% OFF`;
+        if (onboardingQuizAttemptsLeft === 1) attemptBadge.className = "attempt-badge danger";
+      }
+
+      if (feedbackBox) {
+        feedbackBox.className = "quiz-feedback-box error";
+        feedbackBox.innerHTML = `❌ Option does not match your bottle label.`;
+        feedbackBox.style.display = "block";
+      }
+
+      if (onboardingQuizAttemptsLeft <= 0) {
+        alert("Attempts exhausted. You can continue shopping directly!");
+        window.goToOnboardingStep(2);
+      }
+    }
+  };
+
+  window.submitOnboardingPincodeCheck = function () {
+    const pinInput = document.getElementById("onboardPincodeInput");
+    const resBox = document.getElementById("onboardPincodeResultBox");
+    if (!pinInput) return;
+
+    const enteredPin = pinInput.value.trim();
+    if (!/^\d{6}$/.test(enteredPin)) {
+      if (resBox) {
+        resBox.className = "pincode-result-box warning";
+        resBox.innerHTML = "Please enter a valid 6-digit Indian delivery pincode.";
+        resBox.style.display = "block";
+      }
+      return;
+    }
+
+    userSelectedPincode = enteredPin;
+    isBangalorePincode = enteredPin.startsWith("560");
+    localStorage.setItem("manopavana_user_pincode", enteredPin);
+    updateLocationUI();
+
+    if (isBangalorePincode) {
+      if (resBox) {
+        resBox.className = "pincode-result-box success";
+        resBox.innerHTML = `<strong>✅ Delivering to Bangalore (${enteredPin})</strong>Direct doorstep delivery in 48–72 hours!`;
+        resBox.style.display = "block";
+      }
+      setTimeout(window.closeOnboardingModal, 1200);
+    } else {
+      if (resBox) {
+        resBox.className = "pincode-result-box warning";
+        resBox.innerHTML = `<strong>📍 Outside Bangalore (${enteredPin})</strong>Direct website delivery is currently Bangalore exclusive (560xxx). Orders fulfilled via our official <strong>Flipkart store</strong>.<br><br>
+        <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" class="btn-continue-flipkart" style="display:inline-flex; width:auto; padding:0.6rem 1.2rem;">
+          🛒 Shop on Flipkart &rarr;
+        </a>`;
+        resBox.style.display = "block";
+      }
+      setTimeout(window.closeOnboardingModal, 3000);
+    }
+  };
+
+  function checkAndTriggerUpfrontOnboarding() {
+    const completed = localStorage.getItem("manopavana_onboarding_completed");
+    if (completed !== "true") {
+      window.openOnboardingModal(1);
+    }
+  }
+
+  // ==========================================
+  // 9. LOCATION & PINCODE CONTROLLER
   // ==========================================
   window.openLocationCheckModal = function () {
     const modal = document.getElementById("locationModalBackdrop");
     const pinInput = document.getElementById("pincodeCheckInput");
     const resultBox = document.getElementById("pincodeCheckResultBox");
     if (!modal) return;
-
     if (pinInput) pinInput.value = userSelectedPincode;
     if (resultBox) resultBox.style.display = "none";
     modal.classList.add("open");
@@ -1134,20 +1041,16 @@
     userSelectedPincode = enteredPin;
     isBangalorePincode = enteredPin.startsWith("560");
     localStorage.setItem("manopavana_user_pincode", enteredPin);
-
     updateLocationUI();
 
     if (isBangalorePincode) {
       resultBox.className = "pincode-result-box success";
-      resultBox.innerHTML = `<strong>✅ Delivering to Bangalore (${enteredPin})</strong>Direct doorstep delivery in 48–72 hours from our Bangalore packaging and distribution facility. Free delivery on ₹500+ orders.`;
+      resultBox.innerHTML = `<strong>✅ Delivering to Bangalore (${enteredPin})</strong>Doorstep delivery active in 48–72 hours.`;
       resultBox.style.display = "block";
       setTimeout(window.closeLocationCheckModal, 1300);
     } else {
       resultBox.className = "pincode-result-box warning";
-      resultBox.innerHTML = `<strong>📍 Outside Bangalore (${enteredPin})</strong>Direct doorstep delivery is exclusive to Bangalore (560xxx). Orders for your location are fulfilled securely via our <strong>Official Flipkart Store</strong>.<br><br>
-      <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" class="btn-continue-flipkart" style="display:inline-flex; width:auto; padding:0.6rem 1.2rem; margin-top:0.5rem;">
-        🛒 Shop on Flipkart &rarr;
-      </a>`;
+      resultBox.innerHTML = `<strong>📍 Outside Bangalore (${enteredPin})</strong>Direct delivery is exclusive to Bangalore (560xxx). Orders fulfilled via our official Flipkart store.`;
       resultBox.style.display = "block";
     }
   };
@@ -1182,7 +1085,7 @@
   };
 
   // ==========================================
-  // 9. ZERO-FRICTION AUDIO AUTOPLAY ENGINE
+  // 10. AUDIO & VIDEO AUTOPLAY
   // ==========================================
   let isAudioPlaying = false;
   let hasInteracted = false;
@@ -1196,14 +1099,12 @@
 
     audio.volume = 1.0;
     const playPromise = audio.play();
-
     if (playPromise !== undefined) {
       playPromise.then(() => {
         isAudioPlaying = true;
         if (icon) icon.textContent = "🔊";
         if (text) text.textContent = "Sound On";
         btn?.classList.add("playing");
-        removeInteractionListeners();
       }).catch(() => {
         isAudioPlaying = false;
         if (icon) icon.textContent = "🔇";
@@ -1211,27 +1112,6 @@
         btn?.classList.remove("playing");
       });
     }
-  }
-
-  function handleFirstUserInteraction() {
-    if (!isAudioPlaying && !hasInteracted) {
-      hasInteracted = true;
-      tryImmediateAudioPlayback();
-    }
-  }
-
-  function attachInteractionListeners() {
-    const events = ["scroll", "wheel", "touchstart", "touchmove", "pointerdown", "click", "keydown"];
-    events.forEach(evt => {
-      window.addEventListener(evt, handleFirstUserInteraction, { once: true, passive: true });
-    });
-  }
-
-  function removeInteractionListeners() {
-    const events = ["scroll", "wheel", "touchstart", "touchmove", "pointerdown", "click", "keydown"];
-    events.forEach(evt => {
-      window.removeEventListener(evt, handleFirstUserInteraction);
-    });
   }
 
   function toggleAudio() {
@@ -1261,11 +1141,9 @@
     const video = document.getElementById("heroVideo");
     const fallback = document.getElementById("heroFallbackImage");
     if (!video) return;
-
     video.muted = true;
     video.loop = true;
     video.playsInline = true;
-
     video.play().catch(() => {
       if (fallback) {
         video.style.display = "none";
@@ -1275,15 +1153,11 @@
   }
 
   // ==========================================
-  // 10. LEAFLET INTERACTIVE MAP & PIN DROP
+  // 11. MAPS & GEOLOCATION
   // ==========================================
   function initOrUpdateDeliveryMap(lat = DEFAULT_BANGALORE_COORDS[0], lng = DEFAULT_BANGALORE_COORDS[1]) {
     const mapElement = document.getElementById("deliveryMap");
     if (!mapElement || typeof L === "undefined") return;
-
-    const coordsBadge = document.getElementById("mapCoordsBadge");
-    const latInput = document.getElementById("custLatitude");
-    const lngInput = document.getElementById("custLongitude");
 
     if (!leafletMap) {
       leafletMap = L.map("deliveryMap", {
@@ -1293,13 +1167,11 @@
         scrollWheelZoom: false
       });
 
-      // Free, open OpenStreetMap Tiles
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        attribution: '&copy; OpenStreetMap',
         maxZoom: 19
       }).addTo(leafletMap);
 
-      // Create Draggable Pin Marker
       mapMarker = L.marker([lat, lng], { draggable: true }).addTo(leafletMap);
 
       mapMarker.on("dragend", function (e) {
@@ -1317,8 +1189,6 @@
     }
 
     setMapCoordinates(lat, lng);
-
-    // Give Leaflet time to size properly inside the opened modal
     setTimeout(() => {
       if (leafletMap) leafletMap.invalidateSize();
     }, 250);
@@ -1328,7 +1198,6 @@
     const latInput = document.getElementById("custLatitude");
     const lngInput = document.getElementById("custLongitude");
     const coordsBadge = document.getElementById("mapCoordsBadge");
-
     const roundLat = parseFloat(lat).toFixed(5);
     const roundLng = parseFloat(lng).toFixed(5);
 
@@ -1337,209 +1206,37 @@
     if (coordsBadge) coordsBadge.textContent = `GPS: ${roundLat}, ${roundLng}`;
   }
 
-  // HTML5 Native Geolocation (100% Free - No Google API Key required)
   window.detectUserGeolocation = function () {
-    const btn = document.querySelector(".btn-gps-locate");
-    const origText = btn ? btn.innerHTML : "";
-
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your current browser.");
+      alert("Geolocation is not supported by your browser.");
       return;
     }
-
-    if (btn) btn.innerHTML = "⏳ Locating...";
-
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        initOrUpdateDeliveryMap(lat, lng);
-        reverseGeocodeOpenStreetMap(lat, lng);
-
-        if (btn) btn.innerHTML = "✅ Located!";
-        setTimeout(() => { if (btn) btn.innerHTML = origText; }, 2000);
+        initOrUpdateDeliveryMap(pos.coords.latitude, pos.coords.longitude);
       },
-      (err) => {
-        console.warn("Geolocation prompt was dismissed or failed:", err);
-        alert("Could not retrieve exact location. Please drag the marker pin manually to your gate or building.");
-        if (btn) btn.innerHTML = origText;
+      () => {
+        alert("Location access denied or unavailable. Please drag the pin on the map.");
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+      { enableHighAccuracy: true, timeout: 8000 }
     );
   };
 
-  // Reverse geocoding to auto-fill pincode and address area
-  function reverseGeocodeOpenStreetMap(lat, lng) {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data || !data.address) return;
-        const addr = data.address;
-
-        const pin = addr.postcode || "";
-        const city = addr.city || addr.town || addr.suburb || addr.neighbourhood || "Bengaluru";
-
-        const custCity = document.getElementById("custCity");
-        const custPin = document.getElementById("custPincode");
-        const custAddress = document.getElementById("custAddress");
-
-        if (custCity && !custCity.value) custCity.value = city;
-        if (custPin && pin && /^\d{6}$/.test(pin)) {
-          custPin.value = pin;
-          userSelectedPincode = pin;
-          isBangalorePincode = pin.startsWith("560");
-          updateLocationUI();
-        }
-
-        if (custAddress && !custAddress.value && data.display_name) {
-          custAddress.value = data.display_name.split(",").slice(0, 3).join(",").trim();
-        }
-      })
-      .catch((e) => console.log("Reverse geocode notice:", e));
-  }
-
-  // Dynamic Forward Geocoding Debounce & Nominatim Integration
-  let addressTypingTimer = null;
-  function setupForwardGeocoding() {
-    const addressInput = document.getElementById("custAddress");
-    if (!addressInput) return;
-
-    addressInput.addEventListener("input", (e) => {
-      const query = e.target.value.trim();
-      if (addressTypingTimer) clearTimeout(addressTypingTimer);
-      if (query.length < 5) return;
-
-      addressTypingTimer = setTimeout(() => {
-        const searchCity = document.getElementById("custCity")?.value || "Bengaluru";
-        const fullQuery = `${query}, ${searchCity}, Karnataka, India`;
-        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullQuery)}&limit=1`)
-          .then(res => res.json())
-          .then(results => {
-            if (results && results.length > 0) {
-              const lat = parseFloat(results[0].lat);
-              const lon = parseFloat(results[0].lon);
-              initOrUpdateDeliveryMap(lat, lon);
-            }
-          })
-          .catch(err => console.warn("Forward geocode notice:", err));
-      }, 800);
-    });
-  }
-
   // ==========================================
-  // 11. SAVED ADDRESS ENGINE (NO RE-PROMPTING)
-  // ==========================================
-  function loadSavedDeliveryDetails() {
-    let saved = null;
-    try {
-      saved = JSON.parse(localStorage.getItem("manopavana_saved_delivery"));
-    } catch (e) {
-      saved = null;
-    }
-
-    const summaryCard = document.getElementById("savedAddressSummaryCard");
-    const fieldsContainer = document.getElementById("deliveryFieldsContainer");
-
-    if (saved && saved.name && saved.phone && saved.address) {
-      // Pre-fill existing inputs
-      const custName = document.getElementById("custName");
-      const custPhone = document.getElementById("custPhone");
-      const custAddress = document.getElementById("custAddress");
-      const custState = document.getElementById("custState");
-      const custDistrict = document.getElementById("custDistrict");
-      const custCity = document.getElementById("custCity");
-      const custPincode = document.getElementById("custPincode");
-
-      if (custName) custName.value = saved.name;
-      if (custPhone) custPhone.value = saved.phone;
-      if (custAddress) custAddress.value = saved.address;
-      if (custCity) custCity.value = saved.city || "Bengaluru";
-      if (custPincode) custPincode.value = saved.pincode || "560058";
-
-      if (custState && saved.state) {
-        custState.value = saved.state;
-        populateDistrictsForState(saved.state);
-      }
-      if (custDistrict && saved.district) {
-        custDistrict.value = saved.district;
-      }
-
-      // Populate preview card
-      const addrName = document.getElementById("savedAddrName");
-      const addrText = document.getElementById("savedAddrText");
-      const addrPhone = document.getElementById("savedAddrPhone");
-      const gpsNotice = document.getElementById("savedAddrGpsNotice");
-
-      if (addrName) addrName.textContent = saved.name;
-      if (addrText) addrText.textContent = `${saved.address}, ${saved.city || "Bengaluru"} - ${saved.pincode || "560058"}`;
-      if (addrPhone) addrPhone.textContent = `📞 ${saved.phone}`;
-
-      const savedLat = parseFloat(saved.latitude) || DEFAULT_BANGALORE_COORDS[0];
-      const savedLng = parseFloat(saved.longitude) || DEFAULT_BANGALORE_COORDS[1];
-
-      if (gpsNotice) {
-        gpsNotice.style.display = (saved.latitude && saved.longitude) ? "inline-block" : "none";
-      }
-
-      // Display the 1-click summary card and collapse form fields
-      if (summaryCard) summaryCard.style.display = "block";
-      if (fieldsContainer) fieldsContainer.style.display = "none";
-
-      initOrUpdateDeliveryMap(savedLat, savedLng);
-    } else {
-      // No saved details: show full input form
-      if (summaryCard) summaryCard.style.display = "none";
-      if (fieldsContainer) fieldsContainer.style.display = "block";
-
-      const currentLat = parseFloat(document.getElementById("custLatitude")?.value) || DEFAULT_BANGALORE_COORDS[0];
-      const currentLng = parseFloat(document.getElementById("custLongitude")?.value) || DEFAULT_BANGALORE_COORDS[1];
-      initOrUpdateDeliveryMap(currentLat, currentLng);
-    }
-  }
-
-  window.toggleEditAddress = function (showForm = true) {
-    const summaryCard = document.getElementById("savedAddressSummaryCard");
-    const fieldsContainer = document.getElementById("deliveryFieldsContainer");
-
-    if (showForm) {
-      if (summaryCard) summaryCard.style.display = "none";
-      if (fieldsContainer) fieldsContainer.style.display = "block";
-      setTimeout(() => {
-        if (leafletMap) leafletMap.invalidateSize();
-      }, 200);
-    } else {
-      if (summaryCard) summaryCard.style.display = "block";
-      if (fieldsContainer) fieldsContainer.style.display = "none";
-    }
-  };
-
-  // ==========================================
-  // 12. CART OPERATIONS ("SILENT ADD TO BAG")
+  // 12. CART OPERATIONS
   // ==========================================
   function isLoyaltyDiscountValid() {
     if (!bottleScanTimestampMs) return false;
     return (Date.now() - bottleScanTimestampMs) < QR_EXPIRY_MS;
   }
 
-  function triggerBadgeAnimation() {
-    const badge = document.getElementById("cartCountBadge");
-    if (badge) {
-      badge.classList.remove("badge-pop");
-      void badge.offsetWidth; // Trigger reflow
-      badge.classList.add("badge-pop");
-      setTimeout(() => badge.classList.remove("badge-pop"), 250);
-    }
-  }
-
-  function saveCart(silent = false) {
+  function saveCart() {
     localStorage.setItem("manopavana_cart", JSON.stringify(cart));
     renderCart();
     renderProductsGrid();
     if (currentDetailProductKey) {
       renderProductDetailModalContent();
     }
-    triggerBadgeAnimation();
   }
 
   window.openCart = function () {
@@ -1561,7 +1258,6 @@
     return item ? item.quantity : 0;
   }
 
-  // Silent Add: Does NOT force drawer open, triggers toast and counter update
   window.handleDirectAdd = function (id, title, price, img) {
     if (!isBangalorePincode) {
       window.openFlipkartModal();
@@ -1573,7 +1269,7 @@
     } else {
       cart.push({ id, title, price: parseInt(price, 10), img, quantity: 1 });
     }
-    saveCart(true);
+    saveCart();
     window.showActionToast("Added to Bag", `🛒 Added ${title} to your bag.`, "🛒", "success");
   };
 
@@ -1584,14 +1280,12 @@
         if (COMBO_CATALOG[id]) {
           const combo = COMBO_CATALOG[id];
           cart.push({ id: combo.id, title: combo.title, price: combo.price, img: combo.img, quantity: 1 });
-          window.showActionToast("Added to Bag", `🛒 Added ${combo.title} to your bag.`, "🛒", "success");
         } else {
           const [prodKey, sizeKey] = id.split("-");
           const formattedSize = sizeKey === "1l" ? "1L" : "500ml";
           const catItem = PRODUCT_CATALOG[prodKey]?.sizes[formattedSize];
           if (catItem) {
             cart.push({ id: catItem.id, title: catItem.title, price: catItem.price, img: PRODUCT_CATALOG[prodKey].img, quantity: 1 });
-            window.showActionToast("Added to Bag", `🛒 Added ${catItem.title} to your bag.`, "🛒", "success");
           }
         }
       }
@@ -1601,12 +1295,12 @@
         cart = cart.filter((i) => i.id !== id);
       }
     }
-    saveCart(true);
+    saveCart();
   };
 
   window.removeItem = function (id) {
     cart = cart.filter((item) => item.id !== id);
-    saveCart(true);
+    saveCart();
   };
 
   function renderCart() {
@@ -1644,14 +1338,8 @@
     if (cartCountBadge) cartCountBadge.textContent = totalCount;
     if (cartTotalItems) cartTotalItems.textContent = totalCount;
     if (cartSubtotal) cartSubtotal.textContent = `₹${subtotal.toLocaleString("en-IN")}`;
-
-    if (cartDeliveryCharge) {
-      cartDeliveryCharge.innerHTML = totalCount === 0 ? "₹0" : (deliveryFee === 0 ? `<span class="free-tag">FREE</span>` : `₹${STANDARD_DELIVERY_FEE}`);
-    }
-
-    if (cartGrandTotal) {
-      cartGrandTotal.textContent = `₹${grandTotal.toLocaleString("en-IN")}`;
-    }
+    if (cartDeliveryCharge) cartDeliveryCharge.innerHTML = totalCount === 0 ? "₹0" : (deliveryFee === 0 ? `<span class="free-tag">FREE</span>` : `₹${STANDARD_DELIVERY_FEE}`);
+    if (cartGrandTotal) cartGrandTotal.textContent = `₹${grandTotal.toLocaleString("en-IN")}`;
 
     if (shippingNote) {
       if (totalCount === 0) {
@@ -1690,7 +1378,7 @@
   }
 
   // ==========================================
-  // 13. PRODUCT GRID & COMBOS
+  // 13. PRODUCT RENDERING & COMBOS
   // ==========================================
   function renderStepperButtonHTML(id, title, price, img, quantity) {
     if (!isBangalorePincode) {
@@ -1752,7 +1440,6 @@
           </div>
         </div>
       `;
-
       container.appendChild(card);
     });
 
@@ -1823,7 +1510,7 @@
   };
 
   // ==========================================
-  // 14. PRODUCT DETAIL MODAL CONTROLLER
+  // 14. PRODUCT DETAIL MODAL
   // ==========================================
   window.openProductDetailModal = function (productKey) {
     const product = PRODUCT_CATALOG[productKey];
@@ -1861,7 +1548,6 @@
   window.switchDetailMainImage = function (src, thumbEl) {
     const mainImg = document.getElementById("detailMainImg");
     if (mainImg) mainImg.src = src;
-
     document.querySelectorAll(".detail-thumb-img").forEach((el) => el.classList.remove("active"));
     if (thumbEl) thumbEl.classList.add("active");
   };
@@ -1928,7 +1614,7 @@
   }
 
   // ==========================================
-  // 15. CHECKOUT & SUBMISSION (SAVED ADDRESS & MAPS)
+  // 15. CHECKOUT FLOW & MAPS
   // ==========================================
   window.handleDirectBuyNow = function (id, title, price, img) {
     if (!isBangalorePincode) {
@@ -1944,11 +1630,6 @@
   function promptLoginOrOpenCheckout() {
     if (!currentUser) {
       window.openAuthModal("login");
-      const errBox = document.getElementById("authErrorMsg");
-      if (errBox) {
-        errBox.textContent = "Please sign in or create an account to tie your order to your profile.";
-        errBox.style.display = "block";
-      }
     } else {
       openCheckoutModalUI();
     }
@@ -1956,14 +1637,6 @@
 
   function openCheckoutModalUI() {
     currentOrderRef = "MP_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900);
-
-    const titleEl = document.getElementById("modalCheckoutTitle");
-    if (titleEl) {
-      titleEl.textContent = checkoutSource === "buynow" && buyNowItem
-        ? `Delivery & Payment: ${buyNowItem.title}`
-        : "Delivery & Payment Details";
-    }
-
     updateCheckoutFinancials();
     updatePaymentModeUI();
     loadSavedDeliveryDetails();
@@ -2049,6 +1722,61 @@
     }
   }
 
+  function loadSavedDeliveryDetails() {
+    let saved = null;
+    try {
+      saved = JSON.parse(localStorage.getItem("manopavana_saved_delivery"));
+    } catch (e) {
+      saved = null;
+    }
+
+    const summaryCard = document.getElementById("savedAddressSummaryCard");
+    const fieldsContainer = document.getElementById("deliveryFieldsContainer");
+
+    if (saved && saved.name && saved.phone && saved.address) {
+      const custName = document.getElementById("custName");
+      const custPhone = document.getElementById("custPhone");
+      const custAddress = document.getElementById("custAddress");
+      const custCity = document.getElementById("custCity");
+      const custPincode = document.getElementById("custPincode");
+
+      if (custName) custName.value = saved.name;
+      if (custPhone) custPhone.value = saved.phone;
+      if (custAddress) custAddress.value = saved.address;
+      if (custCity) custCity.value = saved.city || "Bengaluru";
+      if (custPincode) custPincode.value = saved.pincode || "560058";
+
+      const addrName = document.getElementById("savedAddrName");
+      const addrText = document.getElementById("savedAddrText");
+      const addrPhone = document.getElementById("savedAddrPhone");
+
+      if (addrName) addrName.textContent = saved.name;
+      if (addrText) addrText.textContent = `${saved.address}, ${saved.city || "Bengaluru"} - ${saved.pincode || "560058"}`;
+      if (addrPhone) addrPhone.textContent = `📞 ${saved.phone}`;
+
+      if (summaryCard) summaryCard.style.display = "block";
+      if (fieldsContainer) fieldsContainer.style.display = "none";
+    } else {
+      if (summaryCard) summaryCard.style.display = "none";
+      if (fieldsContainer) fieldsContainer.style.display = "block";
+    }
+    initOrUpdateDeliveryMap();
+  }
+
+  window.toggleEditAddress = function (showForm = true) {
+    const summaryCard = document.getElementById("savedAddressSummaryCard");
+    const fieldsContainer = document.getElementById("deliveryFieldsContainer");
+
+    if (showForm) {
+      if (summaryCard) summaryCard.style.display = "none";
+      if (fieldsContainer) fieldsContainer.style.display = "block";
+      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 200);
+    } else {
+      if (summaryCard) summaryCard.style.display = "block";
+      if (fieldsContainer) fieldsContainer.style.display = "none";
+    }
+  };
+
   async function handleCheckoutSubmission() {
     if (!currentUser) {
       promptLoginOrOpenCheckout();
@@ -2067,9 +1795,9 @@
     const chkSave = document.getElementById("chkSaveAddress")?.checked;
     const errBox = document.getElementById("formError");
 
-    if (!name || phone.length < 10 || !address || !state || !district || !city || pincode.length !== 6) {
+    if (!name || phone.length < 10 || !address || !pincode || pincode.length !== 6) {
       if (errBox) {
-        errBox.textContent = "Please fill in all mandatory delivery address fields properly.";
+        errBox.textContent = "Please fill in all mandatory address and phone fields.";
         errBox.style.display = "block";
       }
       return;
@@ -2080,22 +1808,10 @@
       return;
     }
 
-    if (errBox) errBox.style.display = "none";
-
-    // Persist delivery details if save checkbox is checked
     if (chkSave) {
-      const deliveryPayload = {
-        name,
-        phone,
-        address,
-        state,
-        district,
-        city,
-        pincode,
-        latitude,
-        longitude
-      };
-      localStorage.setItem("manopavana_saved_delivery", JSON.stringify(deliveryPayload));
+      localStorage.setItem("manopavana_saved_delivery", JSON.stringify({
+        name, phone, address, state, district, city, pincode, latitude, longitude
+      }));
     }
 
     const itemsToCheckout = checkoutSource === "buynow" && buyNowItem ? [buyNowItem] : cart;
@@ -2105,142 +1821,76 @@
       : (document.getElementById("payCOD")?.checked ? "COD" : "WHATSAPP");
 
     const submitBtn = document.getElementById("submitOrderBtn");
-    const origText = submitBtn ? submitBtn.textContent : "";
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = "Processing Order...";
     }
 
-    const uid = currentUser.uid || ("GUEST_" + phone);
-
-    // Snapshot order to local storage history immediately for offline/lag resilience
     const orderSnapshot = {
       timestamp: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
       orderRef: currentOrderRef,
-      firebaseUid: uid,
+      firebaseUid: currentUser.uid,
       customerName: name,
       phone: phone,
       email: currentUser.email || "",
       items: itemsSummary,
       grandTotal: currentCalculatedGrandTotal.toString(),
       paymentMode: paymentMode,
-      orderStatus: "Placed",
-      trackingNotes: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.",
-      latitude: latitude,
-      longitude: longitude
+      orderStatus: "Placed"
     };
+
     localOrdersHistory.unshift(orderSnapshot);
     localStorage.setItem("manopavana_local_orders", JSON.stringify(localOrdersHistory));
 
     try {
-      if (paymentMode === "PHONEPE") {
-        const response = await callBackend({
-          action: "create_phonepe_order",
-          orderRef: currentOrderRef,
-          firebaseUid: uid,
-          amount: currentCalculatedGrandTotal,
-          name: name,
-          phone: phone,
-          email: currentUser.email || "",
-          address: `${address}, ${city}`,
-          state: state,
-          district: district,
-          pincode: pincode,
-          items: itemsSummary,
-          bottleCode: activeBottleCode || "",
-          latitude: latitude,
-          longitude: longitude
-        });
-
-        if (response && response.redirectUrl) {
-          window.location.href = response.redirectUrl;
-          return;
-        } else {
-          throw new Error(response.message || "Failed to initialize PhonePe payment gateway.");
-        }
-      } else {
-        await callBackend({
-          action: "create_order",
-          orderRef: currentOrderRef,
-          firebaseUid: uid,
-          grandTotal: currentCalculatedGrandTotal,
-          name: name,
-          phone: phone,
-          email: currentUser.email || "",
-          address: `${address}, ${city}`,
-          state: state,
-          district: district,
-          pincode: pincode,
-          items: itemsSummary,
-          paymentMode: paymentMode,
-          bottleCode: activeBottleCode || "",
-          latitude: latitude,
-          longitude: longitude
-        });
-
-        if (checkoutSource === "cart") {
-          cart = [];
-          localStorage.removeItem("manopavana_cart");
-        }
-
-        window.closeCheckoutModal();
-        renderCart();
-
-        showOrderConfirmationModal({
-          orderRef: currentOrderRef,
-          customerName: name,
-          paymentMode: paymentMode === "COD" ? "Cash on Delivery (COD)" : "WhatsApp Manual Order"
-        });
-
-        if (paymentMode === "WHATSAPP") {
-          let msg = `🌿 *New Order - MANOPAVANA Wood-Pressed Oils*\n`;
-          msg += `*Ref:* #${currentOrderRef}\n*UID:* ${uid}\n`;
-          msg += `*Name:* ${name}\n*Phone:* ${phone}\n*Address:* ${address}, ${city} - ${pincode}\n`;
-          msg += `*Location:* https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}\n`;
-          msg += `*Items:* ${itemsSummary}\n*Total:* ₹${currentCalculatedGrandTotal}\n*Payment:* WhatsApp Manual`;
-          window.open(`https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-        }
-      }
-    } catch (err) {
-      console.warn("Backend sync notice:", err);
-      if (checkoutSource === "cart") {
-        cart = [];
-        localStorage.removeItem("manopavana_cart");
-      }
-      window.closeCheckoutModal();
-      renderCart();
-      showOrderConfirmationModal({
+      await callBackend({
+        action: "create_order",
         orderRef: currentOrderRef,
-        customerName: name,
-        paymentMode: paymentMode === "COD" ? "Cash on Delivery (COD)" : "WhatsApp Manual Order"
+        firebaseUid: currentUser.uid,
+        grandTotal: currentCalculatedGrandTotal,
+        name: name,
+        phone: phone,
+        email: currentUser.email || "",
+        address: `${address}, ${city}`,
+        pincode: pincode,
+        items: itemsSummary,
+        paymentMode: paymentMode,
+        bottleCode: activeBottleCode || "",
+        latitude: latitude,
+        longitude: longitude
       });
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = origText;
-      }
+    } catch (e) {
+      console.warn("Backend sync notification:", e);
     }
-  }
 
-  function showOrderConfirmationModal(details) {
-    const modal = document.getElementById("orderConfirmationModalBackdrop");
-    const box = document.getElementById("confirmReceiptDetails");
-    const waBtn = document.getElementById("btnWhatsAppTrackReceipt");
+    if (checkoutSource === "cart") {
+      cart = [];
+      localStorage.removeItem("manopavana_cart");
+    }
 
-    if (box) {
-      box.innerHTML = `
-        <div class="confirm-receipt-row"><span>Order Reference:</span><strong>#${details.orderRef}</strong></div>
-        <div class="confirm-receipt-row"><span>Payment Method:</span><strong>${details.paymentMode}</strong></div>
-        <div class="confirm-receipt-row"><span>Estimated Delivery:</span><strong style="color:#4ade80;">48 – 72 Hours (Bangalore)</strong></div>
-        <div class="confirm-receipt-row total-row"><span>Status:</span><strong style="color:#eab308;">Confirmed &amp; Queued for Packaging</strong></div>
+    window.closeCheckoutModal();
+    renderCart();
+
+    const confirmModal = document.getElementById("orderConfirmationModalBackdrop");
+    const confirmBox = document.getElementById("confirmReceiptDetails");
+    if (confirmBox) {
+      confirmBox.innerHTML = `
+        <div class="confirm-receipt-row"><span>Order Reference:</span><strong>#${currentOrderRef}</strong></div>
+        <div class="confirm-receipt-row"><span>Payment Method:</span><strong>${paymentMode}</strong></div>
+        <div class="confirm-receipt-row total-row"><span>Grand Total:</span><strong>₹${currentCalculatedGrandTotal}</strong></div>
       `;
     }
+    if (confirmModal) confirmModal.classList.add("open");
 
-    if (waBtn) {
-      waBtn.href = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${encodeURIComponent("Live tracking for Order #" + details.orderRef)}`;
+    if (paymentMode === "WHATSAPP") {
+      const msg = `🌿 *Order Placed - MANOPAVANA*\nRef: #${currentOrderRef}\nName: ${name}\nTotal: ₹${currentCalculatedGrandTotal}\nItems: ${itemsSummary}`;
+      window.open(`https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
     }
 
-    if (modal) modal.classList.add("open");
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Order Placed";
+    }
   }
 
   window.closeOrderConfirmationModal = function () {
@@ -2250,42 +1900,12 @@
 
   window.openLiveTrackingFromConfirmation = function () {
     window.closeOrderConfirmationModal();
-    window.openOrderTrackingModal();
+    window.openOrderTrackingModal(true);
   };
 
-// ==========================================
-  // 16. BOTTLE LABEL QUIZ & UPFRONT 2-STEP ONBOARDING
   // ==========================================
-  const BOTTLE_QUIZ_POOLS = {
-    groundnut: [
-      {
-        hint: "Look at the front label right below 'GROUNDNUT OIL':",
-        question: "What tagline is printed right below 'GROUNDNUT OIL' on the front label?",
-        correct: "Perfect for Everyday Indian Cooking"
-      }
-    ],
-    coconut: [
-      {
-        hint: "Look at the front label right below 'COCONUT OIL':",
-        question: "What tagline is printed right below 'COCONUT OIL' on the front label?",
-        correct: "Made for Authentic Flavours"
-      }
-    ],
-    sesame: [
-      {
-        hint: "Look at the front label right below 'SESAME OIL':",
-        question: "What tagline is printed right below 'SESAME OIL' on the front label?",
-        correct: "The Traditional Choice for Rich Flavour"
-      }
-    ]
-  };
-
-  let selectedQuizBottleKey = "groundnut";
-  let activeQuizData = null;
-  let selectedQuizOptionText = null;
-  let onboardingQuizAttemptsLeft = 2;
-
-  // Initialize Loyalty from Storage
+  // 16. COUNTDOWN & LOYALTY INITIALIZATION
+  // ==========================================
   function initLoyaltyFromStorage() {
     const storedTime = localStorage.getItem("manopavana_bottle_scan_time");
     if (storedTime) {
@@ -2295,20 +1915,11 @@
         activeBottleCode = localStorage.getItem("manopavana_bottle_code") || "VERIFIED_BOTTLE";
         startLiveCountdown();
       } else {
-        window.clearLoyaltyDiscount();
+        localStorage.removeItem("manopavana_bottle_code");
+        localStorage.removeItem("manopavana_bottle_scan_time");
       }
     }
   }
-
-  window.clearLoyaltyDiscount = function () {
-    activeBottleCode = null;
-    bottleScanTimestampMs = null;
-    localStorage.removeItem("manopavana_bottle_code");
-    localStorage.removeItem("manopavana_bottle_scan_time");
-    renderCart();
-    startLiveCountdown();
-    renderComboSection();
-  };
 
   function startLiveCountdown() {
     if (countdownTimerInterval) clearInterval(countdownTimerInterval);
@@ -2320,19 +1931,12 @@
 
       if (isLoyaltyDiscountValid()) {
         const remainingMs = Math.max(0, QR_EXPIRY_MS - (Date.now() - bottleScanTimestampMs));
-        if (remainingMs <= 0) {
-          window.clearLoyaltyDiscount();
-          return;
-        }
-
         const totalSeconds = Math.floor(remainingMs / 1000);
         const days = Math.floor(totalSeconds / (24 * 3600));
         const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
         const minutes = Math.floor((totalSeconds % (24 * 3600)) / 60);
-        const seconds = totalSeconds % 60;
 
-        const formatted = `${days}d ${String(hours).padStart(2, "0")}h ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
-        announcementText.innerHTML = `🏷 <strong>Bottle Scan Verified:</strong> 10% Loyalty Discount Active! <span class="countdown-pill">⏱ ${formatted}</span>`;
+        announcementText.innerHTML = `🏷 <strong>Bottle Verified:</strong> 10% Loyalty Active! <span class="countdown-pill">${days}d ${hours}h ${minutes}m</span>`;
         topBar.classList.add("loyal-banner");
       } else {
         announcementText.innerHTML = `🚚 <strong>FREE Doorstep Delivery</strong> on all orders above ₹500 across Bangalore (Delivered in 48–72 hrs)`;
@@ -2342,340 +1946,11 @@
     }
 
     updateTimer();
-    countdownTimerInterval = setInterval(updateTimer, 1000);
+    countdownTimerInterval = setInterval(updateTimer, 10000);
   }
-
-  // --- UPFRONT 2-STEP GATEKEEPER ONBOARDING ---
-
-  function getOnboardingModal() {
-    return document.getElementById("onboardingModalBackdrop") || 
-           document.getElementById("bottleClaimModalBackdrop") ||
-           document.querySelector(".onboarding-modal-backdrop");
-  }
-
-  window.closeOnboardingModal = function () {
-    const modal = getOnboardingModal();
-    if (modal) {
-      modal.classList.remove("open");
-      modal.style.display = "none";
-    }
-    localStorage.setItem("manopavana_onboarding_completed", "true");
-    document.body.style.overflow = "";
-  };
-
-  function checkAndTriggerUpfrontOnboarding() {
-    const completed = localStorage.getItem("manopavana_onboarding_completed");
-    if (completed === "true") return;
-
-    const modal = getOnboardingModal();
-    if (modal) {
-      modal.classList.add("open");
-      modal.style.display = "flex";
-      document.body.style.overflow = "hidden";
-      startOnboardingStep1();
-    }
-  }
-
-  function startOnboardingStep1() {
-    onboardingQuizAttemptsLeft = 2;
-    selectedQuizOptionText = null;
-
-    const modal = getOnboardingModal();
-    if (!modal) return;
-
-    // Attach Close ('X') Click
-    const closeBtn = modal.querySelector(".modal-close, button.close, [data-modal-close], .onboarding-close-btn");
-    if (closeBtn) {
-      closeBtn.onclick = function (e) {
-        if (e) e.preventDefault();
-        window.closeOnboardingModal();
-      };
-    }
-
-    // Attach Skip Link Click: "I haven't scanned a bottle yet (Continue to Shop) ->"
-    modal.querySelectorAll("a, span, button").forEach(el => {
-      const txt = (el.textContent || "").toLowerCase();
-      if (txt.includes("haven't scanned") || txt.includes("continue to shop") || txt.includes("skip")) {
-        el.style.cursor = "pointer";
-        el.onclick = function (e) {
-          if (e) e.preventDefault();
-          window.transitionOnboardingToStep2();
-        };
-      }
-    });
-
-    // Wire Bottle Selection Buttons (Groundnut / Coconut / Sesame)
-    modal.querySelectorAll("button, .quiz-bottle-pill").forEach(btn => {
-      const txt = (btn.textContent || "").toLowerCase();
-      if (txt.includes("groundnut") || txt.includes("coconut") || txt.includes("sesame")) {
-        btn.onclick = function (e) {
-          if (e) e.preventDefault();
-          if (txt.includes("groundnut")) window.loadBottleQuiz("groundnut");
-          else if (txt.includes("coconut")) window.loadBottleQuiz("coconut");
-          else if (txt.includes("sesame")) window.loadBottleQuiz("sesame");
-        };
-      }
-    });
-
-    // Load initial Groundnut Quiz
-    window.loadBottleQuiz("groundnut");
-  }
-
-  window.loadBottleQuiz = function (bottleKey) {
-    selectedQuizBottleKey = bottleKey;
-    selectedQuizOptionText = null;
-
-    const modal = getOnboardingModal();
-    if (!modal) return;
-
-    // Update active button styling
-    modal.querySelectorAll("button, .quiz-bottle-pill").forEach(btn => {
-      const txt = (btn.textContent || "").toLowerCase();
-      if (txt.includes("groundnut") || txt.includes("coconut") || txt.includes("sesame")) {
-        if (txt.includes(bottleKey)) {
-          btn.style.backgroundColor = "#eab308";
-          btn.style.color = "#0c0a09";
-          btn.style.borderColor = "#eab308";
-          btn.classList.add("active");
-        } else {
-          btn.style.backgroundColor = "transparent";
-          btn.style.color = "#d6d3d1";
-          btn.style.borderColor = "#44403c";
-          btn.classList.remove("active");
-        }
-      }
-    });
-
-    // Pull Question & Form 5 Options (1 correct, 4 distractors)
-    const qData = BOTTLE_QUIZ_POOLS[bottleKey][0];
-    const distractors = [
-      "Extracted using industrial chemical solvents",
-      "Refined, bleached, and chemically deodorized",
-      "Blended with synthetic liquid paraffin wax",
-      "Processed with artificial preservatives and dyes"
-    ];
-
-    const allOptions = [
-      { text: qData.correct, correct: true },
-      { text: distractors[0], correct: false },
-      { text: distractors[1], correct: false },
-      { text: distractors[2], correct: false },
-      { text: distractors[3], correct: false }
-    ].sort(() => Math.random() - 0.5);
-
-    activeQuizData = {
-      hint: qData.hint,
-      question: qData.question,
-      options: allOptions
-    };
-
-    // Replace "Loading label question..." with live UI
-    renderBottleQuizUI(modal);
-  };
-
-  // Alias in case markup calls selectQuizBottle
-  window.selectQuizBottle = function (bottleKey) {
-    window.loadBottleQuiz(bottleKey);
-  };
-
-  function renderBottleQuizUI(modal) {
-    // Locate or target question text container
-    let qEl = modal.querySelector(".quiz-question, #quizQuestionText, #onboardingQuizQuestion");
-    if (!qEl) {
-      modal.querySelectorAll("*").forEach(el => {
-        if (el.textContent && el.textContent.includes("Loading label question")) {
-          qEl = el;
-        }
-      });
-    }
-
-    if (qEl) {
-      qEl.textContent = activeQuizData.question;
-      qEl.style.color = "#f5f5f4";
-      qEl.style.fontSize = "0.95rem";
-      qEl.style.fontWeight = "600";
-      qEl.style.margin = "0.75rem 0";
-    }
-
-    // Locate or create options container right after question
-    let optsContainer = modal.querySelector(".quiz-options-container, #quizOptionsContainer, #onboardingQuizOptions");
-    if (!optsContainer && qEl) {
-      optsContainer = document.getElementById("dynamicQuizOptions");
-      if (!optsContainer) {
-        optsContainer = document.createElement("div");
-        optsContainer.id = "dynamicQuizOptions";
-        qEl.parentNode.insertBefore(optsContainer, qEl.nextSibling);
-      }
-    }
-
-    if (optsContainer) {
-      optsContainer.innerHTML = activeQuizData.options.map((opt, i) => `
-        <div class="onboarding-opt-row" data-idx="${i}" style="display:flex; align-items:center; gap:0.75rem; padding:0.65rem 0.85rem; margin-bottom:0.45rem; background:#1c1917; border:1px solid #44403c; border-radius:8px; cursor:pointer;">
-          <input type="radio" name="bottleOptionRadio" id="bOpt_${i}" style="accent-color:#eab308; width:16px; height:16px; cursor:pointer;" />
-          <label for="bOpt_${i}" style="color:#f5f5f4; font-size:0.85rem; cursor:pointer; line-height:1.3; margin:0;">${opt.text}</label>
-        </div>
-      `).join("");
-
-      // Bind row clicks
-      optsContainer.querySelectorAll(".onboarding-opt-row").forEach(row => {
-        row.onclick = function () {
-          const idx = parseInt(row.getAttribute("data-idx"), 10);
-          selectedQuizOptionText = activeQuizData.options[idx].text;
-
-          optsContainer.querySelectorAll(".onboarding-opt-row").forEach((r, rIdx) => {
-            const rad = r.querySelector("input[type='radio']");
-            if (rIdx === idx) {
-              r.style.borderColor = "#eab308";
-              r.style.backgroundColor = "#292524";
-              if (rad) rad.checked = true;
-            } else {
-              r.style.borderColor = "#44403c";
-              r.style.backgroundColor = "#1c1917";
-              if (rad) rad.checked = false;
-            }
-          });
-        };
-      });
-    }
-
-    // Update Chance Badge
-    modal.querySelectorAll("span, div, p").forEach(el => {
-      if (el.textContent && el.textContent.includes("chances left")) {
-        el.textContent = `⚠️ ${onboardingQuizAttemptsLeft} chance${onboardingQuizAttemptsLeft === 1 ? '' : 's'} left to claim 10% OFF`;
-      }
-    });
-
-    // Bind "Verify & Claim 10% Off" button
-    modal.querySelectorAll("button").forEach(btn => {
-      const txt = (btn.textContent || "").toLowerCase();
-      if (txt.includes("verify") || txt.includes("claim 10%")) {
-        btn.onclick = function (e) {
-          if (e) e.preventDefault();
-          window.handleVerifyBottleAnswer();
-        };
-      }
-    });
-  }
-
-  window.handleVerifyBottleAnswer = function () {
-    if (!selectedQuizOptionText) {
-      alert("Please select one of the options from your bottle label.");
-      return;
-    }
-
-    const currentCorrect = BOTTLE_QUIZ_POOLS[selectedQuizBottleKey][0].correct;
-    if (selectedQuizOptionText === currentCorrect) {
-      activeBottleCode = `VERIFIED_${selectedQuizBottleKey.toUpperCase()}_BOTTLE`;
-      bottleScanTimestampMs = Date.now();
-      localStorage.setItem("manopavana_bottle_code", activeBottleCode);
-      localStorage.setItem("manopavana_bottle_scan_time", bottleScanTimestampMs.toString());
-
-      renderCart();
-      startLiveCountdown();
-      renderComboSection();
-      window.showActionToast("Loyalty Unlocked", "🎉 10% Reorder Loyalty Discount is now active!", "✨", "success");
-
-      setTimeout(window.transitionOnboardingToStep2, 1000);
-    } else {
-      onboardingQuizAttemptsLeft--;
-      if (onboardingQuizAttemptsLeft > 0) {
-        alert(`❌ That does not match your bottle label. You have ${onboardingQuizAttemptsLeft} chance left.`);
-        const modal = getOnboardingModal();
-        if (modal) {
-          modal.querySelectorAll("span, div, p").forEach(el => {
-            if (el.textContent && el.textContent.includes("chances left")) {
-              el.textContent = `⚠️️ ${onboardingQuizAttemptsLeft} chance left to claim 10% OFF`;
-            }
-          });
-        }
-      } else {
-        alert("❌ Attempts exhausted. Proceeding to delivery check...");
-        setTimeout(window.transitionOnboardingToStep2, 1000);
-      }
-    }
-  };
-
-  // Transition: Step 1 (Bottle Scan) -> Step 2 (Pincode Check)
-  window.transitionOnboardingToStep2 = function () {
-    const modal = getOnboardingModal();
-    if (!modal) {
-      window.closeOnboardingModal();
-      return;
-    }
-
-    // Step 2 Container Render
-    const cardBody = modal.querySelector(".modal-body, .onboarding-body") || modal;
-    cardBody.innerHTML = `
-      <div style="padding:1.5rem; text-align:center; max-width:420px; margin:0 auto;">
-        <div style="font-size:2.5rem; margin-bottom:0.75rem;">📍</div>
-        <h2 style="color:#eab308; margin-bottom:0.5rem; font-size:1.35rem;">Delivery Pincode Check</h2>
-        <p style="color:#d6d3d1; font-size:0.9rem; line-height:1.4; margin-bottom:1.25rem;">
-          Enter your 6-digit delivery pincode to check doorstep serviceability from our Bangalore facility.
-        </p>
-        <div style="margin-bottom:1rem;">
-          <input type="text" id="step2PincodeInput" maxlength="6" placeholder="e.g. 560058" style="width:100%; padding:0.75rem; border-radius:8px; border:1px solid #44403c; background:#1c1917; color:#f5f5f4; font-size:1.1rem; text-align:center; letter-spacing:2px; box-sizing:border-box;" />
-        </div>
-        <div id="step2PincodeFeedback" style="display:none; font-size:0.85rem; margin-bottom:1rem; padding:0.5rem; border-radius:6px;"></div>
-        <button type="button" id="btnCheckPincodeStep2" style="width:100%; padding:0.85rem; background:#eab308; color:#0c0a09; font-weight:bold; border:none; border-radius:8px; font-size:1rem; cursor:pointer;">
-          Check &amp; Continue &rarr;
-        </button>
-      </div>
-    `;
-
-    const pinInput = document.getElementById("step2PincodeInput");
-    const checkBtn = document.getElementById("btnCheckPincodeStep2");
-    const feedback = document.getElementById("step2PincodeFeedback");
-
-    if (pinInput) {
-      pinInput.addEventListener("input", (e) => {
-        e.target.value = e.target.value.replace(/\D/g, "");
-      });
-      pinInput.focus();
-    }
-
-    if (checkBtn) {
-      checkBtn.onclick = function () {
-        const pin = pinInput.value.trim();
-        if (!/^\d{6}$/.test(pin)) {
-          feedback.style.display = "block";
-          feedback.style.background = "#451a03";
-          feedback.style.color = "#fbbf24";
-          feedback.textContent = "Please enter a valid 6-digit Indian pincode.";
-          return;
-        }
-
-        userSelectedPincode = pin;
-        isBangalorePincode = pin.startsWith("560");
-        localStorage.setItem("manopavana_user_pincode", pin);
-        updateLocationUI();
-
-        if (isBangalorePincode) {
-          feedback.style.display = "block";
-          feedback.style.background = "#052e16";
-          feedback.style.color = "#4ade80";
-          feedback.textContent = `✅ Bangalore Serviceable (${pin})! Doorstep delivery active.`;
-          setTimeout(() => {
-            window.closeOnboardingModal();
-          }, 1000);
-        } else {
-          feedback.style.display = "block";
-          feedback.style.background = "#451a03";
-          feedback.style.color = "#fbbf24";
-          feedback.innerHTML = `
-            📍 Outside Bangalore (${pin}). Direct doorstep delivery is exclusive to Bangalore (560xxx). Orders for your location are fulfilled via Flipkart.<br><br>
-            <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:0.6rem 1.2rem; background:#2874f0; color:#fff; text-decoration:none; font-weight:bold; border-radius:6px;">
-              🛒 Shop on Flipkart &rarr;
-            </a>
-          `;
-          localStorage.setItem("manopavana_onboarding_completed", "true");
-        }
-      };
-    }
-  };
-
 
   // ==========================================
-  // 17. CUSTOMER REVIEWS & ADMIN DELETION
+  // 17. REVIEWS & LEGAL MODALS
   // ==========================================
   function renderReviews() {
     const grid = document.getElementById("reviewsDisplayGrid");
@@ -2685,55 +1960,24 @@
       grid.innerHTML = `
         <div class="empty-reviews-notice">
           <span>🌱</span>
-          <p>No customer reviews posted yet.<br>Be the first to share your kitchen experience using the form below!</p>
+          <p>Be the first to share your kitchen experience using the form below!</p>
         </div>
       `;
       return;
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const isAdmin = urlParams.get("admin") === "true";
-
-    grid.innerHTML = reviewsList
-      .map((rev) => {
-        const starRatingNum = Math.max(1, Math.min(5, parseInt(rev.rating, 10) || 5));
-        const starsDisplay = "★".repeat(starRatingNum) + "☆".repeat(5 - starRatingNum);
-
-        return `
-          <div class="review-card" id="card-${rev.id}">
-            <div>
-              <div class="review-card-top">
-                <div class="review-stars">${starsDisplay}</div>
-                ${isAdmin ? `<button class="btn-admin-delete" onclick="deleteReview('${rev.id}')" title="Admin Delete">🗑️ Delete</button>` : ""}
-              </div>
-              <p class="review-text">"${escapeHtml(rev.comment)}"</p>
-            </div>
-            <div class="reviewer-meta">
-              <strong>${escapeHtml(rev.name)}</strong>
-              <span>${escapeHtml(rev.location)} • ${escapeHtml(rev.product)}</span>
-              <small class="review-date">${escapeHtml(rev.date)}</small>
-            </div>
-          </div>
-        `;
-      })
-      .join("");
+    grid.innerHTML = reviewsList.map((rev) => `
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"${escapeHtml(rev.comment)}"</p>
+        <div class="reviewer-meta">
+          <strong>${escapeHtml(rev.name)}</strong>
+          <span>${escapeHtml(rev.product)}</span>
+        </div>
+      </div>
+    `).join("");
   }
 
-  window.deleteReview = function (reviewId) {
-    const enteredPin = prompt("Admin Verification: Enter Secret PIN to remove this review:");
-    if (enteredPin === ADMIN_PIN) {
-      reviewsList = reviewsList.filter((item) => item.id !== reviewId);
-      localStorage.setItem("manopavana_user_reviews", JSON.stringify(reviewsList));
-      renderReviews();
-      alert("Review removed successfully.");
-    } else if (enteredPin !== null) {
-      alert("Incorrect PIN. Action denied.");
-    }
-  };
-
-  // ==========================================
-  // 18. LEGAL MODALS CONTROLLER
-  // ==========================================
   window.openLegalModal = function (modalId) {
     const modal = document.getElementById(modalId);
     if (modal) modal.classList.add("open");
@@ -2744,19 +1988,51 @@
     if (modal) modal.classList.remove("open");
   };
 
+  function populateStatesDropdown() {
+    const stateSelect = document.getElementById("custState");
+    const districtSelect = document.getElementById("custDistrict");
+    if (!stateSelect || !districtSelect) return;
+
+    stateSelect.innerHTML = `<option value="">-- Select State / UT --</option>`;
+    Object.keys(INDIA_STATES_AND_DISTRICTS).sort().forEach((stateName) => {
+      const opt = document.createElement("option");
+      opt.value = stateName;
+      opt.textContent = stateName;
+      stateSelect.appendChild(opt);
+    });
+
+    stateSelect.value = "Karnataka";
+    districtSelect.innerHTML = INDIA_STATES_AND_DISTRICTS["Karnataka"].map(d => `<option value="${d}">${d}</option>`).join("");
+    districtSelect.value = "Bengaluru Urban";
+
+    stateSelect.onchange = function (e) {
+      const selected = e.target.value;
+      if (INDIA_STATES_AND_DISTRICTS[selected]) {
+        districtSelect.innerHTML = INDIA_STATES_AND_DISTRICTS[selected].map(d => `<option value="${d}">${d}</option>`).join("");
+      }
+    };
+  }
+
   // ==========================================
-  // 19. INITIALIZATION & EVENT LISTENERS
+  // 18. DOM INITIALIZATION
   // ==========================================
   document.addEventListener("DOMContentLoaded", () => {
-    // Sound & Video Engine
+    // Sound & Video
     document.getElementById("soundToggleBtn")?.addEventListener("click", toggleAudio);
     initVideoAutoplay();
-
-    // Trigger instant autoplay or listen for first gesture
     tryImmediateAudioPlayback();
-    attachInteractionListeners();
 
-    // Navigation and Cart Drawer
+    // Interaction audio listener
+    ["click", "scroll", "touchstart"].forEach(evt => {
+      window.addEventListener(evt, () => {
+        if (!hasInteracted) {
+          hasInteracted = true;
+          tryImmediateAudioPlayback();
+        }
+      }, { once: true, passive: true });
+    });
+
+    // Cart Drawer triggers
     document.getElementById("openCartBtn")?.addEventListener("click", window.openCart);
     document.getElementById("closeCartBtn")?.addEventListener("click", window.closeCart);
     document.getElementById("cartBackdrop")?.addEventListener("click", window.closeCart);
@@ -2780,86 +2056,48 @@
     document.getElementById("closeModalBtn")?.addEventListener("click", window.closeCheckoutModal);
     document.getElementById("closeDetailModalBtn")?.addEventListener("click", window.closeProductDetailModal);
 
-    // Payment Radio Selections
+    // Payment radio selectors
     document.getElementById("payPhonePe")?.addEventListener("change", updatePaymentModeUI);
     document.getElementById("payCOD")?.addEventListener("change", updatePaymentModeUI);
     document.getElementById("payWhatsApp")?.addEventListener("change", updatePaymentModeUI);
 
-    // Checkout Submit
+    // Submit checkout
     document.getElementById("submitOrderBtn")?.addEventListener("click", handleCheckoutSubmission);
 
-    // Number Inputs Sanitization
-    document.getElementById("custPhone")?.addEventListener("input", (e) => {
-      e.target.value = e.target.value.replace(/\D/g, "");
-    });
-    document.getElementById("custPincode")?.addEventListener("input", (e) => {
-      e.target.value = e.target.value.replace(/\D/g, "");
-    });
-    document.getElementById("onboardingPincodeInput")?.addEventListener("input", (e) => {
-      e.target.value = e.target.value.replace(/\D/g, "");
+    // Number sanitization
+    ["custPhone", "custPincode", "onboardPincodeInput", "pincodeCheckInput"].forEach(id => {
+      document.getElementById(id)?.addEventListener("input", (e) => {
+        e.target.value = e.target.value.replace(/\D/g, "");
+      });
     });
 
-    // Dynamic Address Geocoding Setup
-    setupForwardGeocoding();
-
-    // Review Form Submission
+    // Reviews form
     document.getElementById("productReviewForm")?.addEventListener("submit", (e) => {
       e.preventDefault();
       const name = document.getElementById("revName")?.value.trim();
       const product = document.getElementById("revProduct")?.value;
-      const rating = document.getElementById("revRating")?.value;
-      const location = document.getElementById("revLocation")?.value.trim() || "Bangalore";
       const comment = document.getElementById("revComment")?.value.trim();
 
-      if (!name || !comment) {
-        alert("Please fill in your name and kitchen feedback.");
-        return;
+      if (name && comment) {
+        reviewsList.unshift({ name, product, comment });
+        localStorage.setItem("manopavana_user_reviews", JSON.stringify(reviewsList));
+        renderReviews();
+        e.target.reset();
+        window.showActionToast("Review Submitted", "Thank you for your feedback!", "✨", "success");
       }
-
-      reviewsList.unshift({
-        id: "REV-" + Date.now(),
-        name,
-        product,
-        rating,
-        location,
-        comment,
-        date: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })
-      });
-
-      localStorage.setItem("manopavana_user_reviews", JSON.stringify(reviewsList));
-      renderReviews();
-      e.target.reset();
-      window.showActionToast("Review Submitted", "✨ Thank you! Your review has been posted.", "✨", "success");
     });
 
     // FAQ Accordion
-    document.querySelectorAll(".faq-question").forEach((button) => {
-      button.addEventListener("click", () => {
-        const item = button.parentElement;
+    document.querySelectorAll(".faq-question").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const item = btn.parentElement;
         const isActive = item.classList.contains("active");
         document.querySelectorAll(".faq-item").forEach((el) => el.classList.remove("active"));
         if (!isActive) item.classList.add("active");
       });
     });
 
-    // Post-Checkout Redirect Handler (?status=success&orderRef=...)
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("status") === "success" && urlParams.get("orderRef")) {
-      const ref = urlParams.get("orderRef");
-      cart = [];
-      localStorage.removeItem("manopavana_cart");
-      renderCart();
-
-      showOrderConfirmationModal({
-        orderRef: ref,
-        paymentMode: "PhonePe PG (Online Paid)"
-      });
-
-      callBackend({ action: "verify_payment", orderRef: ref }).catch(console.error);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    // Initialize Components
+    // Render components
     populateStatesDropdown();
     updateLocationUI();
     initLoyaltyFromStorage();
@@ -2867,6 +2105,8 @@
     renderCart();
     renderReviews();
     initFirebaseAuth();
+
+    // Trigger onboarding sequence (Bottle Scan -> Pincode -> Shop)
     checkAndTriggerUpfrontOnboarding();
   });
 })();
