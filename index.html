@@ -17,6 +17,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
+  <!-- Leaflet Interactive Maps CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
   <!-- Firebase Official Web SDK (Compat Builds for Clean Browser Execution) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -293,9 +297,9 @@
     </div>
   </div>
 
-  <!-- Streamlined Checkout Modal -->
+  <!-- Streamlined Checkout Modal with Saved Address & Leaflet Map Integration -->
   <div id="checkoutModalBackdrop" class="modal-backdrop">
-    <div class="modal-card">
+    <div class="modal-card checkout-modal-card-extended">
       <div class="modal-header">
         <h3 id="modalCheckoutTitle">Delivery &amp; Payment Details</h3>
         <button id="closeModalBtn" class="close-modal-btn" type="button">&times;</button>
@@ -303,47 +307,89 @@
       <div class="modal-body">
         <div id="checkoutOrderPreview" class="checkout-order-preview"></div>
 
-        <div class="form-group">
-          <label for="custName" id="lblCustName">Full Name *</label>
-          <input type="text" id="custName" placeholder="e.g. Ramesh Kumar" required autocomplete="name" />
-          <small class="field-error-text" id="custNameErr"></small>
-        </div>
-
-        <div class="form-group">
-          <label for="custPhone" id="lblCustPhone">WhatsApp / Mobile Number (10 Digits) *</label>
-          <input type="tel" id="custPhone" maxlength="10" placeholder="e.g. 9876543210" required autocomplete="tel" />
-          <small class="field-error-text" id="custPhoneErr"></small>
-        </div>
-
-        <div class="form-group">
-          <label for="custAddress">Complete Street Delivery Address *</label>
-          <textarea id="custAddress" rows="2" placeholder="Flat / House No, Building, Street, Landmark" required autocomplete="street-address"></textarea>
-          <small class="field-error-text" id="custAddressErr"></small>
-        </div>
-
-        <div class="form-row">
-          <div class="form-col">
-            <label for="custState">State / UT *</label>
-            <select id="custState" required><option value="">-- Select State / UT --</option></select>
-            <small class="field-error-text" id="custStateErr"></small>
+        <!-- 1-Click Saved Address Summary Card -->
+        <div id="savedAddressSummaryCard" class="saved-address-card" style="display: none;">
+          <div class="saved-address-header">
+            <span class="saved-address-badge">📍 Saved Delivery Address</span>
+            <button type="button" id="btnEditSavedAddress" class="btn-edit-address" onclick="toggleEditAddress(true)">✏️ Edit / Change</button>
           </div>
-          <div class="form-col">
-            <label for="custDistrict">District *</label>
-            <select id="custDistrict" required><option value="">-- Select District --</option></select>
-            <small class="field-error-text" id="custDistrictErr"></small>
+          <div class="saved-address-content">
+            <strong id="savedAddrName">--</strong>
+            <p id="savedAddrText">--</p>
+            <span id="savedAddrPhone">--</span>
+            <div id="savedAddrGpsNotice" class="saved-gps-badge" style="display:none;">📍 Exact GPS Pin Saved</div>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-col">
-            <label for="custCity">City / Town / Area *</label>
-            <input type="text" id="custCity" placeholder="e.g. Bengaluru" required autocomplete="address-level2" />
-            <small class="field-error-text" id="custCityErr"></small>
+        <!-- Editable Delivery Address Form Container -->
+        <div id="deliveryFieldsContainer">
+          <div class="form-group">
+            <label for="custName" id="lblCustName">Full Name *</label>
+            <input type="text" id="custName" placeholder="e.g. Ramesh Kumar" required autocomplete="name" />
+            <small class="field-error-text" id="custNameErr"></small>
           </div>
-          <div class="form-col">
-            <label for="custPincode">Pincode (6 Digits) *</label>
-            <input type="text" id="custPincode" maxlength="6" placeholder="e.g. 560058" required autocomplete="postal-code" />
-            <small class="field-error-text" id="custPincodeErr"></small>
+
+          <div class="form-group">
+            <label for="custPhone" id="lblCustPhone">WhatsApp / Mobile Number (10 Digits) *</label>
+            <input type="tel" id="custPhone" maxlength="10" placeholder="e.g. 9876543210" required autocomplete="tel" />
+            <small class="field-error-text" id="custPhoneErr"></small>
+          </div>
+
+          <div class="form-group">
+            <div class="address-label-row">
+              <label for="custAddress">Complete Street Delivery Address *</label>
+              <button type="button" class="btn-gps-locate" onclick="detectUserGeolocation()" title="Use device GPS">
+                📍 Locate My Doorstep
+              </button>
+            </div>
+            <textarea id="custAddress" rows="2" placeholder="Flat / House No, Building, Street, Landmark" required autocomplete="street-address"></textarea>
+            <small class="field-error-text" id="custAddressErr"></small>
+          </div>
+
+          <!-- Interactive Leaflet Map Pin-Drop Container -->
+          <div class="form-group map-form-group">
+            <div class="map-label-bar">
+              <span class="map-label">📍 Pinpoint Doorstep Location (Drag marker for exact delivery)</span>
+              <span id="mapCoordsBadge" class="map-coords-badge">Centering on Bangalore</span>
+            </div>
+            <div id="deliveryMap" class="delivery-map-canvas"></div>
+            <!-- Hidden coordinates for backend & Google Maps navigation -->
+            <input type="hidden" id="custLatitude" value="12.9716" />
+            <input type="hidden" id="custLongitude" value="77.5946" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label for="custState">State / UT *</label>
+              <select id="custState" required><option value="">-- Select State / UT --</option></select>
+              <small class="field-error-text" id="custStateErr"></small>
+            </div>
+            <div class="form-col">
+              <label for="custDistrict">District *</label>
+              <select id="custDistrict" required><option value="">-- Select District --</option></select>
+              <small class="field-error-text" id="custDistrictErr"></small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label for="custCity">City / Town / Area *</label>
+              <input type="text" id="custCity" placeholder="e.g. Bengaluru" required autocomplete="address-level2" />
+              <small class="field-error-text" id="custCityErr"></small>
+            </div>
+            <div class="form-col">
+              <label for="custPincode">Pincode (6 Digits) *</label>
+              <input type="text" id="custPincode" maxlength="6" placeholder="e.g. 560058" required autocomplete="postal-code" />
+              <small class="field-error-text" id="custPincodeErr"></small>
+            </div>
+          </div>
+
+          <!-- Save Address Preference Checkbox -->
+          <div class="save-address-row">
+            <label class="save-address-label">
+              <input type="checkbox" id="chkSaveAddress" checked />
+              <span>Save address &amp; pin for 1-click checkout on future orders</span>
+            </label>
           </div>
         </div>
 
