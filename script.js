@@ -95,17 +95,29 @@
   let currentDetailProductKey = null;
   let currentDetailSelectedSize = "1L";
 
-  // Onboarding state for Step 1
+  // Upfront Onboarding State (Step 1 Quiz)
   let onboardingQuizAttemptsLeft = 2;
-  let onboardingQuizPool = [
+  const ONBOARDING_QUIZ_POOL = [
     {
-      question: "Which tagline best describes our packaging and quality standard?",
+      hint: "Quality & Packaging Authenticity Question:",
+      question: "Which statement accurately describes MANOPAVANA's sourcing and packaging standard?",
       options: [
         { text: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.", correct: true },
-        { text: "Extracted on-site in industrial mills using heavy chemical solvents.", correct: false },
-        { text: "Processed in automated overseas industrial plants.", correct: false },
-        { text: "Refined and bleached with artificial preservatives.", correct: false },
-        { text: "Packaged directly at unverified roadside kiosks.", correct: false }
+        { text: "Crushed with industrial chemical solvents at high temperature.", correct: false },
+        { text: "Refined, bleached, and deodorized using heavy machinery.", correct: false },
+        { text: "Imported from foreign synthetic bulk suppliers.", correct: false },
+        { text: "Blended with artificial petroleum mineral oils.", correct: false }
+      ]
+    },
+    {
+      hint: "Production Process Verification:",
+      question: "How are MANOPAVANA wood-pressed oils prepared before distribution?",
+      options: [
+        { text: "Cold pressed in traditional wooden chekkus, allowed natural sedimentation, and packed at our Bangalore packaging facility.", correct: true },
+        { text: "Heated over 200°C in thermal refining columns.", correct: false },
+        { text: "Preserved with added chemical antioxidants and dyes.", correct: false },
+        { text: "Blended with argemone oil for consistency.", correct: false },
+        { text: "Diluted with liquid paraffin.", correct: false }
       ]
     }
   ];
@@ -277,16 +289,226 @@
     }
   };
 
+  // Comprehensive 36 States & Union Territories of India
   const INDIA_STATES_AND_DISTRICTS = {
+    "Andhra Pradesh": [
+      "Alluri Sitharama Raju", "Anakapalli", "Ananthapuramu", "Annamayya", "Bapatla",
+      "Chittoor", "Dr. B.R. Ambedkar Konaseema", "East Godavari", "Eluru", "Guntur",
+      "Kakinada", "Krishna", "Kurnool", "Nandyal", "NTR", "Palnadu",
+      "Parvathipuram Manyam", "Prakasam", "Sri Potti Sriramulu Nellore", "Sri Sathya Sai",
+      "Srikakulam", "Tirupati", "Visakhapatnam", "Vizianagaram", "West Godavari", "YSR Kadapa"
+    ],
+    "Arunachal Pradesh": [
+      "Anjaw", "Bichom", "Changlang", "Dibang Valley", "East Kameng", "East Siang",
+      "Kamle", "Keyi Panyor", "Kra Daadi", "Kurung Kumey", "Lepa Rada", "Lohit",
+      "Longding", "Lower Dibang Valley", "Lower Siang", "Lower Subansiri", "Namsai",
+      "Pakke Kessang", "Papum Pare", "Shi Yomi", "Siang", "Tawang", "Tirap",
+      "Upper Siang", "Upper Subansiri", "West Kameng", "West Siang"
+    ],
+    "Assam": [
+      "Baksa", "Barpeta", "Biswanath", "Bongaigaon", "Cachar", "Charaideo",
+      "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao",
+      "Goalpara", "Golaghat", "Hailakandi", "Hojai", "Jorhat", "Kamrup",
+      "Kamrup Metropolitan", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur",
+      "Majuli", "Morigaon", "Nagaon", "Nalbari", "Sivasagar", "Sonitpur",
+      "South Salmara-Mankachar", "Tamulpur", "Tinsukia", "Udalguri", "West Karbi Anglong"
+    ],
+    "Bihar": [
+      "Araria", "Arwal", "Aurangabad", "Banka", "Begusarai", "Bhagalpur", "Bhojpur",
+      "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad",
+      "Kaimur", "Katihar", "Khagaria", "Kishanganj", "Lakhisarai", "Madhepura",
+      "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia",
+      "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi",
+      "Siwan", "Supaul", "Vaishali", "West Champaran"
+    ],
+    "Chhattisgarh": [
+      "Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur",
+      "Bilaspur", "Dantewada", "Dhamtari", "Durg", "Gariaband", "Gaurela-Pendra-Marwahi",
+      "Janjgir-Champa", "Jashpur", "Kabirdham", "Kanker", "Khairagarh-Chhuikhadan-Gandai",
+      "Kondagaon", "Korba", "Koriya", "Mahasamund", "Manendragarh-Chirmiri-Bharatpur",
+      "Mohla-Manpur-Ambagarh Chowki", "Mungeli", "Narayanpur", "Raigarh", "Raipur",
+      "Rajnandgaon", "Sakti", "Sarangarh-Bilaigarh", "Sukma", "Surajpur", "Surguja"
+    ],
+    "Goa": [
+      "North Goa", "South Goa"
+    ],
+    "Gujarat": [
+      "Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch",
+      "Bhavnagar", "Botad", "Chhota Udaipur", "Dahod", "Dang", "Devbhumi Dwarka",
+      "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch",
+      "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal",
+      "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar",
+      "Tapi", "Vadodara", "Valsad"
+    ],
+    "Haryana": [
+      "Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurugram",
+      "Hisar", "Jhajjar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Mahendragarh",
+      "Nuh", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa",
+      "Sonipat", "Yamunanagar"
+    ],
+    "Himachal Pradesh": [
+      "Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu",
+      "Lahaul and Spiti", "Mandi", "Shimla", "Sirmaur", "Solan", "Una"
+    ],
+    "Jharkhand": [
+      "Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum",
+      "Garhwa", "Giridih", "Godda", "Gumla", "Hazaribagh", "Jamtara",
+      "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu",
+      "Ramgarh", "Ranchi", "Sahebganj", "Seraikela Kharsawan", "Simdega", "West Singhbhum"
+    ],
     "Karnataka": [
-      "Bengaluru Urban", "Bengaluru Rural", "Bagalkote", "Ballari", "Belagavi", "Bidar",
+      "Bagalkote", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar",
       "Chamarajanagara", "Chikkaballapura", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada",
       "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", "Kalaburagi", "Kodagu", "Kolar",
-      "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi",
-      "Uttara Kannada", "Vijayanagara", "Vijayapura", "Yadgir"
+      "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru",
+      "Udupi", "Uttara Kannada", "Vijayanagara", "Vijayapura", "Yadgir"
     ],
-    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem"],
-    "Kerala": ["Thiruvananthapuram", "Ernakulam", "Kozhikode", "Thrissur", "Palakkad"]
+    "Kerala": [
+      "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam",
+      "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta",
+      "Thiruvananthapuram", "Thrissur", "Wayanad"
+    ],
+    "Madhya Pradesh": [
+      "Agar Malwa", "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani",
+      "Betul", "Bhind", "Bhopal", "Burhanpur", "Chhatarpur", "Chhindwara",
+      "Damoh", "Datia", "Dewas", "Dhar", "Dindori", "Guna", "Gwalior",
+      "Harda", "Indore", "Jabalpur", "Jhabua", "Katni", "Khandwa",
+      "Khargone", "Maihar", "Mandla", "Mandsaur", "Morena", "Narsinghpur",
+      "Neemuch", "Niwari", "Panna", "Pandhurna", "Raisen", "Rajgarh",
+      "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol",
+      "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
+      "Ujjain", "Umaria", "Vidisha"
+    ],
+    "Maharashtra": [
+      "Ahmednagar", "Akola", "Amravati", "Chhatrapati Sambhajinagar", "Beed", "Bhandara",
+      "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli",
+      "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban",
+      "Nagpur", "Nanded", "Nandurbar", "Nashik", "Dharashiv", "Palghar",
+      "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara",
+      "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal"
+    ],
+    "Manipur": [
+      "Bishnupur", "Chandel", "Churachandpur", "Imphal East", "Imphal West",
+      "Jiribam", "Kakching", "Kamjong", "Kangpokpi", "Noney", "Pherzawl",
+      "Senapati", "Tamenglong", "Tengnoupal", "Thoubal", "Ukhrul"
+    ],
+    "Meghalaya": [
+      "East Garo Hills", "East Jaintia Hills", "East Khasi Hills", "Eastern West Khasi Hills",
+      "North Garo Hills", "Ri Bhoi", "South Garo Hills", "South West Garo Hills",
+      "South West Khasi Hills", "West Garo Hills", "West Jaintia Hills", "West Khasi Hills"
+    ],
+    "Mizoram": [
+      "Aizawl", "Champhai", "Hnahthial", "Khawzawl", "Kolasib", "Lawngtlai",
+      "Lunglei", "Mamit", "Saitual", "Serchhip", "Siaha"
+    ],
+    "Nagaland": [
+      "Chümoukedima", "Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung",
+      "Mon", "Niuland", "Noklak", "Peren", "Phek", "Shamator", "Tseminyü",
+      "Tuensang", "Wokha", "Zünheboto"
+    ],
+    "Odisha": [
+      "Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Boudh",
+      "Cuttack", "Deogarh", "Dhenkanal", "Gajapati", "Ganjam", "Jagatsinghpur",
+      "Jajpur", "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar",
+      "Khordha", "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh",
+      "Nuapada", "Puri", "Rayagada", "Sambalpur", "Subarnapur", "Sundargarh"
+    ],
+    "Punjab": [
+      "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka",
+      "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Ludhiana",
+      "Malerkotla", "Mansa", "Moga", "Muktsar", "Pathankot", "Patiala",
+      "Rupnagar", "Sahibzada Ajit Singh Nagar", "Sangrur", "Shahid Bhagat Singh Nagar", "Tarn Taran"
+    ],
+    "Rajasthan": [
+      "Ajmer", "Alwar", "Anupgarh", "Balotra", "Banswara", "Baran", "Barmer",
+      "Beawar", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh",
+      "Churu", "Dausa", "Deeg", "Dholpur", "Didwana-Kuchaman", "Dudu", "Dungarpur",
+      "Gangapur City", "Hanumangarh", "Jaipur", "Jaipur Rural", "Jaisalmer",
+      "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", "Jodhpur Rural", "Karauli",
+      "Kekri", "Khairthal-Tijara", "Kota", "Kotputli-Behror", "Nagaur", "Neem Ka Thana",
+      "Pali", "Phalodi", "Pratapgarh", "Rajsamand", "Salumbar", "Sanchore",
+      "Sawai Madhopur", "Shahpura", "Sikar", "Sirohi", "Sri Ganganagar", "Tonk", "Udaipur"
+    ],
+    "Sikkim": [
+      "Gangtok", "Gyalshing", "Mangan", "Namchi", "Pakyong", "Soreng"
+    ],
+    "Tamil Nadu": [
+      "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri",
+      "Dindigul", "Erode", "Kallakurichi", "Kanchipuram", "Kanyakumari", "Karur",
+      "Krishnagiri", "Madurai", "Mayiladuthurai", "Nagapattinam", "Namakkal", "Nilgiris",
+      "Perambalur", "Pudukkottai", "Ramanathapuram", "Ranipet", "Salem", "Sivaganga",
+      "Tenkasi", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli",
+      "Tirupathur", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore",
+      "Viluppuram", "Virudhunagar"
+    ],
+    "Telangana": [
+      "Adilabad", "Bhadradri Kothagudem", "Hanamkonda", "Hyderabad", "Jagtial",
+      "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar",
+      "Khammam", "Kumuram Bheem Asifabad", "Mahabubabad", "Mahabubnagar", "Mancherial",
+      "Medak", "Medchal-Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda",
+      "Narayanpet", "Nirmal", "Nizamabad", "Peddapalli", "Rajanna Sircilla",
+      "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad",
+      "Wanaparthy", "Warangal", "Yadadri Bhuvanagiri"
+    ],
+    "Tripura": [
+      "Dhalai", "Gomati", "Khowai", "North Tripura", "Sepahijala",
+      "South Tripura", "Unakoti", "West Tripura"
+    ],
+    "Uttar Pradesh": [
+      "Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya",
+      "Ayodhya", "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur",
+      "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor",
+      "Budaun", "Bulandshahr", "Chandauli", "Chitrakoot", "Deoria", "Etah",
+      "Etawah", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar", "Ghaziabad",
+      "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi",
+      "Hathras", "Jalaun", "Jaunpur", "Jhansi", "Kannauj", "Kanpur Dehat",
+      "Kanpur Nagar", "Kasganj", "Kaushambi", "Kheri", "Kushinagar", "Lalitpur",
+      "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau",
+      "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit", "Pratapgarh",
+      "Prayagraj", "Raebareli", "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar",
+      "Shahjahanpur", "Shamli", "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra",
+      "Sultanpur", "Unnao", "Varanasi"
+    ],
+    "Uttarakhand": [
+      "Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar",
+      "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal",
+      "Udham Singh Nagar", "Uttarkashi"
+    ],
+    "West Bengal": [
+      "Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur",
+      "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong",
+      "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas",
+      "Paschim Bardhaman", "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur",
+      "Purulia", "South 24 Parganas", "Uttar Dinajpur"
+    ],
+    "Andaman and Nicobar Islands": [
+      "Nicobar", "North and Middle Andaman", "South Andaman"
+    ],
+    "Chandigarh": [
+      "Chandigarh"
+    ],
+    "Dadra and Nagar Haveli and Daman and Diu": [
+      "Dadra and Nagar Haveli", "Daman", "Diu"
+    ],
+    "Delhi": [
+      "Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi",
+      "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi"
+    ],
+    "Jammu and Kashmir": [
+      "Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal",
+      "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch",
+      "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian",
+      "Srinagar", "Udhampur"
+    ],
+    "Ladakh": [
+      "Kargil", "Leh"
+    ],
+    "Lakshadweep": [
+      "Lakshadweep"
+    ],
+    "Puducherry": [
+      "Karaikal", "Mahe", "Puducherry", "Yanam"
+    ]
   };
 
   function populateStatesDropdown() {
@@ -1179,31 +1401,31 @@
 
   // Dynamic Forward Geocoding Debounce & Nominatim Integration
   let addressTypingTimer = null;
-  document.addEventListener("DOMContentLoaded", () => {
+  function setupForwardGeocoding() {
     const addressInput = document.getElementById("custAddress");
-    if (addressInput) {
-      addressInput.addEventListener("input", (e) => {
-        const query = e.target.value.trim();
-        if (addressTypingTimer) clearTimeout(addressTypingTimer);
-        if (query.length < 5) return;
+    if (!addressInput) return;
 
-        addressTypingTimer = setTimeout(() => {
-          const searchCity = document.getElementById("custCity")?.value || "Bengaluru";
-          const fullQuery = `${query}, ${searchCity}, Karnataka, India`;
-          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullQuery)}&limit=1`)
-            .then(res => res.json())
-            .then(results => {
-              if (results && results.length > 0) {
-                const lat = parseFloat(results[0].lat);
-                const lon = parseFloat(results[0].lon);
-                initOrUpdateDeliveryMap(lat, lon);
-              }
-            })
-            .catch(err => console.warn("Forward geocode notice:", err));
-        }, 800);
-      });
-    }
-  });
+    addressInput.addEventListener("input", (e) => {
+      const query = e.target.value.trim();
+      if (addressTypingTimer) clearTimeout(addressTypingTimer);
+      if (query.length < 5) return;
+
+      addressTypingTimer = setTimeout(() => {
+        const searchCity = document.getElementById("custCity")?.value || "Bengaluru";
+        const fullQuery = `${query}, ${searchCity}, Karnataka, India`;
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullQuery)}&limit=1`)
+          .then(res => res.json())
+          .then(results => {
+            if (results && results.length > 0) {
+              const lat = parseFloat(results[0].lat);
+              const lon = parseFloat(results[0].lon);
+              initOrUpdateDeliveryMap(lat, lon);
+            }
+          })
+          .catch(err => console.warn("Forward geocode notice:", err));
+      }, 800);
+    });
+  }
 
   // ==========================================
   // 11. SAVED ADDRESS ENGINE (NO RE-PROMPTING)
@@ -2241,7 +2463,7 @@
   }
 
   function initOnboardingStep1() {
-    onboardingActiveQuestion = onboardingQuizPool[0];
+    onboardingActiveQuestion = ONBOARDING_QUIZ_POOL[Math.floor(Math.random() * ONBOARDING_QUIZ_POOL.length)];
     onboardingSelectedOptionIndex = null;
     onboardingQuizAttemptsLeft = 2;
 
@@ -2504,6 +2726,9 @@
     document.getElementById("onboardingPincodeInput")?.addEventListener("input", (e) => {
       e.target.value = e.target.value.replace(/\D/g, "");
     });
+
+    // Dynamic Address Geocoding Setup
+    setupForwardGeocoding();
 
     // Review Form Submission
     document.getElementById("productReviewForm")?.addEventListener("submit", (e) => {
