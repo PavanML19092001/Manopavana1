@@ -87,14 +87,19 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.announcement-text-node {
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
 
 .top-bar-action-group {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
@@ -103,15 +108,16 @@ html, body {
   color: #fafaf9;
   border: 1px solid rgba(234, 179, 8, 0.6);
   font-family: inherit;
-  font-size: 0.76rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 0.28rem 0.85rem;
+  padding: 0.32rem 0.75rem;
   border-radius: 20px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .btn-location-pill:hover {
@@ -129,12 +135,13 @@ html, body {
   color: #fafaf9;
   border: 1px solid rgba(255, 255, 255, 0.25);
   font-family: inherit;
-  font-size: 0.76rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  padding: 0.28rem 0.85rem;
+  padding: 0.32rem 0.75rem;
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .btn-track-pill-top:hover {
@@ -148,12 +155,13 @@ html, body {
   color: #fef08a;
   border: 1px solid rgba(254, 240, 138, 0.4);
   font-family: inherit;
-  font-size: 0.76rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  padding: 0.28rem 0.75rem;
+  padding: 0.32rem 0.75rem;
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .btn-claim-bottle-top:hover {
@@ -167,10 +175,10 @@ html, body {
   display: inline-block;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.4);
-  padding: 0.15rem 0.6rem;
+  padding: 0.15rem 0.55rem;
   border-radius: 12px;
   font-family: monospace;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   margin-left: 0.4rem;
   letter-spacing: 0.5px;
@@ -535,6 +543,10 @@ html, body {
 .auth-dropdown-menu a:hover {
   background: rgba(234, 179, 8, 0.15);
   color: #eab308;
+}
+
+.auth-logout-link {
+  color: #ef4444 !important;
 }
 
 .cart-trigger-btn {
@@ -1106,7 +1118,7 @@ html, body {
 }
 
 /* ==========================================
-   PRODUCT DETAIL MODAL & MOBILE OPTIMIZATIONS
+   PRODUCT DETAIL MODAL & SPECIFICATIONS
    ========================================== */
 .product-detail-backdrop {
   z-index: 1300;
@@ -2862,7 +2874,6 @@ html, body {
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
-/* Lower Leaflet pane z-indexes so map tiles do not cover headers or modals */
 .leaflet-pane {
   z-index: 10 !important;
 }
@@ -3462,8 +3473,51 @@ html, body {
   border-radius: 20px;
 }
 
+.track-modal-card-custom {
+  max-width: 580px;
+}
+
 .track-modal-body {
   padding: 1.6rem 1.8rem;
+}
+
+.tracking-tabs-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.btn-tracking-tab {
+  flex: 1;
+  padding: 0.55rem;
+  background: transparent;
+  color: #d6d3d1;
+  font-weight: 700;
+  font-size: 0.84rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-tracking-tab.active {
+  background: #eab308;
+  color: #0c0a09;
+}
+
+.orders-loading-state {
+  text-align: center;
+  padding: 1.5rem;
+  color: #a8a29e;
+  font-size: 0.88rem;
+}
+
+.orders-scroll-list {
+  max-height: 420px;
+  overflow-y: auto;
 }
 
 .track-subtext {
@@ -3733,6 +3787,121 @@ html, body {
   transform: translateY(-2px);
 }
 
+/* =========================================================
+   DEDICATED PAYMENT INCOMPLETE & RETRY MODAL
+   ========================================================= */
+.payment-failed-card {
+  max-width: 540px;
+  background: #141211;
+  border: 2px solid #ef4444;
+  border-radius: 22px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(239, 68, 68, 0.25);
+}
+
+.payment-failed-header {
+  border-bottom: 1px solid #450a0a;
+}
+
+.payment-failed-header h3 {
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.failed-badge-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.failed-title {
+  color: #f87171;
+  text-align: center;
+  font-size: 1.35rem;
+  margin-top: 0;
+  font-family: 'Cinzel', serif;
+}
+
+.failed-intro-text {
+  color: #d6d3d1;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  text-align: center;
+  margin-bottom: 1.2rem;
+}
+
+.failed-reason-text {
+  color: #fca5a5;
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.status-declined {
+  color: #ef4444;
+}
+
+.status-saved {
+  color: #4ade80;
+}
+
+.failed-actions-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.btn-retry-phonepe {
+  background: linear-gradient(135deg, #eab308, #ca8a04);
+  color: #0c0a09;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.94rem;
+  padding: 0.9rem;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.btn-retry-phonepe:hover {
+  transform: translateY(-2px);
+}
+
+.btn-switch-cod {
+  background: #26221f;
+  color: #fafaf9;
+  border: 1px solid #44403c;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 0.8rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-switch-cod:hover {
+  background: #332d29;
+  border-color: #eab308;
+  color: #eab308;
+}
+
+.btn-return-store {
+  background: transparent;
+  border: none;
+  color: #a8a29e;
+  font-family: inherit;
+  font-size: 0.84rem;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 0.3rem;
+}
+
+.btn-return-store:hover {
+  color: #fafaf9;
+}
+
 /* ==========================================
    LEGAL MODALS & FOOTER
    ========================================== */
@@ -3845,6 +4014,22 @@ html, body {
   font-size: 0.88rem;
 }
 
+.contact-lead-name {
+  color: #d6d3d1;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.contact-lead-role {
+  color: #a8a29e;
+  font-weight: normal;
+}
+
+.contact-alt-phone {
+  color: #a8a29e;
+  font-size: 0.8rem;
+}
+
 .contact-icon {
   color: #eab308;
 }
@@ -3896,6 +4081,7 @@ html, body {
   }
   .announcement-content-wrap {
     justify-content: center;
+    text-align: center;
   }
   .top-bar-action-group {
     width: 100%;
@@ -3942,10 +4128,6 @@ html, body {
     right: 18px;
     padding: 0.45rem 0.9rem;
     font-size: 0.78rem;
-  }
-  .golden-vortex-aura {
-    width: 260px;
-    height: 260px;
   }
   .section-title-wrap h2 {
     font-size: 1.85rem;
@@ -4033,20 +4215,13 @@ html, body {
   .detail-nutrition-grid {
     grid-template-columns: repeat(2, 1fr) !important;
   }
-}
 
-/* =========================================================
-   MOBILE PERFORMANCE & FLICKER PREVENTION OVERRIDES
-   ========================================================= */
-
-@media (max-width: 768px) {
-  /* 1. Eliminate heavy Gaussian blur & vortex thrashing on mobile GPU */
+  /* Mobile Performance & Flicker Prevention Overrides */
   .golden-vortex-aura {
-    display: none !important; /* Disables heavy blur recalculation */
+    display: none !important;
     animation: none !important;
   }
 
-  /* 2. Prevent backdrop-filter layering collisions with video */
   .site-header,
   .floating-sound-pill,
   .modal-backdrop,
@@ -4058,13 +4233,13 @@ html, body {
 
   .site-header {
     background: #0c0a09 !important;
+    padding: 0.6rem 1rem;
   }
 
   .floating-sound-pill {
     background: #171412 !important;
   }
 
-  /* 3. Promote elements to composite layers to stop flickering */
   .hero-clean-video,
   .bottle-showcase-video,
   .product-card,
@@ -4077,7 +4252,6 @@ html, body {
     will-change: auto;
   }
 
-  /* 4. Stop overflow lockups on mobile bodies */
   body.modal-open {
     position: fixed;
     width: 100%;
