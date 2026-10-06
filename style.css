@@ -1118,67 +1118,67 @@ html, body {
 }
 
 /* ==========================================
-   PRODUCT DETAIL MODAL & SPECIFICATIONS
-   ========================================== */
-/* ==========================================
-   PRODUCT DETAIL MODAL (FIXED & RESPONSIVE)
+   PRODUCT DETAIL MODAL (SCROLLABLE & RESPONSIVE)
    ========================================== */
 .product-detail-backdrop {
   z-index: 1300;
   padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-card.product-detail-card {
   width: 95vw;
   max-width: 1100px;
-  height: 90vh;
   max-height: 90vh;
   background: #12100e;
   border: 1.5px solid rgba(234, 179, 8, 0.45);
-  border-radius: 22px;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Stops horizontal modal blowout */
+  overflow: hidden;
 }
 
 .modal-detail-body {
-  overflow-y: auto;
-  overflow-x: hidden; /* Strictly prevent horizontal scrolling */
-  padding: 2rem;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  padding: 1.8rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  flex: 1;
+  gap: 1.8rem;
+  flex: 1 1 auto;
   width: 100%;
 }
 
 .detail-top-grid {
   display: grid;
-  grid-template-columns: 420px 1fr;
-  gap: 2.5rem;
+  grid-template-columns: 380px 1fr;
+  gap: 2rem;
   align-items: start;
   width: 100%;
-  min-width: 0; /* CRITICAL: Allows grid to shrink below content size */
+  min-width: 0;
 }
 
 .detail-gallery {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.75rem;
   width: 100%;
-  min-width: 0; /* CRITICAL: Prevents 11 thumbnails from expanding the parent */
+  min-width: 0;
 }
 
 .detail-main-img-box {
   width: 100%;
-  height: 380px;
+  height: 320px;
   background: #080706;
-  border-radius: 18px;
-  border: 1.5px solid rgba(234, 179, 8, 0.35);
+  border-radius: 14px;
+  border: 1px solid rgba(234, 179, 8, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 0.75rem;
   overflow: hidden;
 }
 
@@ -1188,13 +1188,13 @@ html, body {
   width: auto;
   height: auto;
   object-fit: contain;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .detail-thumb-strip {
   display: flex;
-  gap: 0.6rem;
-  overflow-x: auto; /* Thumbnails scroll horizontally within their box */
+  gap: 0.5rem;
+  overflow-x: auto;
   width: 100%;
   min-width: 0;
   padding-bottom: 6px;
@@ -1202,59 +1202,77 @@ html, body {
 }
 
 .detail-thumb-img {
-  width: 64px;
-  height: 64px;
+  width: 58px;
+  height: 58px;
   flex-shrink: 0;
-  border-radius: 10px;
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   background: #171412;
   object-fit: contain;
-  padding: 4px;
+  padding: 3px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .detail-thumb-img.active {
   border-color: #eab308;
-  box-shadow: 0 0 10px rgba(234, 179, 8, 0.3);
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.35);
 }
 
 .detail-info-col {
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-width: 0; /* CRITICAL: Prevents long text from stretching the column */
+  min-width: 0;
+}
+
+.detail-badge-pill {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #eab308;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
 }
 
 .detail-title {
   font-family: 'Cinzel', serif;
-  font-size: 1.8rem;
+  font-size: 1.65rem;
   color: #fafaf9;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.5rem;
   line-height: 1.25;
   word-break: break-word;
 }
 
 .detail-short-desc {
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   color: #d6d3d1;
-  line-height: 1.55;
-  margin-bottom: 1.2rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
   word-break: break-word;
 }
 
 .modal-variant-wrap {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(234, 179, 8, 0.25);
-  border-radius: 14px;
-  padding: 1rem;
-  margin-bottom: 1.2rem;
+  border-radius: 12px;
+  padding: 0.85rem;
+  margin-bottom: 1rem;
   width: 100%;
+}
+
+.modal-variant-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #eab308;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
 }
 
 .modal-variant-pills {
   display: flex;
-  gap: 0.8rem;
+  gap: 0.6rem;
   width: 100%;
 }
 
@@ -1264,13 +1282,12 @@ html, body {
   border: 1.5px solid rgba(255, 255, 255, 0.15);
   color: #fafaf9;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   font-weight: 700;
-  padding: 0.7rem 0.8rem;
-  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
   cursor: pointer;
   text-align: center;
-  white-space: normal;
 }
 
 .modal-size-pill.active {
@@ -1284,89 +1301,117 @@ html, body {
   align-items: center;
   justify-content: space-between;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 1.2rem;
-  gap: 1rem;
+  padding-top: 1rem;
+  gap: 0.8rem;
   width: 100%;
 }
 
-/* ==========================================
-   MOBILE RESPONSIVE OVERRIDES (<= 768px)
-   ========================================== */
-@media (max-width: 768px) {
-  .product-detail-backdrop {
-    padding: 0 !important;
-  }
+.modal-price-val {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #eab308;
+}
 
-  .modal-card.product-detail-card {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    border-radius: 0 !important;
-    border: none !important;
-  }
+.modal-direct-buy-wrap {
+  margin-top: 0.8rem;
+  width: 100%;
+}
 
-  .modal-detail-body {
-    padding: 1rem !important;
-    gap: 1.2rem !important;
-  }
+.btn-direct-buy-now {
+  width: 100%;
+  padding: 0.85rem 1.2rem;
+  background: linear-gradient(135deg, #eab308, #ca8a04);
+  color: #0c0a09;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(234, 179, 8, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-  .detail-top-grid {
-    grid-template-columns: 1fr !important; /* Stack gallery above text */
-    gap: 1.2rem !important;
-    width: 100% !important;
-  }
+.btn-direct-buy-now:hover {
+  background: linear-gradient(135deg, #facc15, #eab308);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(234, 179, 8, 0.5);
+}
 
-  .detail-main-img-box {
-    height: 240px !important;
-    padding: 0.5rem !important;
-  }
+.detail-spec-box {
+  background: #171412;
+  border: 1px solid rgba(234, 179, 8, 0.25);
+  border-radius: 14px;
+  padding: 1.2rem;
+  width: 100%;
+}
 
-  .detail-title {
-    font-size: 1.35rem !important;
-  }
+.detail-spec-box h4 {
+  font-family: 'Cinzel', serif;
+  font-size: 1.15rem;
+  color: #eab308;
+  margin-bottom: 0.8rem;
+}
 
-  .detail-short-desc {
-    font-size: 0.85rem !important;
-    line-height: 1.45 !important;
-  }
+.specs-table-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
 
-  .modal-variant-pills {
-    flex-direction: column !important;
-    gap: 0.5rem !important;
-  }
+.specs-table-grid tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
 
-  .modal-size-pill {
-    padding: 0.65rem 0.8rem !important;
-    font-size: 0.86rem !important;
-    width: 100% !important;
-  }
+.specs-table-grid tr:last-child {
+  border-bottom: none;
+}
 
-  .modal-action-row {
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-  }
+.specs-table-grid td {
+  padding: 0.6rem 0.4rem;
+}
 
-  .modal-price-val {
-    font-size: 1.5rem !important;
-  }
+.specs-table-grid td.spec-lbl {
+  color: #a8a29e;
+  width: 38%;
+  font-weight: 500;
+}
 
-  .detail-spec-box {
-    padding: 1rem !important;
-    width: 100% !important;
-    overflow-x: auto !important;
-  }
+.specs-table-grid td.spec-val {
+  color: #fafaf9;
+  font-weight: 600;
+}
 
-  .specs-table-grid {
-    width: 100% !important;
-    font-size: 0.8rem !important;
-  }
+.detail-nutrition-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
 
-  .detail-nutrition-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 0.5rem !important;
-  }
+.nutri-cell {
+  background: #1c1917;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.6rem;
+  text-align: center;
+}
+
+.nutri-lbl {
+  font-size: 0.72rem;
+  color: #a8a29e;
+  display: block;
+}
+
+.nutri-num {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #eab308;
+  margin-top: 0.2rem;
 }
 
 /* ==========================================
@@ -4056,34 +4101,42 @@ html, body {
   .faqs-section {
     padding: 2.2rem 1rem;
   }
+
   .floating-sound-pill {
     bottom: 18px;
     right: 18px;
     padding: 0.45rem 0.9rem;
     font-size: 0.78rem;
   }
+
   .section-title-wrap h2 {
     font-size: 1.85rem;
   }
+
   .product-grid {
     grid-template-columns: 1fr;
     gap: 1.2rem;
   }
+
   .bottle-video-wrapper {
     height: 320px;
   }
+
   .bottle-showcase-video,
   .bottle-fallback-img {
     max-height: 300px;
   }
+
   .bottle-radial-glow {
     width: 240px;
     height: 240px;
   }
+
   .footer-inner {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
+
   .bottle-quiz-pills {
     grid-template-columns: 1fr;
   }
@@ -4094,59 +4147,81 @@ html, body {
 
   /* Responsive Mobile Product Detail Modal */
   .product-detail-backdrop {
-    padding: 0.5rem !important;
+    padding: 0 !important;
   }
+
   .modal-card.product-detail-card {
     width: 100vw !important;
     max-width: 100vw !important;
-    height: 96vh !important;
-    max-height: 96vh !important;
-    border-radius: 16px !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    border-radius: 0 !important;
+    border: none !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
+
   .modal-detail-body {
-    padding: 1rem !important;
+    flex: 1 1 auto !important;
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 1rem 1rem 3.5rem 1rem !important; /* Bottom padding ensures full display of tables */
     gap: 1.4rem !important;
   }
+
   .detail-top-grid {
     grid-template-columns: 1fr !important;
     gap: 1.2rem !important;
+    width: 100% !important;
   }
+
   .detail-main-img-box {
-    height: 250px !important;
-    padding: 0.8rem !important;
+    height: 220px !important;
   }
+
   .detail-title {
-    font-size: 1.4rem !important;
+    font-size: 1.35rem !important;
   }
+
   .detail-short-desc {
-    font-size: 0.88rem !important;
-    line-height: 1.5 !important;
+    font-size: 0.85rem !important;
+    line-height: 1.45 !important;
   }
+
   .modal-variant-pills {
     flex-direction: column !important;
     gap: 0.5rem !important;
   }
+
   .modal-size-pill {
-    padding: 0.6rem !important;
+    padding: 0.6rem 0.8rem !important;
     font-size: 0.86rem !important;
+    width: 100% !important;
   }
+
   .modal-action-row {
     flex-direction: row !important;
     align-items: center !important;
     justify-content: space-between !important;
   }
+
   .modal-price-val {
-    font-size: 1.6rem !important;
+    font-size: 1.5rem !important;
   }
+
   .detail-spec-box {
     padding: 1rem !important;
+    margin-bottom: 0.5rem !important;
   }
+
   .specs-table-grid td {
     padding: 0.5rem 0.2rem !important;
     font-size: 0.82rem !important;
   }
+
   .detail-nutrition-grid {
     grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
   }
 
   /* Mobile Performance & Flicker Prevention Overrides */
