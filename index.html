@@ -578,6 +578,54 @@
     </div>
   </div>
 
+  <!-- Authentic Payment Incomplete & Immediate Retry Modal -->
+  <div id="paymentFailedModalBackdrop" class="modal-backdrop">
+    <div class="modal-card order-confirm-card" style="border: 2px solid #ef4444; background: #1c1917;">
+      <div class="modal-header" style="border-bottom: 1px solid #450a0a;">
+        <h3 style="color: #ef4444; display:flex; align-items:center; gap:8px;">
+          <span>⚠️</span> Payment Incomplete
+        </h3>
+        <button class="close-modal-btn" onclick="closePaymentFailedModal()" type="button">&times;</button>
+      </div>
+      <div class="modal-body order-confirm-body" style="padding: 1.5rem;">
+        <div style="font-size: 3rem; text-align: center; margin-bottom: 0.5rem;">❌</div>
+        <h4 style="color: #f87171; text-align: center; font-size: 1.25rem; margin-top: 0;">Order Not Yet Placed</h4>
+        
+        <p style="color: #d6d3d1; font-size: 0.95rem; line-height: 1.5; text-align: center;">
+          <strong id="failedModalReason" style="color: #fca5a5; display:block; margin-bottom: 0.25rem;">Payment was cancelled at the gateway.</strong>
+          No funds were deducted. Your selected items and delivery address are saved so you can retry immediately.
+        </p>
+
+        <div style="background: #292524; padding: 1rem; border-radius: 8px; margin: 1.25rem 0; border: 1px solid #44403c;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span style="color: #a8a29e;">Order Reference:</span>
+            <strong id="failedModalRef" style="color: #fafaf9;">--</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span style="color: #a8a29e;">Gateway Status:</span>
+            <strong style="color: #ef4444;">Unpaid / Declined</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-top: 1px solid #44403c; padding-top: 0.5rem;">
+            <span style="color: #a8a29e;">Items Status:</span>
+            <strong style="color: #4ade80;">Saved in Bag ✓</strong>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <button type="button" class="btn-track-this-order" onclick="retryPaymentFromModal()" style="background:#eab308; color:#0c0a09; font-weight:bold; padding:0.9rem; border-radius:8px; border:none; cursor:pointer;">
+            ⚡ Retry Online Payment (PhonePe)
+          </button>
+          <button type="button" class="btn-track-this-order" onclick="switchToCodFromModal()" style="background:#292524; color:#fafaf9; border:1px solid #57534e; padding:0.8rem; border-radius:8px; cursor:pointer;">
+            💵 Switch to Cash on Delivery (COD)
+          </button>
+          <button type="button" onclick="closePaymentFailedModal()" style="background:transparent; border:none; color:#a8a29e; cursor:pointer; text-decoration:underline; font-size:0.85rem; margin-top:0.25rem;">
+            Return to Storefront
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Hero Section -->
   <section class="hero-clean-video-section">
     <div class="golden-vortex-aura"></div>
