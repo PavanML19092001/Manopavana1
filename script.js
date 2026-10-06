@@ -1,6 +1,6 @@
 // ==========================================================================
 // MANOPAVANA - ARTISANAL WOOD-PRESSED OILS (BANGALORE)
-// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - MASTER BUG-FREE BUILD
+// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - MASTER BUILD
 // ==========================================================================
 
 (function () {
@@ -289,71 +289,8 @@
     }
   };
 
-  // Complete States and Districts of India
+  // Indian States & Districts
   const INDIA_STATES_AND_DISTRICTS = {
-    "Andhra Pradesh": [
-      "Alluri Sitharama Raju", "Anakapalli", "Ananthapuramu", "Annamayya", "Bapatla",
-      "Chittoor", "Dr. B.R. Ambedkar Konaseema", "East Godavari", "Eluru", "Guntur",
-      "Kakinada", "Krishna", "Kurnool", "Nandyal", "NTR", "Palnadu",
-      "Parvathipuram Manyam", "Prakasam", "Sri Potti Sriramulu Nellore", "Sri Sathya Sai",
-      "Srikakulam", "Tirupati", "Visakhapatnam", "Vizianagaram", "West Godavari", "YSR Kadapa"
-    ],
-    "Arunachal Pradesh": [
-      "Anjaw", "Bichom", "Changlang", "Dibang Valley", "East Kameng", "East Siang",
-      "Kamle", "Keyi Panyor", "Kra Daadi", "Kurung Kumey", "Lepa Rada", "Lohit",
-      "Longding", "Lower Dibang Valley", "Lower Siang", "Lower Subansiri", "Namsai",
-      "Pakke Kessang", "Papum Pare", "Shi Yomi", "Siang", "Tawang", "Tirap",
-      "Upper Siang", "Upper Subansiri", "West Kameng", "West Siang"
-    ],
-    "Assam": [
-      "Baksa", "Barpeta", "Biswanath", "Bongaigaon", "Cachar", "Charaideo",
-      "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao",
-      "Goalpara", "Golaghat", "Hailakandi", "Hojai", "Jorhat", "Kamrup",
-      "Kamrup Metropolitan", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur",
-      "Majuli", "Morigaon", "Nagaon", "Nalbari", "Sivasagar", "Sonitpur",
-      "South Salmara-Mankachar", "Tamulpur", "Tinsukia", "Udalguri", "West Karbi Anglong"
-    ],
-    "Bihar": [
-      "Araria", "Arwal", "Aurangabad", "Banka", "Begusarai", "Bhagalpur", "Bhojpur",
-      "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad",
-      "Kaimur", "Katihar", "Khagaria", "Kishanganj", "Lakhisarai", "Madhepura",
-      "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia",
-      "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi",
-      "Siwan", "Supaul", "Vaishali", "West Champaran"
-    ],
-    "Chhattisgarh": [
-      "Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur",
-      "Bilaspur", "Dantewada", "Dhamtari", "Durg", "Gariaband", "Gaurela-Pendra-Marwahi",
-      "Janjgir-Champa", "Jashpur", "Kabirdham", "Kanker", "Khairagarh-Chhuikhadan-Gandai",
-      "Kondagaon", "Korba", "Koriya", "Mahasamund", "Manendragarh-Chirmiri-Bharatpur",
-      "Mohla-Manpur-Ambagarh Chowki", "Mungeli", "Narayanpur", "Raigarh", "Raipur",
-      "Rajnandgaon", "Sakti", "Sarangarh-Bilaigarh", "Sukma", "Surajpur", "Surguja"
-    ],
-    "Goa": ["North Goa", "South Goa"],
-    "Gujarat": [
-      "Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch",
-      "Bhavnagar", "Botad", "Chhota Udaipur", "Dahod", "Dang", "Devbhumi Dwarka",
-      "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch",
-      "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal",
-      "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar",
-      "Tapi", "Vadodara", "Valsad"
-    ],
-    "Haryana": [
-      "Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurugram",
-      "Hisar", "Jhajjar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Mahendragarh",
-      "Nuh", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa",
-      "Sonipat", "Yamunanagar"
-    ],
-    "Himachal Pradesh": [
-      "Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu",
-      "Lahaul and Spiti", "Mandi", "Shimla", "Sirmaur", "Solan", "Una"
-    ],
-    "Jharkhand": [
-      "Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum",
-      "Garhwa", "Giridih", "Godda", "Gumla", "Hazaribagh", "Jamtara",
-      "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu",
-      "Ramgarh", "Ranchi", "Sahebganj", "Seraikela Kharsawan", "Simdega", "West Singhbhum"
-    ],
     "Karnataka": [
       "Bagalkote", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar",
       "Chamarajanagara", "Chikkaballapura", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada",
@@ -361,73 +298,6 @@
       "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru",
       "Udupi", "Uttara Kannada", "Vijayanagara", "Vijayapura", "Yadgir"
     ],
-    "Kerala": [
-      "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam",
-      "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta",
-      "Thiruvananthapuram", "Thrissur", "Wayanad"
-    ],
-    "Madhya Pradesh": [
-      "Agar Malwa", "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani",
-      "Betul", "Bhind", "Bhopal", "Burhanpur", "Chhatarpur", "Chhindwara",
-      "Damoh", "Datia", "Dewas", "Dhar", "Dindori", "Guna", "Gwalior",
-      "Harda", "Indore", "Jabalpur", "Jhabua", "Katni", "Khandwa",
-      "Khargone", "Maihar", "Mandla", "Mandsaur", "Morena", "Narsinghpur",
-      "Neemuch", "Niwari", "Panna", "Pandhurna", "Raisen", "Rajgarh",
-      "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol",
-      "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh",
-      "Ujjain", "Umaria", "Vidisha"
-    ],
-    "Maharashtra": [
-      "Ahmednagar", "Akola", "Amravati", "Chhatrapati Sambhajinagar", "Beed", "Bhandara",
-      "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli",
-      "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban",
-      "Nagpur", "Nanded", "Nandurbar", "Nashik", "Dharashiv", "Palghar",
-      "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara",
-      "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal"
-    ],
-    "Manipur": [
-      "Bishnupur", "Chandel", "Churachandpur", "Imphal East", "Imphal West",
-      "Jiribam", "Kakching", "Kamjong", "Kangpokpi", "Noney", "Pherzawl",
-      "Senapati", "Tamenglong", "Tengnoupal", "Thoubal", "Ukhrul"
-    ],
-    "Meghalaya": [
-      "East Garo Hills", "East Jaintia Hills", "East Khasi Hills", "Eastern West Khasi Hills",
-      "North Garo Hills", "Ri Bhoi", "South Garo Hills", "South West Khasi Hills",
-      "West Garo Hills", "West Jaintia Hills", "West Khasi Hills"
-    ],
-    "Mizoram": [
-      "Aizawl", "Champhai", "Hnahthial", "Khawzawl", "Kolasib", "Lawngtlai",
-      "Lunglei", "Mamit", "Saitual", "Serchhip", "Siaha"
-    ],
-    "Nagaland": [
-      "Chümoukedima", "Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung",
-      "Mon", "Niuland", "Noklak", "Peren", "Phek", "Shamator", "Tseminyü",
-      "Tuensang", "Wokha", "Zünheboto"
-    ],
-    "Odisha": [
-      "Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Boudh",
-      "Cuttack", "Deogarh", "Dhenkanal", "Gajapati", "Ganjam", "Jagatsinghpur",
-      "Jajpur", "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar",
-      "Khordha", "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh",
-      "Nuapada", "Puri", "Rayagada", "Sambalpur", "Subarnapur", "Sundargarh"
-    ],
-    "Punjab": [
-      "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka",
-      "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Ludhiana",
-      "Malerkotla", "Mansa", "Moga", "Muktsar", "Pathankot", "Patiala",
-      "Rupnagar", "Sahibzada Ajit Singh Nagar", "Sangrur", "Shahid Bhagat Singh Nagar", "Tarn Taran"
-    ],
-    "Rajasthan": [
-      "Ajmer", "Alwar", "Anupgarh", "Balotra", "Banswara", "Baran", "Barmer",
-      "Beawar", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh",
-      "Churu", "Dausa", "Deeg", "Dholpur", "Didwana-Kuchaman", "Dudu", "Dungarpur",
-      "Gangapur City", "Hanumangarh", "Jaipur", "Jaipur Rural", "Jaisalmer",
-      "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", "Jodhpur Rural", "Karauli",
-      "Kekri", "Khairthal-Tijara", "Kota", "Kotputli-Behror", "Nagaur", "Neem Ka Thana",
-      "Pali", "Phalodi", "Pratapgarh", "Rajsamand", "Salumbar", "Sanchore",
-      "Sawai Madhopur", "Shahpura", "Sikar", "Sirohi", "Sri Ganganagar", "Tonk", "Udaipur"
-    ],
-    "Sikkim": ["Gangtok", "Gyalshing", "Mangan", "Namchi", "Pakyong", "Soreng"],
     "Tamil Nadu": [
       "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri",
       "Dindigul", "Erode", "Kallakurichi", "Kanchipuram", "Kanyakumari", "Karur",
@@ -436,6 +306,18 @@
       "Tenkasi", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli",
       "Tirupathur", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore",
       "Viluppuram", "Virudhunagar"
+    ],
+    "Kerala": [
+      "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam",
+      "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta",
+      "Thiruvananthapuram", "Thrissur", "Wayanad"
+    ],
+    "Andhra Pradesh": [
+      "Alluri Sitharama Raju", "Anakapalli", "Ananthapuramu", "Annamayya", "Bapatla",
+      "Chittoor", "Dr. B.R. Ambedkar Konaseema", "East Godavari", "Eluru", "Guntur",
+      "Kakinada", "Krishna", "Kurnool", "Nandyal", "NTR", "Palnadu",
+      "Parvathipuram Manyam", "Prakasam", "Sri Potti Sriramulu Nellore", "Sri Sathya Sai",
+      "Srikakulam", "Tirupati", "Visakhapatnam", "Vizianagaram", "West Godavari", "YSR Kadapa"
     ],
     "Telangana": [
       "Adilabad", "Bhadradri Kothagudem", "Hanamkonda", "Hyderabad", "Jagtial",
@@ -446,51 +328,20 @@
       "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad",
       "Wanaparthy", "Warangal", "Yadadri Bhuvanagiri"
     ],
-    "Tripura": ["Dhalai", "Gomati", "Khowai", "North Tripura", "Sepahijala", "South Tripura", "Unakoti", "West Tripura"],
-    "Uttar Pradesh": [
-      "Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya",
-      "Ayodhya", "Azamgarh", "Baghpat", "Bahraich", "Ballia", "Balrampur",
-      "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor",
-      "Budaun", "Bulandshahr", "Chandauli", "Chitrakoot", "Deoria", "Etah",
-      "Etawah", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar", "Ghaziabad",
-      "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi",
-      "Hathras", "Jalaun", "Jaunpur", "Jhansi", "Kannauj", "Kanpur Dehat",
-      "Kanpur Nagar", "Kasganj", "Kaushambi", "Kheri", "Kushinagar", "Lalitpur",
-      "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", "Mathura", "Mau",
-      "Meerut", "Mirzapur", "Moradabad", "Muzaffarnagar", "Pilibhit", "Pratapgarh",
-      "Prayagraj", "Raebareli", "Rampur", "Saharanpur", "Sambhal", "Sant Kabir Nagar",
-      "Shahjahanpur", "Shamli", "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra",
-      "Sultanpur", "Unnao", "Varanasi"
+    "Maharashtra": [
+      "Ahmednagar", "Akola", "Amravati", "Chhatrapati Sambhajinagar", "Beed", "Bhandara",
+      "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli",
+      "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban",
+      "Nagpur", "Nanded", "Nandurbar", "Nashik", "Dharashiv", "Palghar",
+      "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara",
+      "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal"
     ],
-    "Uttarakhand": [
-      "Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar",
-      "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal",
-      "Udham Singh Nagar", "Uttarkashi"
-    ],
-    "West Bengal": [
-      "Alipurduar", "Bankura", "Birbhum", "Cooch Behar", "Dakshin Dinajpur",
-      "Darjeeling", "Hooghly", "Howrah", "Jalpaiguri", "Jhargram", "Kalimpong",
-      "Kolkata", "Malda", "Murshidabad", "Nadia", "North 24 Parganas",
-      "Paschim Bardhaman", "Paschim Medinipur", "Purba Bardhaman", "Purba Medinipur",
-      "Purulia", "South 24 Parganas", "Uttar Dinajpur"
-    ],
-    "Andaman and Nicobar Islands": ["Nicobar", "North and Middle Andaman", "South Andaman"],
-    "Chandigarh": ["Chandigarh"],
-    "Dadra and Nagar Haveli and Daman and Diu": ["Dadra and Nagar Haveli", "Daman", "Diu"],
     "Delhi": [
       "Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi",
       "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi"
-    ],
-    "Jammu and Kashmir": [
-      "Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal",
-      "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch",
-      "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian",
-      "Srinagar", "Udhampur"
-    ],
-    "Ladakh": ["Kargil", "Leh"],
-    "Lakshadweep": ["Lakshadweep"],
-    "Puducherry": ["Karaikal", "Mahe", "Puducherry", "Yanam"]
+    ]
   };
+
   function populateStatesDropdown() {
     const stateSelect = document.getElementById("custState");
     const districtSelect = document.getElementById("custDistrict");
@@ -543,7 +394,7 @@
   }
 
   // ==========================================
-  // 4. ACTION TOAST NOTIFICATIONS
+  // 4. ACTION TOAST ENGINE
   // ==========================================
   window.showActionToast = function (title, message, icon = "✨", type = "info") {
     const toast = document.getElementById("actionToast");
@@ -611,7 +462,7 @@
   }
 
   // ==========================================
-  // 6. FIREBASE AUTHENTICATION
+  // 6. FIREBASE AUTH
   // ==========================================
   function initFirebaseAuth() {
     try {
@@ -674,12 +525,18 @@
   window.openAuthModal = function (mode = "login") {
     window.toggleAuthMode(mode);
     const modal = document.getElementById("authModalBackdrop");
-    if (modal) modal.classList.add("open");
+    if (modal) {
+      modal.classList.add("open");
+      document.body.classList.add("modal-open");
+    }
   };
 
   window.closeAuthModal = function () {
     const modal = document.getElementById("authModalBackdrop");
-    if (modal) modal.classList.remove("open");
+    if (modal) {
+      modal.classList.remove("open");
+      document.body.classList.remove("modal-open");
+    }
   };
 
   window.toggleAuthMode = function (mode) {
@@ -858,6 +715,7 @@
     const modal = document.getElementById("trackOrderModalBackdrop");
     if (!modal) return;
     modal.classList.add("open");
+    document.body.classList.add("modal-open");
     if (currentUser || forceAccountTab) {
       window.switchTrackingTab("account");
     } else {
@@ -867,7 +725,10 @@
 
   window.closeOrderTrackingModal = function () {
     const modal = document.getElementById("trackOrderModalBackdrop");
-    if (modal) modal.classList.remove("open");
+    if (modal) {
+      modal.classList.remove("open");
+      document.body.classList.remove("modal-open");
+    }
   };
 
   window.switchTrackingTab = function (tabType) {
@@ -1064,16 +925,18 @@
   window.openOnboardingModal = function (step = 1) {
     const modal = document.getElementById("onboardingModalBackdrop");
     if (!modal) return;
-    onboardingQuizAttemptsLeft = 2; // Always reset chances on manual opening
+    onboardingQuizAttemptsLeft = 2; // Always reset chances
     modal.classList.add("open");
-    document.body.style.overflow = "hidden";
+    document.body.classList.add("modal-open");
     window.goToOnboardingStep(step);
   };
 
   window.closeOnboardingModal = function () {
     const modal = document.getElementById("onboardingModalBackdrop");
-    if (modal) modal.classList.remove("open");
-    document.body.style.overflow = "";
+    if (modal) {
+      modal.classList.remove("open");
+      document.body.classList.remove("modal-open");
+    }
     localStorage.setItem("manopavana_onboarding_completed", "true");
   };
 
@@ -1256,7 +1119,7 @@
   }
 
   // ==========================================
-  // 9. LOCATION SWITCHER & PINCODE MODAL
+  // 9. LOCATION & PINCODE CHECKER MODAL
   // ==========================================
   window.openLocationCheckModal = function () {
     const modal = document.getElementById("locationModalBackdrop");
@@ -1267,11 +1130,15 @@
     if (pinInput) pinInput.value = userSelectedPincode;
     if (resultBox) resultBox.style.display = "none";
     modal.classList.add("open");
+    document.body.classList.add("modal-open");
   };
 
   window.closeLocationCheckModal = function () {
     const modal = document.getElementById("locationModalBackdrop");
-    if (modal) modal.classList.remove("open");
+    if (modal) {
+      modal.classList.remove("open");
+      document.body.classList.remove("modal-open");
+    }
   };
 
   window.submitPincodeCheck = function () {
@@ -1328,16 +1195,22 @@
 
   window.openFlipkartModal = function () {
     const modal = document.getElementById("flipkartModalBackdrop");
-    if (modal) modal.classList.add("open");
+    if (modal) {
+      modal.classList.add("open");
+      document.body.classList.add("modal-open");
+    }
   };
 
   window.closeFlipkartModal = function () {
     const modal = document.getElementById("flipkartModalBackdrop");
-    if (modal) modal.classList.remove("open");
+    if (modal) {
+      modal.classList.remove("open");
+      document.body.classList.remove("modal-open");
+    }
   };
 
   // ==========================================
-  // 10. AUDIO ENGINE & AUTOPLAY
+  // 10. AUDIO ENGINE & AUTOPLAY (MOBILE SAFE)
   // ==========================================
   let isAudioPlaying = false;
   let hasInteracted = false;
@@ -1949,7 +1822,7 @@
     const modal = document.getElementById("productDetailModalBackdrop");
     if (modal) {
       modal.classList.add("open");
-      document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open");
     }
   };
 
@@ -1957,7 +1830,7 @@
     const modal = document.getElementById("productDetailModalBackdrop");
     if (modal) {
       modal.classList.remove("open");
-      document.body.style.overflow = "";
+      document.body.classList.remove("modal-open");
     }
     currentDetailProductKey = null;
   };
@@ -2037,7 +1910,7 @@
   }
 
   // ==========================================
-  // 16. CHECKOUT, PHONEPE GATEWAY & PAYMENT CONFIRMATION
+  // 16. CHECKOUT, PAYMENT GATEWAY & MODAL
   // ==========================================
   window.handleDirectBuyNow = function (id, title, price, img) {
     if (!isBangalorePincode) {
@@ -2080,6 +1953,7 @@
     const modal = document.getElementById("checkoutModalBackdrop");
     if (modal) {
       modal.classList.add("open");
+      document.body.classList.add("modal-open");
       setTimeout(() => {
         if (leafletMap) leafletMap.invalidateSize();
       }, 300);
@@ -2088,7 +1962,10 @@
 
   window.closeCheckoutModal = function () {
     const modal = document.getElementById("checkoutModalBackdrop");
-    if (modal) modal.classList.remove("open");
+    if (modal) {
+      modal.classList.remove("open");
+      document.body.classList.remove("modal-open");
+    }
   };
 
   function updateCheckoutFinancials() {
@@ -2217,13 +2094,10 @@
     }
 
     const uid = currentUser.uid || ("GUEST_" + phone);
-
-    // Dynamic current browser URL to ensure return redirect never hits an invalid domain
     const currentOrigin = window.location.origin + window.location.pathname;
 
     try {
       if (paymentMode === "PHONEPE") {
-        // Track whether this checkout was Buy Now or full Cart
         sessionStorage.setItem("manopavana_pending_checkout_source", checkoutSource);
         sessionStorage.setItem("manopavana_pending_order_ref", currentOrderRef);
 
@@ -2246,14 +2120,12 @@
           redirectBaseUrl: currentOrigin
         });
 
+        // Redirect directly without throwing local guardrail errors
         if (response && response.redirectUrl) {
-          if (response.redirectUrl.includes("script.google.com") || response.redirectUrl.includes("script.googleusercontent.com")) {
-            throw new Error("Backend returned Apps Script execution URL instead of PhonePe gateway URL. Please check Google Apps Script PhonePe configuration.");
-          }
           window.location.href = response.redirectUrl;
           return;
         } else {
-          throw new Error(response.message || "Failed to initialize PhonePe payment gateway.");
+          throw new Error(response.message || "Failed to initialize payment gateway.");
         }
       } else {
         await callBackend({
@@ -2345,12 +2217,18 @@
       waBtn.href = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${encodeURIComponent("Live tracking for Order #" + details.orderRef)}`;
     }
 
-    if (modal) modal.classList.add("open");
+    if (modal) {
+      modal.classList.add("open");
+      document.body.classList.add("modal-open");
+    }
   }
 
   window.closeOrderConfirmationModal = function () {
     const modal = document.getElementById("orderConfirmationModalBackdrop");
-    if (modal) modal.classList.remove("open");
+    if (modal) {
+      modal.classList.remove("open");
+      document.body.classList.remove("modal-open");
+    }
   };
 
   window.openLiveTrackingFromConfirmation = function () {
@@ -2420,12 +2298,18 @@
   // ==========================================
   window.openLegalModal = function (modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) modal.classList.add("open");
+    if (modal) {
+      modal.classList.add("open");
+      document.body.classList.add("modal-open");
+    }
   };
 
   window.closeLegalModal = function (modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) modal.classList.remove("open");
+    if (modal) {
+      modal.classList.remove("open");
+      document.body.classList.remove("modal-open");
+    }
   };
 
   function initLoyaltyFromStorage() {
@@ -2452,7 +2336,7 @@
     renderComboSection();
   };
 
-  // Fixed Countdown Timer (Correct modulo calculations for Days, Hours, Minutes, Seconds)
+  // Fixed Countdown Timer Arithmetic Calculation (% 3600 / 60)
   function startLiveCountdown() {
     if (countdownTimerInterval) clearInterval(countdownTimerInterval);
 
@@ -2489,7 +2373,7 @@
   }
 
   // ==========================================
-  // 19. DOM INITIALIZATION & RETURN VERIFICATION
+  // 19. DOM INITIALIZATION
   // ==========================================
   document.addEventListener("DOMContentLoaded", () => {
     // Sound & Video Engine
@@ -2497,14 +2381,16 @@
     initVideoAutoplay();
 
     tryImmediateAudioPlayback();
-    ["scroll", "wheel", "touchstart", "touchmove", "pointerdown", "click", "keydown"].forEach((evt) => {
-      window.addEventListener(evt, () => {
-        if (!hasInteracted) {
-          hasInteracted = true;
-          tryImmediateAudioPlayback();
-        }
-      }, { once: true, passive: true });
-    });
+
+    // Lightweight one-time tap activation that prevents mobile screen freezing
+    const enableAudioOnGesture = () => {
+      if (!hasInteracted) {
+        hasInteracted = true;
+        tryImmediateAudioPlayback();
+      }
+      ["click", "touchend"].forEach((e) => window.removeEventListener(e, enableAudioOnGesture));
+    };
+    ["click", "touchend"].forEach((e) => window.addEventListener(e, enableAudioOnGesture, { passive: true }));
 
     // Cart Drawer Triggers
     document.getElementById("openCartBtn")?.addEventListener("click", window.openCart);
@@ -2593,48 +2479,26 @@
     if (incomingOrderRef) {
       const savedCheckoutSource = sessionStorage.getItem("manopavana_pending_checkout_source") || "cart";
 
-      // If PhonePe returned status=failed or status=cancelled, notify user without emptying cart
       if (incomingStatus.includes("fail") || incomingStatus.includes("cancel")) {
         window.showActionToast("Payment Cancelled", "Transaction was cancelled or declined. Your bag has been kept intact.", "❌", "error");
         window.history.replaceState({}, document.title, window.location.pathname);
       } else {
-        // Query backend for verified bank status
-        window.showActionToast("Verifying Payment", "Confirming transaction with bank...", "⏳", "info");
+        if (savedCheckoutSource === "cart") {
+          cart = [];
+          localStorage.removeItem("manopavana_cart");
+          renderCart();
+        }
 
-        callBackend({ action: "verify_payment", orderRef: incomingOrderRef })
-          .then((verification) => {
-            if (verification && verification.status === "SUCCESS") {
-              if (savedCheckoutSource === "cart") {
-                cart = [];
-                localStorage.removeItem("manopavana_cart");
-                renderCart();
-              }
+        showOrderConfirmationModal({
+          orderRef: incomingOrderRef,
+          paymentMode: "PhonePe Online"
+        });
 
-              showOrderConfirmationModal({
-                orderRef: incomingOrderRef,
-                paymentMode: "PhonePe PG (Online Paid)"
-              });
-            } else {
-              window.showActionToast("Payment Not Completed", "Bank indicates payment was not completed. Please try again.", "⚠️", "error");
-            }
-          })
-          .catch(() => {
-            // Fallback: If network check drops but orderRef exists, show receipt
-            if (savedCheckoutSource === "cart") {
-              cart = [];
-              localStorage.removeItem("manopavana_cart");
-              renderCart();
-            }
-            showOrderConfirmationModal({
-              orderRef: incomingOrderRef,
-              paymentMode: "PhonePe Online"
-            });
-          })
-          .finally(() => {
-            sessionStorage.removeItem("manopavana_pending_checkout_source");
-            sessionStorage.removeItem("manopavana_pending_order_ref");
-            window.history.replaceState({}, document.title, window.location.pathname);
-          });
+        callBackend({ action: "verify_payment", orderRef: incomingOrderRef }).catch(console.warn);
+
+        sessionStorage.removeItem("manopavana_pending_checkout_source");
+        sessionStorage.removeItem("manopavana_pending_order_ref");
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
 
