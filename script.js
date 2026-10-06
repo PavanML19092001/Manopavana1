@@ -52,8 +52,10 @@
   let countdownTimerInterval = null;
   let currentCalculatedGrandTotal = 0;
   let currentOrderRef = "";
-  let checkoutSource = "cart";
+  let checkoutSource = "cart"; // "cart" | "buynow" | "retry"
   let buyNowItem = null;
+  let retryOrderData = null; // Stores dedicated previous order data during payment retry
+  let lastFailedOrderRef = "";
   let toastTimeoutTimer = null;
   let addressTypingTimer = null;
 
@@ -745,14 +747,14 @@
       }
       if (accountView) accountView.style.display = "block";
       if (manualView) manualView.style.display = "none";
-      if (tabAccount) { tabAccount.style.background = "#eab308"; tabAccount.style.color = "#0c0a09"; }
-      if (tabManual) { tabManual.style.background = "transparent"; tabManual.style.color = "#d6d3d1"; }
+      if (tabAccount) { tabAccount.classList.add("active"); }
+      if (tabManual) { tabManual.classList.remove("active"); }
       fetchUserOrderHistory();
     } else {
       if (accountView) accountView.style.display = "none";
       if (manualView) manualView.style.display = "block";
-      if (tabManual) { tabManual.style.background = "#eab308"; tabManual.style.color = "#0c0a09"; }
-      if (tabAccount) { tabAccount.style.background = "transparent"; tabAccount.style.color = "#d6d3d1"; }
+      if (tabManual) { tabManual.classList.add("active"); }
+      if (tabAccount) { tabAccount.classList.remove("active"); }
     }
   };
 
@@ -808,10 +810,24 @@
   }
 
   function renderOrdersTimelineList(orders) {
-    return orders.map((order) => {
+    // Deduplicate orders by orderRef: keep only the most recent entry for each unique order reference
+    const seenRefs = new Set();
+    const uniqueOrders = [];
+    orders.forEach((o) => {
+      const ref = (o.orderRef || "").trim();
+      if (ref && !seenRefs.has(ref)) {
+        seenRefs.add(ref);
+        uniqueOrders.push(o);
+      }
+    });
+
+    return uniqueOrders.map((order) => {
       const pMode = (order.paymentMode || "").toUpperCase();
       const oStat = (order.orderStatus || "").toLowerCase();
-      const isUnpaid = pMode.includes("PENDING") || pMode.includes("UNPAID") || oStat.includes("incomplete") || pMode === "PHONEPE_PENDING";
+      const isUnpaid = pMode.includes("PENDING") || pMode.includes("UNPAID") || oStat.includes("incomplete") || oStat.includes("pending");
+
+      // Serialize order data safely so it can be passed into retry function
+      const orderPayloadAttr = escapeHtml(JSON.stringify(order));
 
       return `
         <div class="history-order-card" style="${isUnpaid ? 'border:1px solid #ef4444;' : ''}">
@@ -832,13 +848,13 @@
           ${isUnpaid ? `
             <div style="margin-top:1rem; padding:0.85rem; background:#291414; border-radius:8px; border:1px solid #7f1d1d;">
               <p style="margin:0 0 0.5rem 0; color:#fca5a5; font-size:0.85rem; line-height:1.4;">
-                Payment was not completed for this order. You can complete it now online or switch to Cash on Delivery:
+                Payment was not completed for this previous order. Complete payment online or switch to Cash on Delivery:
               </p>
               <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                <button type="button" class="btn-track-this-order" style="padding:0.6rem 1rem; font-size:0.85rem; flex:1; background:#eab308; color:#0c0a09; font-weight:bold; border-radius:6px; border:none; cursor:pointer;" onclick="window.retrySpecificOrderPayment('${escapeHtml(order.orderRef)}', ${escapeHtml(order.grandTotal)}, 'PHONEPE')">
+                <button type="button" class="btn-track-this-order" style="padding:0.6rem 1rem; font-size:0.85rem; flex:1; background:#eab308; color:#0c0a09; font-weight:bold; border-radius:6px; border:none; cursor:pointer;" onclick='window.retryOrderDirectly(${orderPayloadAttr}, "PHONEPE")'>
                   ⚡ Retry via PhonePe
                 </button>
-                <button type="button" class="btn-track-this-order" style="padding:0.6rem 1rem; font-size:0.85rem; flex:1; background:#292524; color:#fafaf9; border:1px solid #44403c; border-radius:6px; cursor:pointer;" onclick="window.retrySpecificOrderPayment('${escapeHtml(order.orderRef)}', ${escapeHtml(order.grandTotal)}, 'COD')">
+                <button type="button" class="btn-track-this-order" style="padding:0.6rem 1rem; font-size:0.85rem; flex:1; background:#292524; color:#fafaf9; border:1px solid #44403c; border-radius:6px; cursor:pointer;" onclick='window.retryOrderDirectly(${orderPayloadAttr}, "COD")'>
                   💵 Switch to COD
                 </button>
               </div>
@@ -873,12 +889,19 @@
     }).join("");
   }
 
-  window.retrySpecificOrderPayment = function (orderRef, amount, chosenMode) {
+  // Opens checkout locked to the dedicated previous order WITHOUT touching the current cart
+  window.retryOrderDirectly = function (orderObj, mode) {
     window.closeOrderTrackingModal();
-    currentOrderRef = orderRef;
-    currentCalculatedGrandTotal = parseFloat(amount);
+    window.closePaymentFailedModal();
 
-    if (chosenMode === "PHONEPE") {
+    checkoutSource = "retry";
+    buyNowItem = null;
+    retryOrderData = orderObj;
+    currentOrderRef = orderObj.orderRef;
+    currentCalculatedGrandTotal = parseFloat(orderObj.grandTotal) || 0;
+
+    // Set desired payment mode
+    if (mode === "PHONEPE") {
       const pRadio = document.getElementById("payPhonePe");
       if (pRadio) pRadio.checked = true;
     } else {
@@ -886,15 +909,7 @@
       if (cRadio) cRadio.checked = true;
     }
 
-    updatePaymentModeUI();
-    loadSavedDeliveryDetails();
-
-    const modal = document.getElementById("checkoutModalBackdrop");
-    if (modal) {
-      modal.classList.add("open");
-      document.body.classList.add("modal-open");
-      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 250);
-    }
+    openCheckoutModalUI();
   };
 
   window.submitOrderTrackingQuery = function () {
@@ -1468,6 +1483,24 @@
     const summaryCard = document.getElementById("savedAddressSummaryCard");
     const fieldsContainer = document.getElementById("deliveryFieldsContainer");
 
+    // If retrying a previous order with dedicated address data, use that
+    if (checkoutSource === "retry" && retryOrderData) {
+      const custName = document.getElementById("custName");
+      const custPhone = document.getElementById("custPhone");
+      const custAddress = document.getElementById("custAddress");
+      const custPincode = document.getElementById("custPincode");
+
+      if (custName && retryOrderData.customerName) custName.value = retryOrderData.customerName;
+      if (custPhone && retryOrderData.phone) custPhone.value = retryOrderData.phone;
+      if (custAddress && retryOrderData.address) custAddress.value = retryOrderData.address;
+      if (custPincode && retryOrderData.pincode) custPincode.value = retryOrderData.pincode;
+
+      if (summaryCard) summaryCard.style.display = "none";
+      if (fieldsContainer) fieldsContainer.style.display = "block";
+      initOrUpdateDeliveryMap();
+      return;
+    }
+
     if (saved && saved.name && saved.phone && saved.address) {
       const custName = document.getElementById("custName");
       const custPhone = document.getElementById("custPhone");
@@ -1958,6 +1991,7 @@
       return;
     }
     checkoutSource = "buynow";
+    retryOrderData = null;
     buyNowItem = { id, title, price: parseInt(price, 10), quantity: 1, img };
     window.closeProductDetailModal();
     promptLoginOrOpenCheckout();
@@ -1977,13 +2011,19 @@
   }
 
   function openCheckoutModalUI() {
-    currentOrderRef = currentOrderRef || ("MP_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900));
+    if (checkoutSource !== "retry") {
+      currentOrderRef = "MP_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900);
+    }
 
     const titleEl = document.getElementById("modalCheckoutTitle");
     if (titleEl) {
-      titleEl.textContent = checkoutSource === "buynow" && buyNowItem
-        ? `Delivery & Payment: ${buyNowItem.title}`
-        : "Delivery & Payment Details";
+      if (checkoutSource === "retry" && retryOrderData) {
+        titleEl.textContent = `Verify & Complete Payment: #${retryOrderData.orderRef}`;
+      } else if (checkoutSource === "buynow" && buyNowItem) {
+        titleEl.textContent = `Delivery & Payment: ${buyNowItem.title}`;
+      } else {
+        titleEl.textContent = "Delivery & Payment Details";
+      }
     }
 
     updateCheckoutFinancials();
@@ -2006,9 +2046,48 @@
       modal.classList.remove("open");
       document.body.classList.remove("modal-open");
     }
+    if (checkoutSource === "retry") {
+      checkoutSource = "cart";
+      retryOrderData = null;
+    }
   };
 
   function updateCheckoutFinancials() {
+    const preview = document.getElementById("checkoutOrderPreview");
+    if (!preview) return;
+
+    // SCENARIO 1: RETRYING A PREVIOUS ORDER (Order isolation from active cart)
+    if (checkoutSource === "retry" && retryOrderData) {
+      currentCalculatedGrandTotal = parseFloat(retryOrderData.grandTotal) || 0;
+      currentOrderRef = retryOrderData.orderRef;
+
+      preview.innerHTML = `
+        <div style="background:#26221f; border:1px solid #44403c; border-radius:8px; padding:1rem; margin-bottom:1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; border-bottom:1px solid #3d3834; padding-bottom:0.5rem;">
+            <span style="color:#eab308; font-weight:700; font-size:0.88rem;">📋 Retrying Order Reference</span>
+            <strong style="color:#fafaf9; font-size:0.95rem;">#${escapeHtml(retryOrderData.orderRef)}</strong>
+          </div>
+          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:#d6d3d1;">
+            <strong style="color:#a8a29e;">Items to be Paid:</strong>
+            <div style="color:#fde047; margin-top:0.2rem;">${escapeHtml(retryOrderData.items)}</div>
+          </div>
+          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:#d6d3d1;">
+            <strong style="color:#a8a29e;">Delivery Destination:</strong>
+            <div style="margin-top:0.2rem;">${escapeHtml(retryOrderData.address || "Bangalore")} (${escapeHtml(retryOrderData.pincode || "560058")})</div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #3d3834; padding-top:0.6rem; margin-top:0.6rem;">
+            <span style="color:#fafaf9; font-weight:700; font-size:0.95rem;">Locked Grand Total:</span>
+            <strong style="color:#eab308; font-size:1.15rem;">₹${currentCalculatedGrandTotal.toLocaleString("en-IN")}</strong>
+          </div>
+          <small style="color:#a8a29e; display:block; margin-top:0.4rem; font-size:0.75rem;">
+            💡 Your current active shopping bag remains safely preserved in the background.
+          </small>
+        </div>
+      `;
+      return;
+    }
+
+    // SCENARIO 2: NORMAL CART / BUY NOW CHECKOUT
     let subtotal = 0;
     let itemsCount = 0;
     let previewHTML = "";
@@ -2044,21 +2123,18 @@
     const grandTotal = discountedSubtotal + (itemsCount > 0 ? deliveryFee : 0);
     currentCalculatedGrandTotal = grandTotal;
 
-    const preview = document.getElementById("checkoutOrderPreview");
-    if (preview) {
-      preview.innerHTML = `
-        <div class="checkout-preview-header">
-          <span>Items (${itemsCount})</span>
-          <span>Subtotal: ₹${subtotal.toLocaleString("en-IN")}</span>
-        </div>
-        <div class="checkout-preview-list">${previewHTML}</div>
-        <div class="checkout-preview-footer">
-          ${discountAmount > 0 ? `<div class="checkout-row discount-text"><span>Loyalty Discount (10%):</span><span>-₹${discountAmount.toLocaleString("en-IN")}</span></div>` : ""}
-          <div class="checkout-row"><span>Delivery:</span><span>${deliveryFee === 0 ? '<strong class="free-tag">FREE</strong>' : `₹${deliveryFee}`}</span></div>
-          <div class="checkout-row total-highlight"><span>Total Payable:</span><span>₹${grandTotal.toLocaleString("en-IN")}</span></div>
-        </div>
-      `;
-    }
+    preview.innerHTML = `
+      <div class="checkout-preview-header">
+        <span>Items (${itemsCount})</span>
+        <span>Subtotal: ₹${subtotal.toLocaleString("en-IN")}</span>
+      </div>
+      <div class="checkout-preview-list">${previewHTML}</div>
+      <div class="checkout-preview-footer">
+        ${discountAmount > 0 ? `<div class="checkout-row discount-text"><span>Loyalty Discount (10%):</span><span>-₹${discountAmount.toLocaleString("en-IN")}</span></div>` : ""}
+        <div class="checkout-row"><span>Delivery:</span><span>${deliveryFee === 0 ? '<strong class="free-tag">FREE</strong>' : `₹${deliveryFee}`}</span></div>
+        <div class="checkout-row total-highlight"><span>Total Payable:</span><span>₹${grandTotal.toLocaleString("en-IN")}</span></div>
+      </div>
+    `;
   }
 
   function updatePaymentModeUI() {
@@ -2089,16 +2165,16 @@
     const name = document.getElementById("custName")?.value.trim();
     const phone = document.getElementById("custPhone")?.value.trim();
     const address = document.getElementById("custAddress")?.value.trim();
-    const state = document.getElementById("custState")?.value.trim();
-    const district = document.getElementById("custDistrict")?.value.trim();
-    const city = document.getElementById("custCity")?.value.trim();
+    const state = document.getElementById("custState")?.value.trim() || "Karnataka";
+    const district = document.getElementById("custDistrict")?.value.trim() || "Bengaluru Urban";
+    const city = document.getElementById("custCity")?.value.trim() || "Bengaluru";
     const pincode = document.getElementById("custPincode")?.value.trim();
     const latitude = document.getElementById("custLatitude")?.value || DEFAULT_BANGALORE_COORDS[0];
     const longitude = document.getElementById("custLongitude")?.value || DEFAULT_BANGALORE_COORDS[1];
     const chkSave = document.getElementById("chkSaveAddress")?.checked;
     const errBox = document.getElementById("formError");
 
-    if (!name || phone.length < 10 || !address || !state || !district || !city || pincode.length !== 6) {
+    if (!name || phone.length < 10 || !address || pincode.length !== 6) {
       if (errBox) {
         errBox.textContent = "Please fill in all mandatory delivery address fields properly.";
         errBox.style.display = "block";
@@ -2120,8 +2196,15 @@
       localStorage.setItem("manopavana_saved_delivery", JSON.stringify(deliveryPayload));
     }
 
-    const itemsToCheckout = checkoutSource === "buynow" && buyNowItem ? [buyNowItem] : cart;
-    const itemsSummary = itemsToCheckout.map((i) => `${i.title} (x${i.quantity})`).join(", ");
+    // Determine items summary string based on checkout mode
+    let itemsSummary = "";
+    if (checkoutSource === "retry" && retryOrderData) {
+      itemsSummary = retryOrderData.items;
+    } else {
+      const itemsToCheckout = checkoutSource === "buynow" && buyNowItem ? [buyNowItem] : cart;
+      itemsSummary = itemsToCheckout.map((i) => `${i.title} (x${i.quantity})`).join(", ");
+    }
+
     const paymentMode = document.getElementById("payPhonePe")?.checked
       ? "PHONEPE"
       : (document.getElementById("payCOD")?.checked ? "COD" : "WHATSAPP");
@@ -2212,16 +2295,24 @@
           latitude: latitude,
           longitude: longitude
         };
-        localOrdersHistory.unshift(orderSnapshot);
+
+        // Update local order snapshot in history list
+        const existingIdx = localOrdersHistory.findIndex(o => o.orderRef === currentOrderRef);
+        if (existingIdx !== -1) {
+          localOrdersHistory[existingIdx] = orderSnapshot;
+        } else {
+          localOrdersHistory.unshift(orderSnapshot);
+        }
         localStorage.setItem("manopavana_local_orders", JSON.stringify(localOrdersHistory));
 
+        // Only clear shopping cart if checkout was directly made from cart!
         if (checkoutSource === "cart") {
           cart = [];
           localStorage.removeItem("manopavana_cart");
+          renderCart();
         }
 
         window.closeCheckoutModal();
-        renderCart();
 
         showOrderConfirmationModal({
           orderRef: currentOrderRef,
@@ -2290,13 +2381,14 @@
   // 17. PAYMENT FAILURE MODAL & RETRY HANDLERS
   // ==========================================
   window.showPaymentFailedModal = function (orderRef, reasonText) {
+    lastFailedOrderRef = orderRef;
     const modal = document.getElementById("paymentFailedModalBackdrop");
     const refEl = document.getElementById("failedModalRef");
     const reasonEl = document.getElementById("failedModalReason");
 
     if (refEl) refEl.textContent = "#" + orderRef;
     if (reasonEl) {
-      reasonEl.textContent = reasonText || "Payment was cancelled or declined by the bank.";
+      reasonEl.textContent = reasonText || "Payment was cancelled or was not confirmed by the bank.";
     }
 
     if (modal) {
@@ -2315,18 +2407,31 @@
 
   window.retryPaymentFromModal = function () {
     window.closePaymentFailedModal();
-    const pRadio = document.getElementById("payPhonePe");
-    if (pRadio) pRadio.checked = true;
-    updatePaymentModeUI();
-    openCheckoutModalUI();
+    const matched = localOrdersHistory.find(o => o.orderRef === lastFailedOrderRef);
+
+    if (matched) {
+      window.retryOrderDirectly(matched, "PHONEPE");
+    } else {
+      // Re-trigger current checkout if order record is in active session
+      const pRadio = document.getElementById("payPhonePe");
+      if (pRadio) pRadio.checked = true;
+      updatePaymentModeUI();
+      openCheckoutModalUI();
+    }
   };
 
   window.switchToCodFromModal = function () {
     window.closePaymentFailedModal();
-    const cRadio = document.getElementById("payCOD");
-    if (cRadio) cRadio.checked = true;
-    updatePaymentModeUI();
-    openCheckoutModalUI();
+    const matched = localOrdersHistory.find(o => o.orderRef === lastFailedOrderRef);
+
+    if (matched) {
+      window.retryOrderDirectly(matched, "COD");
+    } else {
+      const cRadio = document.getElementById("payCOD");
+      if (cRadio) cRadio.checked = true;
+      updatePaymentModeUI();
+      openCheckoutModalUI();
+    }
   };
 
   // ==========================================
@@ -2429,13 +2534,14 @@
     renderComboSection();
   };
 
-  // Fixed Countdown Timer Arithmetic Calculation (% 3600 / 60)
   function startLiveCountdown() {
     if (countdownTimerInterval) clearInterval(countdownTimerInterval);
 
     function updateTimer() {
       const announcementText = document.getElementById("announcementText");
       const topBar = document.getElementById("topAnnouncementBar");
+      const btnBottleClaim = document.getElementById("btnOpenBottleClaimModal");
+
       if (!announcementText || !topBar) return;
 
       if (isLoyaltyDiscountValid()) {
@@ -2454,9 +2560,13 @@
         const formatted = `${days}d ${String(hours).padStart(2, "0")}h ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
         announcementText.innerHTML = `🏷 <strong>Bottle Scan Verified:</strong> 10% Loyalty Discount Active! <span class="countdown-pill">⏱ ${formatted}</span>`;
         topBar.classList.add("loyal-banner");
+
+        // Hide redundant "Claim 10% Off" button because loyalty is already verified and active
+        if (btnBottleClaim) btnBottleClaim.style.display = "none";
       } else {
         announcementText.innerHTML = `🚚 <strong>FREE Doorstep Delivery</strong> on all orders above ₹500 across Bangalore (Delivered in 48–72 hrs)`;
         topBar.classList.remove("loyal-banner");
+        if (btnBottleClaim) btnBottleClaim.style.display = "inline-flex";
         clearInterval(countdownTimerInterval);
       }
     }
@@ -2501,6 +2611,7 @@
       }
       checkoutSource = "cart";
       buyNowItem = null;
+      retryOrderData = null;
       window.closeCart();
       promptLoginOrOpenCheckout();
     });
@@ -2598,6 +2709,7 @@
             handled = true;
 
             if (verification && verification.paymentStatus === "COMPLETED") {
+              // Only empty cart if checkout originated from active cart
               if (savedCheckoutSource === "cart") {
                 cart = [];
                 localStorage.removeItem("manopavana_cart");
