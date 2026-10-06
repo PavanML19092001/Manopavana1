@@ -1,6 +1,6 @@
 // ==========================================================================
 // MANOPAVANA - ARTISANAL WOOD-PRESSED OILS (BANGALORE)
-// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - MASTER BUILD
+// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - MASTER BUG-FREE BUILD
 // ==========================================================================
 
 (function () {
@@ -2120,12 +2120,24 @@
           redirectBaseUrl: currentOrigin
         });
 
-        // Redirect directly without throwing local guardrail errors
-        if (response && response.redirectUrl) {
-          window.location.href = response.redirectUrl;
+        // Safe URL redirect that prevents navigating into Google Apps Script
+        if (response && response.status === "SUCCESS" && response.redirectUrl) {
+          var targetUrl = String(response.redirectUrl).trim();
+
+          // Blocks browser from loading Google Apps Script and showing "Invalid action: "
+          if (targetUrl.indexOf("script.google.com") !== -1 || targetUrl.indexOf("script.googleusercontent.com") !== -1) {
+            console.error("PhonePe Gateway returned an internal Google endpoint:", response);
+            alert("PhonePe Gateway session could not be established. Please select 'Cash on Delivery' or 'WhatsApp Order'.");
+            return;
+          }
+
+          window.location.href = targetUrl;
           return;
         } else {
-          throw new Error(response.message || "Failed to initialize payment gateway.");
+          var errDetail = (response && response.message) ? response.message : "Unable to initiate PhonePe session.";
+          console.error("Payment initiation failure:", response);
+          alert("Payment Error: " + errDetail + "\n\nPlease try Cash on Delivery or WhatsApp Order.");
+          return;
         }
       } else {
         await callBackend({
@@ -2479,26 +2491,38 @@
     if (incomingOrderRef) {
       const savedCheckoutSource = sessionStorage.getItem("manopavana_pending_checkout_source") || "cart";
 
-      if (incomingStatus.includes("fail") || incomingStatus.includes("cancel")) {
-        window.showActionToast("Payment Cancelled", "Transaction was cancelled or declined. Your bag has been kept intact.", "❌", "error");
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } else {
-        if (savedCheckoutSource === "cart") {
-          cart = [];
-          localStorage.removeItem("manopavana_cart");
-          renderCart();
-        }
-
-        showOrderConfirmationModal({
-          orderRef: incomingOrderRef,
-          paymentMode: "PhonePe Online"
-        });
-
-        callBackend({ action: "verify_payment", orderRef: incomingOrderRef }).catch(console.warn);
-
+      // If user cancelled, closed payment, or status has fail/cancel, do NOT empty cart or show success
+      if (incomingStatus.includes("fail") || incomingStatus.includes("cancel") || incomingStatus.includes("error")) {
+        window.showActionToast("Payment Incomplete", "Payment was not completed. Your bag is saved.", "⚠️", "error");
         sessionStorage.removeItem("manopavana_pending_checkout_source");
         sessionStorage.removeItem("manopavana_pending_order_ref");
         window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        // Query backend to confirm payment state
+        callBackend({ action: "verify_payment", orderRef: incomingOrderRef })
+          .then((verification) => {
+            if (verification && (verification.status === "SUCCESS" || verification.paymentStatus === "COMPLETED")) {
+              if (savedCheckoutSource === "cart") {
+                cart = [];
+                localStorage.removeItem("manopavana_cart");
+                renderCart();
+              }
+              showOrderConfirmationModal({
+                orderRef: incomingOrderRef,
+                paymentMode: "PhonePe Online"
+              });
+            } else {
+              window.showActionToast("Payment Incomplete", "Transaction could not be confirmed by the bank.", "⚠️", "error");
+            }
+          })
+          .catch(() => {
+            window.showActionToast("Network Delay", "Verifying payment status...", "⏳", "info");
+          })
+          .finally(() => {
+            sessionStorage.removeItem("manopavana_pending_checkout_source");
+            sessionStorage.removeItem("manopavana_pending_order_ref");
+            window.history.replaceState({}, document.title, window.location.pathname);
+          });
       }
     }
 
