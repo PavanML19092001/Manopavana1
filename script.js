@@ -1,6 +1,6 @@
 // ==========================================================================
 // MANOPAVANA - ARTISANAL WOOD-PRESSED OILS (BANGALORE)
-// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - MASTER BUG-FREE BUILD
+// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - MASTER BUILD
 // ==========================================================================
 
 (function () {
@@ -17,9 +17,13 @@
   const QR_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 Days
   const ADMIN_PIN = "1234";
 
+  // Default Bangalore Landmark Center (Vidhana Soudha corridor)
   const DEFAULT_BANGALORE_COORDS = [12.9716, 77.5946];
-  const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbyQ-8w0XmfJiBUm8fg_W3kBQ7XSXJTftmc6I7188L25N_dwWCKDtYwnpRJTcCii70U-/exec";
 
+  // Google Apps Script Web App Deployment URL
+  const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwC-clS4UPY6I7NklbonBBLF_z2rPMzPlF0KwEPFqg37uQByZaI6Vk5vsoQxEfhmyp-/exec";
+
+  // Active Firebase Configuration
   const firebaseConfig = {
     apiKey: "AIzaSyBZ2h7B82XvIR2ffT2E5g9MHp1M7QPO9K4",
     authDomain: "manopavana-d399e.firebaseapp.com",
@@ -44,7 +48,7 @@
     currentUser = null;
   }
 
-  let currentAuthMode = "login";
+  let currentAuthMode = "login"; // "login" | "register" | "reset"
   let countdownTimerInterval = null;
   let currentCalculatedGrandTotal = 0;
   let currentOrderRef = "";
@@ -53,6 +57,7 @@
   let toastTimeoutTimer = null;
   let addressTypingTimer = null;
 
+  // Leaflet Map & Marker Instances
   let leafletMap = null;
   let mapMarker = null;
 
@@ -89,6 +94,7 @@
   let currentDetailProductKey = null;
   let currentDetailSelectedSize = "1L";
 
+  // Upfront Onboarding State
   let onboardingQuizAttemptsLeft = 2;
   let selectedQuizBottleKey = "groundnut";
   let activeQuizData = null;
@@ -119,7 +125,7 @@
   };
 
   // ==========================================
-  // 3. MASTER CATALOG
+  // 3. MASTER CATALOG & SPECIFICATIONS
   // ==========================================
   const createGallery = (prefix, count = 11) =>
     Array.from({ length: count }, (_, i) => `${R2_PUBLIC_BASE_URL}/${prefix}-${i + 1}.png`);
@@ -283,6 +289,7 @@
     }
   };
 
+  // Indian States & Districts
   const INDIA_STATES_AND_DISTRICTS = {
     "Karnataka": [
       "Bagalkote", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar",
@@ -387,7 +394,7 @@
   }
 
   // ==========================================
-  // 4. ACTION TOAST
+  // 4. ACTION TOAST ENGINE
   // ==========================================
   window.showActionToast = function (title, message, icon = "✨", type = "info") {
     const toast = document.getElementById("actionToast");
@@ -702,7 +709,7 @@
   });
 
   // ==========================================
-  // 7. ORDER TRACKING & AUTO HISTORY
+  // 7. ORDER TRACKING & AUTO HISTORY (RETRY IN-LINE)
   // ==========================================
   window.openOrderTrackingModal = function (forceAccountTab = false) {
     const modal = document.getElementById("trackOrderModalBackdrop");
@@ -802,53 +809,93 @@
 
   function renderOrdersTimelineList(orders) {
     return orders.map((order) => {
-      const st = (order.orderStatus || "").toLowerCase();
-      const isStep1 = true;
-      const isStep2 = st.includes("pack") || st.includes("process") || st.includes("settl") || st.includes("dispatch") || st.includes("deliver");
-      const isStep3 = st.includes("dispatch") || st.includes("transit") || st.includes("out") || st.includes("deliver");
-      const isStep4 = st.includes("deliver");
+      const pMode = (order.paymentMode || "").toUpperCase();
+      const oStat = (order.orderStatus || "").toLowerCase();
+      const isUnpaid = pMode.includes("PENDING") || pMode.includes("UNPAID") || oStat.includes("incomplete") || pMode === "PHONEPE_PENDING";
 
       return `
-        <div class="history-order-card">
+        <div class="history-order-card" style="${isUnpaid ? 'border:1px solid #ef4444;' : ''}">
           <div class="history-card-header">
             <div>
               <strong>Order #${escapeHtml(order.orderRef)}</strong>
               <small style="color:#a8a29e; display:block;">${escapeHtml(order.timestamp || "Recent")} • ₹${escapeHtml(order.grandTotal)}</small>
             </div>
-            <span class="track-status-pill">${escapeHtml(order.orderStatus || "Placed")}</span>
+            <span class="track-status-pill" style="${isUnpaid ? 'background:#ef4444; color:#fff;' : ''}">
+              ${isUnpaid ? '⚠️ Payment Incomplete' : escapeHtml(order.orderStatus || "Placed")}
+            </span>
           </div>
 
           <div class="history-card-items">
             <strong>Items:</strong> ${escapeHtml(order.items)}
           </div>
 
-          <div class="track-timeline-progress">
-            <div class="track-step-node node-step ${isStep1 ? 'active' : ''}">
-              <span class="node-dot ${isStep1 ? 'active' : ''}">✓</span>
-              <span class="node-lbl">Placed</span>
+          ${isUnpaid ? `
+            <div style="margin-top:1rem; padding:0.85rem; background:#291414; border-radius:8px; border:1px solid #7f1d1d;">
+              <p style="margin:0 0 0.5rem 0; color:#fca5a5; font-size:0.85rem; line-height:1.4;">
+                Payment was not completed for this order. You can complete it now online or switch to Cash on Delivery:
+              </p>
+              <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <button type="button" class="btn-track-this-order" style="padding:0.6rem 1rem; font-size:0.85rem; flex:1; background:#eab308; color:#0c0a09; font-weight:bold; border-radius:6px; border:none; cursor:pointer;" onclick="window.retrySpecificOrderPayment('${escapeHtml(order.orderRef)}', ${escapeHtml(order.grandTotal)}, 'PHONEPE')">
+                  ⚡ Retry via PhonePe
+                </button>
+                <button type="button" class="btn-track-this-order" style="padding:0.6rem 1rem; font-size:0.85rem; flex:1; background:#292524; color:#fafaf9; border:1px solid #44403c; border-radius:6px; cursor:pointer;" onclick="window.retrySpecificOrderPayment('${escapeHtml(order.orderRef)}', ${escapeHtml(order.grandTotal)}, 'COD')">
+                  💵 Switch to COD
+                </button>
+              </div>
             </div>
-            <div class="track-step-node node-step ${isStep2 ? 'active' : ''}">
-              <span class="node-dot ${isStep2 ? 'active' : ''}">⚙</span>
-              <span class="node-lbl">Packed &amp; Sealed</span>
+          ` : `
+            <div class="track-timeline-progress">
+              <div class="track-step-node node-step active">
+                <span class="node-dot active">✓</span>
+                <span class="node-lbl">Placed</span>
+              </div>
+              <div class="track-step-node node-step ${oStat.includes('pack') || oStat.includes('process') || oStat.includes('settl') || oStat.includes('dispatch') || oStat.includes('deliver') ? 'active' : ''}">
+                <span class="node-dot ${oStat.includes('pack') || oStat.includes('process') || oStat.includes('settl') || oStat.includes('dispatch') || oStat.includes('deliver') ? 'active' : ''}">⚙</span>
+                <span class="node-lbl">Packed &amp; Sealed</span>
+              </div>
+              <div class="track-step-node node-step ${oStat.includes('dispatch') || oStat.includes('transit') || oStat.includes('out') || oStat.includes('deliver') ? 'active' : ''}">
+                <span class="node-dot ${oStat.includes('dispatch') || oStat.includes('transit') || oStat.includes('out') || oStat.includes('deliver') ? 'active' : ''}">🚚</span>
+                <span class="node-lbl">Dispatched</span>
+              </div>
+              <div class="track-step-node node-step ${oStat.includes('deliver') ? 'active' : ''}">
+                <span class="node-dot ${oStat.includes('deliver') ? 'active' : ''}">🏡</span>
+                <span class="node-lbl">Delivered</span>
+              </div>
             </div>
-            <div class="track-step-node node-step ${isStep3 ? 'active' : ''}">
-              <span class="node-dot ${isStep3 ? 'active' : ''}">🚚</span>
-              <span class="node-lbl">Dispatched</span>
-            </div>
-            <div class="track-step-node node-step ${isStep4 ? 'active' : ''}">
-              <span class="node-dot ${isStep4 ? 'active' : ''}">🏡</span>
-              <span class="node-lbl">Delivered</span>
-            </div>
-          </div>
 
-          <div class="history-card-footer">
-            <span style="color:#eab308; font-weight:600;">Facility Status:</span>
-            <span style="color:#d6d3d1;">${escapeHtml(order.trackingNotes || "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.")}</span>
-          </div>
+            <div class="history-card-footer">
+              <span style="color:#eab308; font-weight:600;">Facility Status:</span>
+              <span style="color:#d6d3d1;">${escapeHtml(order.trackingNotes || "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.")}</span>
+            </div>
+          `}
         </div>
       `;
     }).join("");
   }
+
+  window.retrySpecificOrderPayment = function (orderRef, amount, chosenMode) {
+    window.closeOrderTrackingModal();
+    currentOrderRef = orderRef;
+    currentCalculatedGrandTotal = parseFloat(amount);
+
+    if (chosenMode === "PHONEPE") {
+      const pRadio = document.getElementById("payPhonePe");
+      if (pRadio) pRadio.checked = true;
+    } else {
+      const cRadio = document.getElementById("payCOD");
+      if (cRadio) cRadio.checked = true;
+    }
+
+    updatePaymentModeUI();
+    loadSavedDeliveryDetails();
+
+    const modal = document.getElementById("checkoutModalBackdrop");
+    if (modal) {
+      modal.classList.add("open");
+      document.body.classList.add("modal-open");
+      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 250);
+    }
+  };
 
   window.submitOrderTrackingQuery = function () {
     const refInput = document.getElementById("trackOrderRefInput");
@@ -918,7 +965,7 @@
   window.openOnboardingModal = function (step = 1) {
     const modal = document.getElementById("onboardingModalBackdrop");
     if (!modal) return;
-    onboardingQuizAttemptsLeft = 2;
+    onboardingQuizAttemptsLeft = 2; // Always reset chances
     modal.classList.add("open");
     document.body.classList.add("modal-open");
     window.goToOnboardingStep(step);
@@ -1930,7 +1977,7 @@
   }
 
   function openCheckoutModalUI() {
-    currentOrderRef = "MP_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900);
+    currentOrderRef = currentOrderRef || ("MP_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900));
 
     const titleEl = document.getElementById("modalCheckoutTitle");
     if (titleEl) {
@@ -2240,12 +2287,17 @@
   };
 
   // ==========================================
-  // PAYMENT FAILURE / RETRY MODAL HANDLERS
+  // 17. PAYMENT FAILURE MODAL & RETRY HANDLERS
   // ==========================================
-  window.showPaymentFailedModal = function (orderRef) {
+  window.showPaymentFailedModal = function (orderRef, reasonText) {
     const modal = document.getElementById("paymentFailedModalBackdrop");
     const refEl = document.getElementById("failedModalRef");
+    const reasonEl = document.getElementById("failedModalReason");
+
     if (refEl) refEl.textContent = "#" + orderRef;
+    if (reasonEl) {
+      reasonEl.textContent = reasonText || "Payment was cancelled or declined by the bank.";
+    }
 
     if (modal) {
       modal.classList.add("open");
@@ -2263,22 +2315,22 @@
 
   window.retryPaymentFromModal = function () {
     window.closePaymentFailedModal();
-    const phonepeRadio = document.getElementById("payPhonePe");
-    if (phonepeRadio) phonepeRadio.checked = true;
+    const pRadio = document.getElementById("payPhonePe");
+    if (pRadio) pRadio.checked = true;
     updatePaymentModeUI();
     openCheckoutModalUI();
   };
 
   window.switchToCodFromModal = function () {
     window.closePaymentFailedModal();
-    const codRadio = document.getElementById("payCOD");
-    if (codRadio) codRadio.checked = true;
+    const cRadio = document.getElementById("payCOD");
+    if (cRadio) cRadio.checked = true;
     updatePaymentModeUI();
     openCheckoutModalUI();
   };
 
   // ==========================================
-  // 17. CUSTOMER REVIEWS
+  // 18. CUSTOMER REVIEWS
   // ==========================================
   function renderReviews() {
     const grid = document.getElementById("reviewsDisplayGrid");
@@ -2307,7 +2359,7 @@
             <div>
               <div class="review-card-top">
                 <div class="review-stars">${starsDisplay}</div>
-                ${isAdmin ? `<button class="btn-admin-delete" onclick="deleteReview('${rev.id}')" title="Admin Delete">🗑️️ Delete</button>` : ""}
+                ${isAdmin ? `<button class="btn-admin-delete" onclick="deleteReview('${rev.id}')" title="Admin Delete">🗑️ Delete</button>` : ""}
               </div>
               <p class="review-text">"${escapeHtml(rev.comment)}"</p>
             </div>
@@ -2335,7 +2387,7 @@
   };
 
   // ==========================================
-  // 18. LEGAL MODALS & FIXED COUNTDOWN TIMER
+  // 19. LEGAL MODALS & FIXED COUNTDOWN TIMER
   // ==========================================
   window.openLegalModal = function (modalId) {
     const modal = document.getElementById(modalId);
@@ -2377,6 +2429,7 @@
     renderComboSection();
   };
 
+  // Fixed Countdown Timer Arithmetic Calculation (% 3600 / 60)
   function startLiveCountdown() {
     if (countdownTimerInterval) clearInterval(countdownTimerInterval);
 
@@ -2413,9 +2466,10 @@
   }
 
   // ==========================================
-  // 19. DOM INITIALIZATION & STRICT VERIFICATION
+  // 20. DOM INITIALIZATION
   // ==========================================
   document.addEventListener("DOMContentLoaded", () => {
+    // Sound & Video Engine
     document.getElementById("soundToggleBtn")?.addEventListener("click", toggleAudio);
     initVideoAutoplay();
 
@@ -2430,10 +2484,12 @@
     };
     ["click", "touchend"].forEach((e) => window.addEventListener(e, enableAudioOnGesture, { passive: true }));
 
+    // Cart Drawer Triggers
     document.getElementById("openCartBtn")?.addEventListener("click", window.openCart);
     document.getElementById("closeCartBtn")?.addEventListener("click", window.closeCart);
     document.getElementById("cartBackdrop")?.addEventListener("click", window.closeCart);
 
+    // Checkout Modal Triggers
     document.getElementById("openCheckoutModalBtn")?.addEventListener("click", () => {
       if (cart.length === 0) {
         alert("Please add at least one bottle to your bag first!");
@@ -2452,18 +2508,22 @@
     document.getElementById("closeModalBtn")?.addEventListener("click", window.closeCheckoutModal);
     document.getElementById("closeDetailModalBtn")?.addEventListener("click", window.closeProductDetailModal);
 
+    // Payment Selection Radios
     document.getElementById("payPhonePe")?.addEventListener("change", updatePaymentModeUI);
     document.getElementById("payCOD")?.addEventListener("change", updatePaymentModeUI);
     document.getElementById("payWhatsApp")?.addEventListener("change", updatePaymentModeUI);
 
+    // Submit Checkout
     document.getElementById("submitOrderBtn")?.addEventListener("click", handleCheckoutSubmission);
 
+    // Number Sanitization
     ["custPhone", "custPincode", "onboardPincodeInput", "pincodeCheckInput"].forEach((id) => {
       document.getElementById(id)?.addEventListener("input", (e) => {
         e.target.value = e.target.value.replace(/\D/g, "");
       });
     });
 
+    // Review Submission
     document.getElementById("productReviewForm")?.addEventListener("submit", (e) => {
       e.preventDefault();
       const name = document.getElementById("revName")?.value.trim();
@@ -2493,6 +2553,7 @@
       window.showActionToast("Review Submitted", "✨ Thank you! Your review has been posted.", "✨", "success");
     });
 
+    // FAQ Accordion
     document.querySelectorAll(".faq-question").forEach((button) => {
       button.addEventListener("click", () => {
         const item = button.parentElement;
@@ -2502,9 +2563,7 @@
       });
     });
 
-    // ==========================================
-    // RETURN FROM PHONEPE VERIFICATION
-    // ==========================================
+    // Verify PhonePe Return with 2.5s fast fail-safe cutoff
     const urlParams = new URLSearchParams(window.location.search);
     const incomingOrderRef = urlParams.get("orderRef");
     const incomingStatus = (urlParams.get("status") || "").toLowerCase();
@@ -2513,15 +2572,31 @@
       const savedCheckoutSource = sessionStorage.getItem("manopavana_pending_checkout_source") || "cart";
 
       if (incomingStatus.includes("fail") || incomingStatus.includes("cancel") || incomingStatus.includes("error")) {
-        window.showPaymentFailedModal(incomingOrderRef);
+        window.showPaymentFailedModal(incomingOrderRef, "Payment session was cancelled at PhonePe gateway.");
         sessionStorage.removeItem("manopavana_pending_checkout_source");
         sessionStorage.removeItem("manopavana_pending_order_ref");
         window.history.replaceState({}, document.title, window.location.pathname);
       } else {
-        window.showActionToast("Verifying Payment", "Confirming transaction with bank...", "⏳", "info");
+        window.showActionToast("Checking Status", "Verifying with PhonePe... ⏳", "⏳", "info");
+
+        let handled = false;
+        // Fast cutoff: 2.5 seconds maximum so the user is never left waiting
+        const cutoffTimer = setTimeout(() => {
+          if (!handled) {
+            handled = true;
+            window.showPaymentFailedModal(incomingOrderRef, "Payment was not confirmed by the bank. Order not yet placed.");
+            sessionStorage.removeItem("manopavana_pending_checkout_source");
+            sessionStorage.removeItem("manopavana_pending_order_ref");
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }, 2500);
 
         callBackend({ action: "verify_payment", orderRef: incomingOrderRef })
           .then((verification) => {
+            if (handled) return;
+            clearTimeout(cutoffTimer);
+            handled = true;
+
             if (verification && verification.paymentStatus === "COMPLETED") {
               if (savedCheckoutSource === "cart") {
                 cart = [];
@@ -2533,11 +2608,14 @@
                 paymentMode: "PhonePe Online (Verified)"
               });
             } else {
-              window.showPaymentFailedModal(incomingOrderRef);
+              window.showPaymentFailedModal(incomingOrderRef, verification.reason || "Payment was cancelled or declined by bank.");
             }
           })
           .catch(() => {
-            window.showPaymentFailedModal(incomingOrderRef);
+            if (handled) return;
+            clearTimeout(cutoffTimer);
+            handled = true;
+            window.showPaymentFailedModal(incomingOrderRef, "Payment was not confirmed. Connection dropped.");
           })
           .finally(() => {
             sessionStorage.removeItem("manopavana_pending_checkout_source");
@@ -2547,6 +2625,7 @@
       }
     }
 
+    // Component Initialization
     populateStatesDropdown();
     updateLocationUI();
     initLoyaltyFromStorage();
