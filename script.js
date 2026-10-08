@@ -1,6 +1,6 @@
 // ==========================================================================
 // MANOPAVANA - ARTISANAL WOOD-PRESSED OILS (BANGALORE)
-// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - FIRESTORE POWERED
+// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - FIRESTORE DIRECT
 // ==========================================================================
 
 (function () {
@@ -20,7 +20,7 @@
   // Default Bangalore Landmark Center (Vidhana Soudha corridor)
   const DEFAULT_BANGALORE_COORDS = [12.9716, 77.5946];
 
-  // Google Apps Script Web App Deployment URL (For PhonePe gateway transactions)
+  // Google Apps Script URL (RETAINED EXCLUSIVELY FOR PHONEPE SECRET HANDSHAKE)
   const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbyQ-8w0XmfJiBUm8fg_W3kBQ7XSXJTftmc6I7188L25N_dwWCKDtYwnpRJTcCii70U-/exec";
 
   // Active Firebase Configuration
@@ -39,7 +39,7 @@
   // ==========================================
   let authInstance = null;
   let googleAuthProvider = null;
-  let db = null; // Firestore Instance
+  let db = null; // Cloud Firestore Instance
   let firebaseInitialized = false;
 
   let currentUser = null;
@@ -55,7 +55,7 @@
   let currentOrderRef = "";
   let checkoutSource = "cart"; // "cart" | "buynow" | "retry"
   let buyNowItem = null;
-  let retryOrderData = null; // Stores dedicated previous order data during payment retry
+  let retryOrderData = null;
   let lastFailedOrderRef = "";
   let toastTimeoutTimer = null;
   let addressTypingTimer = null;
@@ -397,7 +397,7 @@
   }
 
   // ==========================================
-  // 4. ACTION TOAST ENGINE
+  // 4. ACTION TOAST & ERROR TRANSLATOR
   // ==========================================
   window.showActionToast = function (title, message, icon = "✨", type = "info") {
     const toast = document.getElementById("actionToast");
@@ -423,6 +423,38 @@
       toast.classList.remove("show");
     }, 4000);
   };
+
+  // Converts Firebase raw errors into clean, professional user explanations
+  function getFriendlyAuthErrorMessage(err) {
+    if (!err) return "An unexpected error occurred. Please try again.";
+    const code = err.code || "";
+    switch (code) {
+      case "auth/invalid-credential":
+      case "auth/wrong-password":
+      case "auth/user-not-found":
+        return "Invalid email or password. Please verify and try again.";
+      case "auth/email-already-in-use":
+        return "An account already exists with this email address. Please sign in instead.";
+      case "auth/weak-password":
+        return "Please choose a stronger password (at least 6 characters).";
+      case "auth/invalid-email":
+        return "Please enter a valid email address.";
+      case "auth/popup-closed-by-user":
+        return "Sign-in was cancelled before completion. Please try again.";
+      case "auth/cancelled-popup-request":
+        return "Sign-in popup was superseded. Please try again.";
+      case "auth/popup-blocked":
+        return "Pop-up blocked by your browser. Please allow popups for this site.";
+      case "auth/network-request-failed":
+        return "Network connection issue detected. Please check your internet connection.";
+      case "auth/too-many-requests":
+        return "Too many unsuccessful attempts. Access is temporarily paused for security. Try again in a few minutes.";
+      case "auth/user-disabled":
+        return "This account has been disabled. Please contact customer support.";
+      default:
+        return err.message || "Authentication failed. Please try again.";
+    }
+  }
 
   // ==========================================
   // 5. JSONP BACKEND CALLER (FOR PHONEPE PG ONLY)
@@ -487,7 +519,7 @@
             currentUser = {
               uid: user.uid,
               email: user.email,
-              displayName: user.displayName || user.email.split("@")[0]
+              displayName: user.displayName || (user.email ? user.email.split("@")[0] : "Customer")
             };
             localStorage.setItem("manopavana_active_user", JSON.stringify(currentUser));
           } else {
@@ -503,7 +535,7 @@
     updateAuthUI();
   }
 
-  // Syncs registered customer profile into Firestore immediately upon sign-in/registration
+  // Synchronizes customer profile directly into Firestore
   async function syncCustomerRecord(user, extraData, isNewUser) {
     if (!db || !user) return;
     try {
@@ -537,9 +569,9 @@
     const custNameInput = document.getElementById("custName");
 
     if (currentUser) {
-      const name = currentUser.displayName || currentUser.email.split("@")[0];
+      const name = currentUser.displayName || (currentUser.email ? currentUser.email.split("@")[0] : "Customer");
       if (authPillLabel) authPillLabel.textContent = "👤 " + name;
-      if (authUserMeta) authUserMeta.textContent = currentUser.email;
+      if (authUserMeta) authUserMeta.textContent = currentUser.email || "";
       if (custNameInput && !custNameInput.value && currentUser.displayName) {
         custNameInput.value = currentUser.displayName;
       }
@@ -653,7 +685,7 @@
         }
       } catch (err) {
         if (errBox) {
-          errBox.textContent = err.message || "Failed to send reset email.";
+          errBox.textContent = getFriendlyAuthErrorMessage(err);
           errBox.style.display = "block";
         }
       } finally {
@@ -700,7 +732,7 @@
       }
     } catch (err) {
       if (errBox) {
-        errBox.textContent = err.message || "Authentication error.";
+        errBox.textContent = getFriendlyAuthErrorMessage(err);
         errBox.style.display = "block";
       }
     } finally {
@@ -738,7 +770,7 @@
       }
     } catch (err) {
       if (errBox) {
-        errBox.textContent = err.message || "Google Sign-In failed.";
+        errBox.textContent = getFriendlyAuthErrorMessage(err);
         errBox.style.display = "block";
       }
     }
@@ -822,7 +854,7 @@
     }
     if (list) list.style.display = "none";
 
-    // 1. Direct Firestore Instant Read (20ms)
+    // 1. Direct Firestore Instant Read (20–30ms)
     if (db && currentUser) {
       try {
         const querySnapshot = await db.collection("orders")
@@ -836,7 +868,7 @@
           querySnapshot.forEach((doc) => {
             orders.push(doc.data());
           });
-          // Sort newest first
+          // Sort newest first in memory
           orders.sort((a, b) => (b.timestampMs || 0) - (a.timestampMs || 0));
           list.innerHTML = renderOrdersTimelineList(orders);
           list.style.display = "block";
@@ -847,10 +879,13 @@
       }
     }
 
-    // 2. Fallback to local cached orders if offline
+    // 2. Fallback to local cached orders if offline or Firestore query is empty
     if (loading) loading.style.display = "none";
     if (list) {
-      const localMatches = localOrdersHistory.filter(o => o.firebaseUid === currentUser.uid || (currentUser.email && o.email === currentUser.email));
+      const localMatches = localOrdersHistory.filter(o => 
+        (currentUser && o.firebaseUid === currentUser.uid) || 
+        (currentUser && currentUser.email && o.email === currentUser.email)
+      );
       if (localMatches.length > 0) {
         list.innerHTML = renderOrdersTimelineList(localMatches);
       } else {
@@ -979,7 +1014,7 @@
     }
     if (resultBox) resultBox.style.display = "none";
 
-    // Fast check directly from Firestore
+    // Instant read directly from Firestore
     if (db) {
       try {
         let matched = [];
@@ -995,6 +1030,7 @@
         if (btn) { btn.disabled = false; btn.textContent = "Fetch Live Status 🔍"; }
 
         if (matched.length > 0) {
+          matched.sort((a, b) => (b.timestampMs || 0) - (a.timestampMs || 0));
           resultBox.innerHTML = renderOrdersTimelineList(matched);
           resultBox.style.display = "block";
           return;
@@ -1004,7 +1040,7 @@
       }
     }
 
-    // Fallback to local storage
+    // Local storage cache fallback
     if (btn) { btn.disabled = false; btn.textContent = "Fetch Live Status 🔍"; }
     const localMatches = localOrdersHistory.filter(o => (orderRef && o.orderRef === orderRef) || (phone && o.phone === phone));
     if (localMatches.length > 0) {
@@ -2052,7 +2088,7 @@
   }
 
   function openCheckoutModalUI() {
-    if (checkoutSource !== "retry") {
+    if (checkoutSource !== "retry" || !currentOrderRef) {
       currentOrderRef = "MP_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900);
     }
 
@@ -2298,10 +2334,11 @@
       bottleCode: activeBottleCode || ""
     };
 
-    // Save order immediately into Firestore
-    await saveOrderToFirestore(orderPayload);
-
     try {
+      // 1. Save directly into Firestore first (Instant ~30ms)
+      await saveOrderToFirestore(orderPayload);
+
+      // 2. Handle Online PhonePe Flow vs Instant COD/WhatsApp Flow
       if (paymentMode === "PHONEPE") {
         sessionStorage.setItem("manopavana_pending_checkout_source", checkoutSource);
         sessionStorage.setItem("manopavana_pending_order_ref", currentOrderRef);
@@ -2326,7 +2363,7 @@
         });
 
         if (response && response.status === "SUCCESS" && response.redirectUrl) {
-          var targetUrl = String(response.redirectUrl).trim();
+          const targetUrl = String(response.redirectUrl).trim();
           if (targetUrl.indexOf("script.google.com") !== -1 || targetUrl.indexOf("script.googleusercontent.com") !== -1) {
             alert("PhonePe Gateway session could not be established. Please select 'Cash on Delivery' or 'WhatsApp Order'.");
             return;
@@ -2334,30 +2371,12 @@
           window.location.href = targetUrl;
           return;
         } else {
-          var errDetail = (response && response.message) ? response.message : "Unable to initiate PhonePe session.";
+          const errDetail = (response && response.message) ? response.message : "Unable to initiate PhonePe session.";
           alert("Payment Error: " + errDetail + "\n\nPlease try Cash on Delivery or WhatsApp Order.");
           return;
         }
       } else {
-        await callBackend({
-          action: "create_order",
-          orderRef: currentOrderRef,
-          firebaseUid: uid,
-          grandTotal: currentCalculatedGrandTotal,
-          name: name,
-          phone: phone,
-          email: currentUser.email || "",
-          address: `${address}, ${city}`,
-          state: state,
-          district: district,
-          pincode: pincode,
-          items: itemsSummary,
-          paymentMode: paymentMode,
-          bottleCode: activeBottleCode || "",
-          latitude: latitude,
-          longitude: longitude
-        });
-
+        // DIRECT COD & WHATSAPP: NO GOOGLE SHEETS / APPS SCRIPT BOTTLENECK
         const orderSnapshot = {
           timestamp: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
           timestampMs: Date.now(),
@@ -2407,13 +2426,15 @@
         }
       }
     } catch (err) {
-      console.warn("Backend checkout notice:", err);
+      console.warn("Checkout processing notice:", err);
       alert(err.message || "Failed to process checkout. Please choose Cash on Delivery or WhatsApp Order.");
     } finally {
+      // PREVENTS CHECKOUT LOCKOUT: Always re-enable button and reset reference ID
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = origText;
       }
+      currentOrderRef = "MP_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900);
     }
   }
 
