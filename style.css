@@ -1,38 +1,63 @@
 /* ==========================================================================
    MANOPAVANA - ARTISANAL WOOD-PRESSED OILS (BANGALORE)
-   COMPLETE MASTER PRODUCTION STYLESHEET (style.css)
+   COMPLETE PRODUCTION STYLESHEET (style.css) - UNTRUNCATED MASTER
    ========================================================================== */
 
 /* ==========================================
-   1. RESET & GLOBAL BASE THEME
+   1. RESET, BOX-SIZING & BASE THEME
    ========================================== */
-* {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html {
   width: 100%;
-  max-width: 100vw;
+  max-width: 100%;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+body {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
   overflow-x: hidden;
   position: relative;
   background-color: #0c0a09;
   color: #fafaf9;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  scroll-behavior: smooth;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body.modal-open {
-  position: fixed;
-  width: 100%;
-  overflow: hidden;
+  overflow: hidden !important;
+  height: 100vh;
+  touch-action: none;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 /* ==========================================
-   2. FLOATING SOUND CONTROLLER PILL
+   2. FLOATING AMBIENT SOUND PILL
    ========================================== */
 .floating-sound-pill {
   position: fixed;
@@ -47,7 +72,6 @@ body.modal-open {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: inherit;
   font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
@@ -118,7 +142,6 @@ body.modal-open {
   background: rgba(12, 10, 9, 0.88);
   color: #fafaf9;
   border: 1px solid rgba(234, 179, 8, 0.6);
-  font-family: inherit;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.32rem 0.75rem;
@@ -145,7 +168,6 @@ body.modal-open {
   background: rgba(12, 10, 9, 0.88);
   color: #fafaf9;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  font-family: inherit;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.32rem 0.75rem;
@@ -165,7 +187,6 @@ body.modal-open {
   background: rgba(12, 10, 9, 0.85);
   color: #fef08a;
   border: 1px solid rgba(254, 240, 138, 0.4);
-  font-family: inherit;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.32rem 0.75rem;
@@ -196,10 +217,9 @@ body.modal-open {
 }
 
 /* ==========================================
-   4. GLOBAL ACTION NOTIFICATION TOAST
+   4. GLOBAL ACTION TOAST NOTIFICATIONS
    ========================================== */
-.action-toast,
-.reward-toast {
+.action-toast {
   position: fixed;
   top: 84px;
   left: 50%;
@@ -217,8 +237,7 @@ body.modal-open {
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
 }
 
-.action-toast.show,
-.reward-toast.show {
+.action-toast.show {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
   pointer-events: auto;
@@ -234,21 +253,18 @@ body.modal-open {
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), 0 0 22px rgba(239, 68, 68, 0.3);
 }
 
-.action-toast-inner,
-.toast-content {
+.action-toast-inner {
   display: flex;
   align-items: center;
   gap: 0.85rem;
 }
 
-.action-toast-icon,
-.toast-icon {
+.action-toast-icon {
   font-size: 1.35rem;
   flex-shrink: 0;
 }
 
-.action-toast-content strong,
-.toast-content strong {
+.action-toast-content strong {
   color: #eab308;
   font-size: 0.86rem;
   display: block;
@@ -263,8 +279,7 @@ body.modal-open {
   color: #f87171;
 }
 
-.action-toast-content p,
-.toast-content p {
+.action-toast-content p {
   color: #d6d3d1;
   font-size: 0.78rem;
   margin: 2px 0 0 0;
@@ -272,7 +287,7 @@ body.modal-open {
 }
 
 /* ==========================================
-   5. SITE HEADER & SEARCH BAR
+   5. SITE HEADER, LOGO & SEARCH
    ========================================== */
 .site-header {
   position: sticky;
@@ -289,7 +304,6 @@ body.modal-open {
 .header-inner {
   max-width: 1440px;
   margin: 0 auto;
-  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -302,8 +316,8 @@ body.modal-open {
   align-items: center;
   gap: 0.85rem;
   text-decoration: none;
-  z-index: 2;
   flex-shrink: 0;
+  z-index: 2;
 }
 
 .logo-wrap {
@@ -347,7 +361,6 @@ body.modal-open {
 
 .brand-tagline,
 .brand-subtext {
-  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 0.68rem;
   color: #d6d3d1;
   letter-spacing: 0.6px;
@@ -371,7 +384,6 @@ body.modal-open {
   font-size: 0.84rem;
   color: #fafaf9;
   outline: none;
-  font-family: inherit;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -413,8 +425,8 @@ body.modal-open {
   display: flex;
   align-items: center;
   gap: 0.85rem;
-  z-index: 2;
   flex-shrink: 0;
+  z-index: 2;
 }
 
 .auth-pill-container {
@@ -431,7 +443,6 @@ body.modal-open {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-family: inherit;
   font-size: 0.82rem;
   font-weight: 600;
   transition: all 0.2s ease;
@@ -532,7 +543,7 @@ body.modal-open {
 }
 
 /* ==========================================
-   6. HERO SECTION & VIDEO AURA
+   6. HERO SECTION & VIDEO STREAM
    ========================================== */
 .hero-clean-video-section {
   position: relative;
@@ -628,6 +639,8 @@ body.modal-open {
 .faqs-section {
   padding: 3rem 1.5rem;
   width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
   overflow: hidden;
 }
 
@@ -635,6 +648,7 @@ body.modal-open {
   background: #110e0c;
   border-bottom: 1px solid rgba(234, 179, 8, 0.15);
   text-align: center;
+  max-width: 100%;
 }
 
 .intro-container {
@@ -687,12 +701,10 @@ body.modal-open {
 }
 
 /* ==========================================
-   8. FLIPKART PRODUCT GRID & CARDS
+   8. FLIPKART STYLE PRODUCT GRID & CARDS
    ========================================== */
 .products-section {
   background: #090907;
-  max-width: 1440px;
-  margin: 0 auto;
 }
 
 .fk-section-header {
@@ -731,7 +743,7 @@ body.modal-open {
 .product-grid {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 1.5rem;
   margin-top: 1.5rem;
 }
@@ -871,7 +883,6 @@ body.modal-open {
   background: #ff9f00;
   color: #0c0a09;
   border: none;
-  font-family: inherit;
   font-weight: 800;
   font-size: 0.82rem;
   padding: 0.8rem 0.4rem;
@@ -891,7 +902,6 @@ body.modal-open {
   background: #fb641b;
   color: #ffffff;
   border: none;
-  font-family: inherit;
   font-weight: 800;
   font-size: 0.82rem;
   padding: 0.8rem 0.4rem;
@@ -913,14 +923,13 @@ body.modal-open {
 .product-detail-backdrop {
   z-index: 1300;
   padding: 1rem;
-  display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .modal-card.fk-product-detail-card {
-  width: 95vw;
-  max-width: 1220px;
+  width: 100%;
+  max-width: min(1200px, 94vw);
   max-height: 92vh;
   background: #141211;
   border: 1.5px solid rgba(234, 179, 8, 0.4);
@@ -956,7 +965,7 @@ body.modal-open {
 
 .fk-detail-split {
   display: grid;
-  grid-template-columns: 440px 1fr;
+  grid-template-columns: minmax(320px, 440px) 1fr;
   gap: 2.2rem;
   align-items: start;
 }
@@ -971,7 +980,7 @@ body.modal-open {
 
 .fk-main-image-viewer {
   width: 100%;
-  height: 380px;
+  height: clamp(240px, 45vh, 380px);
   background: #090907;
   border: 1px solid rgba(234, 179, 8, 0.3);
   border-radius: 12px;
@@ -1004,6 +1013,7 @@ body.modal-open {
   padding: 3px;
   cursor: pointer;
   transition: border-color 0.2s ease;
+  flex-shrink: 0;
 }
 
 .fk-thumb.active {
@@ -1091,7 +1101,6 @@ body.modal-open {
   background: #1c1917;
   border: 1.5px solid rgba(255, 255, 255, 0.15);
   color: #fafaf9;
-  font-family: inherit;
   font-size: 0.86rem;
   font-weight: 700;
   padding: 0.6rem 1.2rem;
@@ -1111,6 +1120,7 @@ body.modal-open {
   border-collapse: collapse;
   margin-top: 1rem;
   font-size: 0.84rem;
+  word-break: break-word;
 }
 
 .fk-spec-table tr {
@@ -1131,11 +1141,12 @@ body.modal-open {
 }
 
 /* ==========================================
-   10. FUNCTIONAL BOTTLE PACKAGING SHOWCASE
+   10. PACKAGING 360 & FEATURE HIGHLIGHTS
    ========================================== */
 .bottle-design-section {
   background: #060504;
   border-top: 1px solid rgba(234, 179, 8, 0.15);
+  max-width: 100%;
 }
 
 .bottle-stage-content {
@@ -1236,11 +1247,12 @@ body.modal-open {
 }
 
 /* ==========================================
-   11. COMBO VALUE SECTION
+   11. COMBO BOX SHOWCASE
    ========================================== */
 .combo-section {
   background: #110e0c;
   border-top: 1px solid rgba(234, 179, 8, 0.15);
+  max-width: 100%;
 }
 
 .combo-card {
@@ -1362,7 +1374,6 @@ body.modal-open {
   background: #1c1917;
   border: 1.5px solid rgba(255, 255, 255, 0.15);
   color: #fafaf9;
-  font-family: inherit;
   font-size: 0.88rem;
   font-weight: 700;
   padding: 0.65rem 0.9rem;
@@ -1422,11 +1433,12 @@ body.modal-open {
 }
 
 /* ==========================================
-   12. CULINARY ARTISTRY SHOWCASE
+   12. CULINARY SHOWCASE & PAIRINGS
    ========================================== */
 .culinary-section {
   background: #090907;
   border-top: 1px solid rgba(234, 179, 8, 0.15);
+  max-width: 100%;
 }
 
 .label-showcase-grid {
@@ -1511,6 +1523,7 @@ body.modal-open {
 .reviews-section {
   background: #110e0c;
   border-top: 1px solid rgba(234, 179, 8, 0.15);
+  max-width: 100%;
 }
 
 .reviews-container {
@@ -1649,6 +1662,7 @@ body.modal-open {
 .loyalty-section {
   background: #090907;
   border-top: 1px solid rgba(234, 179, 8, 0.15);
+  max-width: 100%;
 }
 
 .loyalty-card-wrap {
@@ -1767,6 +1781,7 @@ body.modal-open {
 .benchmark-section {
   background: #110e0c;
   border-top: 1px solid rgba(234, 179, 8, 0.15);
+  max-width: 100%;
 }
 
 .comparison-table-wrap {
@@ -1819,6 +1834,7 @@ body.modal-open {
 .faqs-section {
   background: #090907;
   border-top: 1px solid rgba(234, 179, 8, 0.15);
+  max-width: 100%;
 }
 
 .faq-accordion {
@@ -1847,7 +1863,6 @@ body.modal-open {
   background: none;
   border: none;
   color: #fafaf9;
-  font-family: inherit;
   font-size: 0.98rem;
   font-weight: 600;
   text-align: left;
@@ -1886,7 +1901,7 @@ body.modal-open {
 }
 
 /* ==========================================
-   17. CART DRAWER & PRICE DETAILS
+   17. CART DRAWER & SLIDEOUT
    ========================================== */
 .cart-backdrop {
   position: fixed;
@@ -1942,7 +1957,6 @@ body.modal-open {
   background: none;
   border: none;
   color: #a8a29e;
-  font-family: inherit;
   font-size: 0.74rem;
   cursor: pointer;
   padding: 0;
@@ -2001,6 +2015,7 @@ body.modal-open {
   background: #1c1917;
   border-radius: 8px;
   padding: 3px;
+  flex-shrink: 0;
 }
 
 .cart-item-details {
@@ -2124,49 +2139,42 @@ body.modal-open {
 }
 
 /* ==========================================
-   18. MODALS BASE & CHECKOUT ENGINE
+   18. MODAL BACKDROP GPU SYSTEM
    ========================================== */
 .modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.82);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   z-index: 1200;
-  display: flex;
+  display: none !important;
   align-items: center;
   justify-content: center;
   padding: 1rem;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease;
 }
 
 .modal-backdrop.open {
-  opacity: 1;
-  pointer-events: auto;
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .modal-card {
   width: 100%;
-  max-width: 540px;
+  max-width: min(540px, 94vw);
   background: #141211;
   border: 1px solid rgba(234, 179, 8, 0.35);
   border-radius: 18px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
   overflow: hidden;
-  transform: scale(0.95) translateY(20px);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   max-height: 92vh;
   overflow-y: auto;
+  position: relative;
 }
 
 .modal-card.checkout-modal-card-extended {
-  max-width: 580px;
-}
-
-.modal-backdrop.open .modal-card {
-  transform: scale(1) translateY(0);
+  max-width: min(580px, 94vw);
 }
 
 .modal-header {
@@ -2235,7 +2243,6 @@ body.modal-open {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(234, 179, 8, 0.35);
   color: #fafaf9;
-  font-family: inherit;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.3rem 0.7rem;
@@ -2285,13 +2292,14 @@ body.modal-open {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.3rem;
+  flex-wrap: wrap;
+  gap: 0.3rem;
 }
 
 .btn-gps-locate {
   background: rgba(234, 179, 8, 0.15);
   border: 1px solid rgba(234, 179, 8, 0.4);
   color: #facc15;
-  font-family: inherit;
   font-size: 0.74rem;
   font-weight: 700;
   padding: 0.25rem 0.65rem;
@@ -2406,9 +2414,7 @@ body.modal-open {
   padding: 0.6rem 0.8rem;
   color: #fafaf9;
   font-size: 0.88rem;
-  font-family: inherit;
   outline: none;
-  box-sizing: border-box;
   transition: border-color 0.2s ease;
 }
 
@@ -2428,9 +2434,7 @@ body.modal-open {
   padding: 0.6rem 0.8rem;
   color: #fafaf9;
   font-size: 0.88rem;
-  font-family: inherit;
   outline: none;
-  box-sizing: border-box;
 }
 
 .modal-body select option,
@@ -2592,8 +2596,8 @@ body.modal-open {
    19. FLIPKART SPLIT AUTH MODAL
    ========================================== */
 .fk-auth-modal-card {
-  width: 760px;
-  max-width: 95vw;
+  width: 100%;
+  max-width: min(760px, 94vw);
   background: #141211;
   border-radius: 14px;
   overflow: hidden;
@@ -2654,7 +2658,6 @@ body.modal-open {
   background: #ffffff;
   color: #171412;
   border: none;
-  font-family: inherit;
   font-size: 0.9rem;
   font-weight: 700;
   padding: 0.75rem;
@@ -2711,7 +2714,6 @@ body.modal-open {
   font-size: 0.95rem;
   padding: 0.6rem 0;
   outline: none;
-  font-family: inherit;
 }
 
 .fk-input:focus {
@@ -2771,7 +2773,6 @@ body.modal-open {
   background: transparent;
   border: 1px solid rgba(234, 179, 8, 0.4);
   color: #eab308;
-  font-family: inherit;
   font-size: 0.82rem;
   font-weight: 700;
   padding: 0.65rem 1rem;
@@ -2786,11 +2787,11 @@ body.modal-open {
 }
 
 /* ==========================================
-   20. USER DASHBOARD (ORDERS & PROFILE)
+   20. USER DASHBOARD MODAL
    ========================================== */
 .fk-dashboard-card {
-  width: 860px;
-  max-width: 95vw;
+  width: 100%;
+  max-width: min(860px, 94vw);
   background: #141211;
   border-radius: 14px;
   border: 1.5px solid rgba(234, 179, 8, 0.35);
@@ -2806,19 +2807,20 @@ body.modal-open {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding-bottom: 0.75rem;
   margin-bottom: 1.2rem;
+  overflow-x: auto;
 }
 
 .fk-tab-btn {
   background: transparent;
   border: none;
   color: #a8a29e;
-  font-family: inherit;
   font-size: 0.88rem;
   font-weight: 700;
   padding: 0.5rem 1rem;
   cursor: pointer;
   border-radius: 6px;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .fk-tab-btn.active {
@@ -2844,6 +2846,8 @@ body.modal-open {
   display: flex;
   margin-bottom: 0.75rem;
   font-size: 0.88rem;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
 .profile-field-row label {
@@ -2855,6 +2859,7 @@ body.modal-open {
   margin-top: 1.2rem;
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .badge-verified-buyer {
@@ -2878,11 +2883,11 @@ body.modal-open {
 }
 
 /* ==========================================
-   21. LOCATION PICKER & MAPS
+   21. LOCATION PICKER & MAP INTEGRATION
    ========================================== */
 .location-modal-card,
 .fk-location-modal-card {
-  max-width: 520px;
+  max-width: min(520px, 94vw);
   background: #141211;
   border: 1.5px solid rgba(234, 179, 8, 0.4);
   border-radius: 20px;
@@ -2904,14 +2909,14 @@ body.modal-open {
   gap: 0.6rem;
   margin-bottom: 1.2rem;
   width: 100%;
+  flex-wrap: wrap;
 }
 
 .location-input-row input {
-  flex: 1;
+  flex: 1 1 180px;
   background: #1c1917;
   border: 1.5px solid rgba(234, 179, 8, 0.3);
   color: #fafaf9;
-  font-family: inherit;
   font-size: 0.95rem;
   font-weight: 700;
   padding: 0.75rem 1rem;
@@ -2923,7 +2928,6 @@ body.modal-open {
   background: #eab308;
   color: #0c0a09;
   border: none;
-  font-family: inherit;
   font-size: 0.82rem;
   font-weight: 700;
   padding: 0 0.85rem;
@@ -2939,13 +2943,13 @@ body.modal-open {
 .btn-check-pincode {
   background: #eab308;
   color: #0c0a09;
-  font-family: inherit;
   font-size: 0.92rem;
   font-weight: 800;
   padding: 0 1.4rem;
   border: none;
   border-radius: 10px;
   cursor: pointer;
+  min-height: 42px;
 }
 
 .btn-check-pincode:hover {
@@ -3008,10 +3012,10 @@ body.modal-open {
 }
 
 /* ==========================================
-   22. BOTTLE LABEL QUIZ ENGINE
+   22. BOTTLE LABEL QUIZ MODAL
    ========================================== */
 .onboarding-modal-card {
-  max-width: 580px;
+  max-width: min(580px, 94vw);
   background: #141211;
   border: 1.5px solid rgba(234, 179, 8, 0.45);
   border-radius: 22px;
@@ -3056,7 +3060,6 @@ body.modal-open {
   background: #1c1917;
   border: 1.5px solid rgba(255, 255, 255, 0.12);
   color: #d6d3d1;
-  font-family: inherit;
   font-size: 0.8rem;
   font-weight: 700;
   padding: 0.6rem 0.4rem;
@@ -3151,7 +3154,6 @@ body.modal-open {
   padding: 0.95rem 1.4rem;
   background: linear-gradient(135deg, #eab308, #ca8a04);
   color: #0c0a09;
-  font-family: inherit;
   font-size: 0.96rem;
   font-weight: 800;
   border: none;
@@ -3161,11 +3163,11 @@ body.modal-open {
 }
 
 /* ==========================================
-   23. RECEIPT & FLIPKART INTERCEPT MODALS
+   23. RECEIPT & FLIPKART NOTICE MODALS
    ========================================== */
 .flipkart-backdrop { z-index: 1400; }
 .flipkart-modal-card {
-  max-width: 490px;
+  max-width: min(490px, 94vw);
   background: #141211;
   border: 1.5px solid rgba(234, 179, 8, 0.4);
   border-radius: 20px;
@@ -3205,7 +3207,7 @@ body.modal-open {
 }
 
 .order-confirm-card {
-  max-width: 540px;
+  max-width: min(540px, 94vw);
   background: #141211;
   border: 1.5px solid #22c55e;
   border-radius: 22px;
@@ -3264,7 +3266,7 @@ body.modal-open {
 }
 
 .payment-failed-card {
-  max-width: 540px;
+  max-width: min(540px, 94vw);
   background: #141211;
   border: 2px solid #ef4444;
   border-radius: 22px;
@@ -3295,7 +3297,7 @@ body.modal-open {
 }
 
 /* ==========================================
-   24. SITE FOOTER & LEGAL MODALS
+   24. SITE FOOTER & LEGAL POLICIES
    ========================================== */
 .site-footer {
   background: #050403;
@@ -3395,7 +3397,7 @@ body.modal-open {
   color: #78716c;
 }
 
-.legal-modal-card { max-width: 600px; }
+.legal-modal-card { max-width: min(600px, 94vw); }
 .legal-modal-body {
   font-size: 0.88rem;
   color: #d6d3d1;
@@ -3412,7 +3414,7 @@ body.modal-open {
 .legal-modal-body p { margin-bottom: 0.65rem; }
 
 /* ==========================================
-   25. RESPONSIVE MEDIA QUERIES
+   25. RESPONSIVE MEDIA QUERIES (DESKTOP & MOBILE)
    ========================================== */
 @media (max-width: 1024px) {
   .header-search-bar { max-width: 320px; }
@@ -3423,24 +3425,80 @@ body.modal-open {
 @media (max-width: 900px) {
   .nav-links,
   .header-search-bar,
-  .fk-auth-sidebar { display: none !important; }
+  .fk-auth-sidebar {
+    display: none !important;
+  }
 
-  .fk-auth-modal-card { grid-template-columns: 1fr; }
-  .fk-detail-split { grid-template-columns: 1fr; gap: 1.5rem; }
-  .fk-main-image-viewer { height: 300px; }
-  
-  .announcement-content-wrap { justify-content: center; text-align: center; }
-  .top-bar-action-group { width: 100%; justify-content: center; margin-top: 4px; }
-  .footer-inner { grid-template-columns: 1fr; gap: 2rem; }
-  .payment-options-grid.payment-options-three { grid-template-columns: 1fr; }
+  .site-header,
+  .floating-sound-pill,
+  .cart-drawer,
+  .action-toast {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .golden-vortex-aura {
+    display: none !important;
+    animation: none !important;
+  }
+
+  .fk-auth-modal-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  .fk-detail-split {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+  }
+
+  .fk-main-image-viewer {
+    height: 260px !important;
+  }
+
+  .fk-main-image-viewer img {
+    max-height: 240px !important;
+  }
+
+  .announcement-content-wrap {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .top-bar-action-group {
+    width: 100%;
+    justify-content: center;
+    margin-top: 4px;
+  }
+
+  .footer-inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .payment-options-grid.payment-options-three {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
-  .site-header { padding: 0.6rem 1rem; }
-  .product-grid { grid-template-columns: 1fr; gap: 1.2rem; }
-  .card-image-wrap { height: 260px; }
-  .card-image-wrap img, .product-img { max-height: 230px; }
-  
+  .site-header {
+    padding: 0.6rem 1rem;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+
+  .card-image-wrap {
+    height: 260px;
+  }
+
+  .card-image-wrap img,
+  .product-img {
+    max-height: 230px;
+  }
+
   .floating-sound-pill {
     bottom: 18px;
     right: 18px;
@@ -3448,8 +3506,16 @@ body.modal-open {
     font-size: 0.78rem;
   }
 
-  .golden-vortex-aura {
-    display: none !important;
-    animation: none !important;
+  .bottle-quiz-pills {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-card {
+    max-height: 94vh;
+    border-radius: 12px;
+  }
+
+  .fk-product-detail-card {
+    max-height: 94vh;
   }
 }
