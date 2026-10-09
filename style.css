@@ -1,16 +1,12 @@
 /* ==========================================================================
    MANOPAVANA - TRADITIONAL WOOD-PRESSED OILS
-   COMPLETE PRODUCTION STYLESHEET (style.css) - REVISED & MOBILE-OPTIMIZED
+   COMPLETE PRODUCTION STYLESHEET (style.css)
    ========================================================================== */
 
-/* --------------------------------------------------------------------------
-   1. CSS VARIABLES & DESIGN SYSTEM TOKENS
-   -------------------------------------------------------------------------- */
 :root {
   --font-primary: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-heading: 'Cinzel', serif;
 
-  /* Color Palette */
   --bg-body: #0c0a09;
   --bg-card: #171412;
   --bg-card-alt: #1f1b18;
@@ -38,9 +34,6 @@
   --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* --------------------------------------------------------------------------
-   2. BASE & RESET
-   -------------------------------------------------------------------------- */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -91,9 +84,7 @@ img, video {
   display: block;
 }
 
-/* --------------------------------------------------------------------------
-   3. FLOATING SOUND PILL & ACTION TOAST
-   -------------------------------------------------------------------------- */
+/* --- Floating Sound Pill & Toast --- */
 .floating-sound-pill {
   position: fixed;
   bottom: 20px;
@@ -102,10 +93,10 @@ img, video {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(23, 20, 18, 0.88);
-  backdrop-filter: blur(10px);
+  background: rgba(23, 20, 18, 0.92);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--border-light);
-  padding: 7px 14px;
+  padding: 8px 16px;
   border-radius: 999px;
   color: var(--primary-gold);
   font-weight: 600;
@@ -148,32 +139,13 @@ img, video {
   min-width: 280px;
 }
 
-.action-toast-icon {
-  font-size: 1.5rem;
-}
+.action-toast-icon { font-size: 1.4rem; }
+.action-toast-content strong { display: block; font-size: 0.88rem; color: var(--text-main); }
+.action-toast-content p { font-size: 0.78rem; color: var(--text-muted); }
+.action-toast.toast-success .action-toast-inner { border-color: var(--accent-green); }
+.action-toast.toast-error .action-toast-inner { border-color: var(--accent-red); }
 
-.action-toast-content strong {
-  display: block;
-  font-size: 0.9rem;
-  color: var(--text-main);
-}
-
-.action-toast-content p {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.action-toast.toast-success .action-toast-inner {
-  border-color: var(--accent-green);
-}
-
-.action-toast.toast-error .action-toast-inner {
-  border-color: var(--accent-red);
-}
-
-/* --------------------------------------------------------------------------
-   4. TOP ANNOUNCEMENT BAR & PINCODE PILL
-   -------------------------------------------------------------------------- */
+/* --- Top Announcement Bar --- */
 .top-announcement-bar {
   background: #171412;
   border-bottom: 1px solid var(--border-color);
@@ -243,9 +215,7 @@ img, video {
   color: var(--primary-amber);
 }
 
-/* --------------------------------------------------------------------------
-   5. SITE HEADER & NAVIGATION (FIXED ALIGNMENT)
-   -------------------------------------------------------------------------- */
+/* --- Header & Navigation --- */
 .site-header {
   position: sticky;
   top: 0;
@@ -363,7 +333,6 @@ img, video {
   position: relative;
 }
 
-/* User Account Pill */
 .btn-auth-pill {
   height: 40px;
   padding: 0 12px;
@@ -428,7 +397,6 @@ img, video {
   border-top: 1px solid var(--border-color);
 }
 
-/* Cart Trigger Button */
 .cart-trigger-btn {
   height: 40px;
   display: inline-flex;
@@ -461,9 +429,7 @@ img, video {
   transform: scale(1.4);
 }
 
-/* --------------------------------------------------------------------------
-   6. CART DRAWER
-   -------------------------------------------------------------------------- */
+/* --- Cart Drawer --- */
 .cart-backdrop {
   position: fixed;
   inset: 0;
@@ -561,9 +527,8 @@ img, video {
   width: 60px;
   height: 75px;
   object-fit: contain;
-  background: #141210;
+  background: #231f1c;
   border-radius: 4px;
-  mix-blend-mode: multiply;
 }
 
 .cart-item-details {
@@ -677,9 +642,7 @@ img, video {
   background: #ea580c;
 }
 
-/* --------------------------------------------------------------------------
-   7. MODAL ENGINE & BACKDROPS
-   -------------------------------------------------------------------------- */
+/* --- Modals Base --- */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -741,9 +704,7 @@ img, video {
   overflow-y: auto;
 }
 
-/* --------------------------------------------------------------------------
-   8. FLIPKART SPLIT AUTH MODAL
-   -------------------------------------------------------------------------- */
+/* --- Split View Auth Modal --- */
 .fk-auth-modal-card {
   max-width: 780px;
   display: flex;
@@ -927,153 +888,133 @@ img, video {
   margin-top: 4px;
 }
 
-/* --------------------------------------------------------------------------
-   9. USER DASHBOARD & TRACKING
-   -------------------------------------------------------------------------- */
+/* --- Fixed User Dashboard & Profile Cards --- */
 .fk-dashboard-card {
-  max-width: 800px;
+  max-width: 620px;
+  background: #171412;
 }
 
 .fk-dash-tabs {
-  display: flex;
-  gap: 12px;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: #14110f;
+  padding: 6px;
+  border-radius: var(--radius-sm);
   margin-bottom: 20px;
+  border: 1px solid var(--border-color);
 }
 
 .fk-tab-btn {
-  padding: 8px 16px;
-  font-size: 0.85rem;
+  padding: 10px 8px;
+  font-size: 0.8rem;
   font-weight: 600;
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
   color: var(--text-muted);
+  text-align: center;
+  transition: var(--transition);
 }
 
 .fk-tab-btn.active {
-  background: #26221f;
+  background: #2b241c;
   color: var(--primary-gold);
-}
-
-.history-order-card {
-  background: #1c1917;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 16px;
-  margin-bottom: 14px;
-}
-
-.history-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 10px;
-}
-
-.track-status-pill {
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: #2a2522;
-  color: var(--primary-gold);
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.history-card-items {
-  font-size: 0.85rem;
-  color: var(--text-light);
-  margin-bottom: 12px;
-}
-
-.track-timeline-progress {
-  display: flex;
-  justify-content: space-between;
-  margin: 16px 0;
-  position: relative;
-}
-
-.track-timeline-progress::before {
-  content: "";
-  position: absolute;
-  top: 12px;
-  left: 20px;
-  right: 20px;
-  height: 2px;
-  background: var(--border-light);
-  z-index: 1;
-}
-
-.track-step-node {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.node-dot {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #26221f;
-  border: 1px solid var(--border-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-}
-
-.node-dot.active {
-  background: var(--accent-green);
-  border-color: var(--accent-green);
-  color: #000;
-  font-weight: bold;
-}
-
-.node-lbl {
-  font-size: 0.7rem;
-  color: var(--text-muted);
+  box-shadow: var(--shadow-sm);
 }
 
 .profile-card-fk, .saved-address-card {
-  background: #1c1917;
+  background: #1d1916;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 16px;
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+
+.profile-card-fk h4 {
+  font-size: 1rem;
+  margin-bottom: 12px;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
 }
 
 .profile-field-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.85rem;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-color);
+  align-items: center;
+  font-size: 0.86rem;
+  padding: 10px 0;
+  border-bottom: 1px solid #28221d;
+}
+
+.profile-field-row label {
+  color: var(--text-muted);
+}
+
+.profile-field-row span {
+  font-weight: 600;
+  color: var(--text-light);
 }
 
 .profile-badge-row {
   display: flex;
-  gap: 8px;
-  margin-top: 14px;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
 }
 
 .badge-verified-buyer, .badge-loyal {
   font-size: 0.75rem;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background: #1e293b;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #112231;
   color: #38bdf8;
   font-weight: 600;
+  border: 1px solid #1e3a5f;
 }
 
 .badge-loyal {
   background: #2a2007;
   color: var(--primary-gold);
+  border-color: #5c470a;
 }
 
-/* --------------------------------------------------------------------------
-   10. MAPS, PINCODE MODAL & GEOLOCATION
-   -------------------------------------------------------------------------- */
+.saved-address-card .saved-address-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.saved-address-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary-gold);
+}
+
+.btn-edit-address {
+  font-size: 0.8rem;
+  color: var(--primary-amber);
+  font-weight: 600;
+}
+
+.saved-address-content strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.saved-address-content p {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin-bottom: 6px;
+}
+
+.saved-address-content span {
+  font-size: 0.82rem;
+  color: var(--text-light);
+}
+
+/* --- Location & Leaflet Map Modals --- */
 .fk-location-modal-card {
   max-width: 600px;
 }
@@ -1180,9 +1121,7 @@ img, video {
   color: var(--text-muted);
 }
 
-/* --------------------------------------------------------------------------
-   11. BOTTLE LOYALTY QUIZ MODAL (10% QR)
-   -------------------------------------------------------------------------- */
+/* --- Bottle Quiz Modal (10% Loyalty QR) --- */
 .onboarding-modal-card {
   max-width: 540px;
 }
@@ -1308,9 +1247,7 @@ img, video {
   border-radius: var(--radius-sm);
 }
 
-/* --------------------------------------------------------------------------
-   12. IMMERSIVE PRODUCT DETAIL MODAL (FLIPKART STYLE)
-   -------------------------------------------------------------------------- */
+/* --- Product Detail Modal --- */
 .fk-product-detail-card {
   max-width: 900px;
   max-height: 92vh;
@@ -1344,7 +1281,7 @@ img, video {
 .detail-main-img-box {
   width: 100%;
   height: 320px;
-  background: #141210;
+  background: radial-gradient(circle, #292420 0%, #151311 100%);
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
@@ -1355,7 +1292,6 @@ img, video {
 .detail-main-img {
   max-height: 90%;
   object-fit: contain;
-  mix-blend-mode: multiply;
 }
 
 .detail-thumb-strip {
@@ -1369,11 +1305,10 @@ img, video {
   width: 50px;
   height: 60px;
   object-fit: contain;
-  background: #1c1917;
+  background: #24201c;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   cursor: pointer;
-  mix-blend-mode: multiply;
 }
 
 .detail-thumb-img.active {
@@ -1521,9 +1456,7 @@ img, video {
   color: var(--primary-gold);
 }
 
-/* --------------------------------------------------------------------------
-   13. CHECKOUT FORM, 1-CLICK ADDRESS & PAYMENT SELECTION
-   -------------------------------------------------------------------------- */
+/* --- Checkout Form & Summary --- */
 .checkout-modal-card-extended {
   max-width: 680px;
 }
@@ -1560,24 +1493,10 @@ img, video {
   object-fit: contain;
 }
 
-.checkout-preview-info {
-  flex: 1;
-}
-
-.checkout-preview-info strong {
-  display: block;
-  font-size: 0.85rem;
-}
-
-.checkout-preview-info span {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.checkout-preview-cost {
-  font-weight: 700;
-  font-size: 0.85rem;
-}
+.checkout-preview-info { flex: 1; }
+.checkout-preview-info strong { display: block; font-size: 0.85rem; }
+.checkout-preview-info span { font-size: 0.75rem; color: var(--text-muted); }
+.checkout-preview-cost { font-weight: 700; font-size: 0.85rem; }
 
 .checkout-preview-footer {
   border-top: 1px solid var(--border-color);
@@ -1592,10 +1511,7 @@ img, video {
   margin-bottom: 4px;
 }
 
-.checkout-row.discount-text {
-  color: var(--accent-green);
-}
-
+.checkout-row.discount-text { color: var(--accent-green); }
 .checkout-row.total-highlight {
   font-size: 0.95rem;
   font-weight: 700;
@@ -1605,46 +1521,8 @@ img, video {
   margin-top: 6px;
 }
 
-.saved-address-card {
-  margin-bottom: 16px;
-}
-
-.saved-address-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.saved-address-badge {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--primary-gold);
-}
-
-.btn-edit-address {
-  font-size: 0.78rem;
-  color: var(--primary-gold);
-}
-
-.saved-gps-badge {
-  font-size: 0.72rem;
-  color: var(--accent-green);
-  margin-top: 4px;
-}
-
-.form-group {
-  margin-bottom: 14px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin-bottom: 4px;
-  color: var(--text-light);
-}
-
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: var(--text-light); }
 .form-group input, .form-group textarea, .form-group select {
   width: 100%;
   background: #141210;
@@ -1653,7 +1531,6 @@ img, video {
   border-radius: var(--radius-sm);
   color: #fff;
 }
-
 .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
   outline: none;
   border-color: var(--primary-gold);
@@ -1666,24 +1543,9 @@ img, video {
   margin-bottom: 4px;
 }
 
-.form-row {
-  display: flex;
-  gap: 12px;
-}
-
-.form-col {
-  flex: 1;
-  margin-bottom: 14px;
-}
-
-.form-col label {
-  display: block;
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin-bottom: 4px;
-  color: var(--text-light);
-}
-
+.form-row { display: flex; gap: 12px; }
+.form-col { flex: 1; margin-bottom: 14px; }
+.form-col label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: var(--text-light); }
 .form-col input, .form-col select {
   width: 100%;
   background: #141210;
@@ -1693,10 +1555,7 @@ img, video {
   color: #fff;
 }
 
-.save-address-row {
-  margin-bottom: 16px;
-}
-
+.save-address-row { margin-bottom: 16px; }
 .save-address-label {
   display: flex;
   align-items: center;
@@ -1705,22 +1564,9 @@ img, video {
   color: var(--text-muted);
 }
 
-.payment-selection-wrap {
-  margin: 18px 0;
-}
-
-.payment-group-label {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.payment-options-three {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
+.payment-selection-wrap { margin: 18px 0; }
+.payment-group-label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; }
+.payment-options-three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
 .payment-radio-card {
   border: 1px solid var(--border-light);
@@ -1732,30 +1578,11 @@ img, video {
   flex-direction: column;
 }
 
-.payment-radio-card input {
-  display: none;
-}
-
-.payment-radio-card.active {
-  border-color: var(--primary-gold);
-  background: #2b2315;
-}
-
-.pay-card-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.pay-card-content strong {
-  display: block;
-  font-size: 0.8rem;
-}
-
-.pay-card-content small {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
+.payment-radio-card input { display: none; }
+.payment-radio-card.active { border-color: var(--primary-gold); background: #2b2315; }
+.pay-card-content { display: flex; align-items: center; gap: 8px; }
+.pay-card-content strong { display: block; font-size: 0.8rem; }
+.pay-card-content small { font-size: 0.7rem; color: var(--text-muted); }
 
 .phonepe-info-box {
   background: #1c1917;
@@ -1766,12 +1593,7 @@ img, video {
   margin-bottom: 14px;
 }
 
-.pg-badge-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
+.pg-badge-row { display: flex; gap: 8px; margin-bottom: 4px; }
 .pg-secure-badge, .pg-provider-badge {
   font-size: 0.7rem;
   padding: 2px 6px;
@@ -1780,12 +1602,7 @@ img, video {
   color: var(--text-light);
 }
 
-.legal-form-note {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin: 10px 0;
-}
-
+.legal-form-note { font-size: 0.72rem; color: var(--text-muted); margin: 10px 0; }
 .btn-submit-order {
   width: 100%;
   padding: 14px;
@@ -1795,23 +1612,11 @@ img, video {
   border-radius: var(--radius-sm);
   font-size: 1rem;
 }
+.btn-submit-order:hover { background: var(--primary-gold-hover); }
 
-.btn-submit-order:hover {
-  background: var(--primary-gold-hover);
-}
-
-/* --------------------------------------------------------------------------
-   14. RECEIPT & RETRY MODALS
-   -------------------------------------------------------------------------- */
-.order-confirm-body, .payment-failed-card .modal-body {
-  text-align: center;
-}
-
-.confirm-badge-icon, .failed-badge-icon, .flipkart-modal-icon {
-  font-size: 3rem;
-  margin-bottom: 8px;
-}
-
+/* --- Receipts & Status Modals --- */
+.order-confirm-body, .payment-failed-card .modal-body { text-align: center; }
+.confirm-badge-icon, .failed-badge-icon, .flipkart-modal-icon { font-size: 3rem; margin-bottom: 8px; }
 .confirm-receipt-summary {
   background: #1c1917;
   border: 1px solid var(--border-color);
@@ -1820,20 +1625,8 @@ img, video {
   margin: 16px 0;
   text-align: left;
 }
-
-.confirm-receipt-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
-  margin-bottom: 6px;
-}
-
-.confirm-actions-row {
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
-}
-
+.confirm-receipt-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; }
+.confirm-actions-row { display: flex; gap: 10px; margin-top: 16px; }
 .btn-track-this-order {
   flex: 1;
   background: var(--primary-gold);
@@ -1842,7 +1635,6 @@ img, video {
   padding: 10px;
   border-radius: var(--radius-sm);
 }
-
 .btn-whatsapp-confirm {
   flex: 1;
   background: #25d366;
@@ -1854,14 +1646,7 @@ img, video {
   align-items: center;
   justify-content: center;
 }
-
-.failed-actions-column {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 16px;
-}
-
+.failed-actions-column { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
 .btn-retry-phonepe {
   padding: 12px;
   background: var(--primary-gold);
@@ -1869,7 +1654,6 @@ img, video {
   font-weight: 700;
   border-radius: var(--radius-sm);
 }
-
 .btn-switch-cod {
   padding: 12px;
   background: #26221f;
@@ -1878,7 +1662,6 @@ img, video {
   font-weight: 600;
   border-radius: var(--radius-sm);
 }
-
 .btn-continue-flipkart {
   display: block;
   background: #2874f0;
@@ -1889,23 +1672,15 @@ img, video {
   text-align: center;
   margin: 14px 0 8px;
 }
+.status-declined { color: var(--accent-red); }
+.status-saved { color: var(--accent-green); }
 
-.status-declined {
-  color: var(--accent-red);
-}
-
-.status-saved {
-  color: var(--accent-green);
-}
-
-/* --------------------------------------------------------------------------
-   15. HERO SECTION & VIDEO
-   -------------------------------------------------------------------------- */
+/* --- 15. Hero Section (Landscape Presentation) --- */
 .hero-clean-video-section {
   position: relative;
   width: 100%;
-  height: 62vh;
-  min-height: 420px;
+  aspect-ratio: 16 / 9;
+  max-height: 80vh;
   overflow: hidden;
   background: #000;
 }
@@ -1913,7 +1688,7 @@ img, video {
 .golden-vortex-aura {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(234, 179, 8, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(234, 179, 8, 0.12) 0%, transparent 70%);
   pointer-events: none;
   z-index: 2;
 }
@@ -1973,9 +1748,7 @@ img, video {
   font-size: 0.95rem;
 }
 
-/* --------------------------------------------------------------------------
-   16. PRODUCTS GRID SECTION (3 ARTISANAL OILS)
-   -------------------------------------------------------------------------- */
+/* --- 16. Products Section --- */
 .products-section {
   max-width: 1400px;
   margin: 0 auto;
@@ -2043,22 +1816,22 @@ img, video {
   z-index: 2;
 }
 
+/* Container for bottle image rendering */
 .card-image-wrap {
   height: 290px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  background: #141210;
+  background: radial-gradient(circle, #292420 0%, #151311 100%);
   cursor: pointer;
   overflow: hidden;
 }
 
 .product-img {
-  max-height: 90%;
+  max-height: 88%;
   object-fit: contain;
   transition: transform 0.3s ease;
-  mix-blend-mode: multiply;
 }
 
 .card-image-wrap:hover .product-img {
@@ -2167,9 +1940,7 @@ img, video {
   border-radius: var(--radius-sm);
 }
 
-/* --------------------------------------------------------------------------
-   17. BOTTLE DESIGN SHOWCASE (STACK OVERFLOW FIXED)
-   -------------------------------------------------------------------------- */
+/* --- 17. Bottle Design Showcase --- */
 .bottle-design-section {
   max-width: 1400px;
   margin: 40px auto;
@@ -2198,11 +1969,10 @@ img, video {
   align-items: center;
 }
 
-/* Layer bottle video and fallback correctly */
 .bottle-video-wrapper {
   position: relative;
   height: 440px;
-  background: #141210;
+  background: radial-gradient(circle, #292420 0%, #151311 100%);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   display: flex;
@@ -2224,7 +1994,6 @@ img, video {
   position: absolute;
   max-height: 85%;
   object-fit: contain;
-  mix-blend-mode: multiply;
   z-index: 0;
 }
 
@@ -2266,9 +2035,7 @@ img, video {
   color: var(--text-light);
 }
 
-/* --------------------------------------------------------------------------
-   18. COMBO SECTION
-   -------------------------------------------------------------------------- */
+/* --- 18. Value Combo Section --- */
 .combo-section {
   max-width: 1200px;
   margin: 40px auto;
@@ -2438,9 +2205,7 @@ img, video {
   background: #f59e0b;
 }
 
-/* --------------------------------------------------------------------------
-   19. CULINARY SHOWCASE & LABEL SHOWCASE
-   -------------------------------------------------------------------------- */
+/* --- 19. Culinary Showcase (Food Labels Without Crop) --- */
 .culinary-section {
   max-width: 1400px;
   margin: 40px auto;
@@ -2458,27 +2223,35 @@ img, video {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Aspect ratio display to keep complete recipe artwork visible */
 .label-img-box {
-  height: 240px;
-  background: #141210;
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  background: #fdfbf7;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .label-art-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform 0.3s ease;
 }
 
 .label-feature-card:hover .label-art-img {
-  transform: scale(1.03);
+  transform: scale(1.02);
 }
 
 .label-info-box {
   padding: 20px;
+  flex: 1;
 }
 
 .pairing-badge {
@@ -2504,9 +2277,7 @@ img, video {
   color: var(--text-light);
 }
 
-/* --------------------------------------------------------------------------
-   20. REVIEWS & CUSTOMER COMMUNITY
-   -------------------------------------------------------------------------- */
+/* --- 20. Reviews --- */
 .reviews-section {
   max-width: 1200px;
   margin: 40px auto;
@@ -2610,9 +2381,7 @@ img, video {
   border-radius: var(--radius-sm);
 }
 
-/* --------------------------------------------------------------------------
-   21. 10% QR PROGRAM / LOYALTY GUIDE
-   -------------------------------------------------------------------------- */
+/* --- 21. 10% QR Loyalty Program --- */
 .loyalty-section {
   max-width: 1200px;
   margin: 40px auto;
@@ -2701,9 +2470,7 @@ img, video {
   color: var(--text-muted);
 }
 
-/* --------------------------------------------------------------------------
-   22. EXTRACTION BENCHMARK TABLE
-   -------------------------------------------------------------------------- */
+/* --- 22. Benchmark Comparison --- */
 .benchmark-section {
   max-width: 1000px;
   margin: 40px auto;
@@ -2746,9 +2513,7 @@ img, video {
   margin-top: 12px;
 }
 
-/* --------------------------------------------------------------------------
-   23. FAQS ACCORDION
-   -------------------------------------------------------------------------- */
+/* --- 23. FAQs Accordion --- */
 .faqs-section {
   max-width: 900px;
   margin: 40px auto;
@@ -2802,9 +2567,7 @@ img, video {
   transform: rotate(45deg);
 }
 
-/* --------------------------------------------------------------------------
-   24. SITE FOOTER
-   -------------------------------------------------------------------------- */
+/* --- 24. Site Footer --- */
 .site-footer {
   background: #0f0d0c;
   border-top: 1px solid var(--border-color);
@@ -2838,18 +2601,9 @@ img, video {
   gap: 4px;
 }
 
-.reg-item {
-  font-size: 0.75rem;
-}
-
-.reg-label {
-  color: var(--text-muted);
-}
-
-.reg-val {
-  color: var(--primary-gold);
-  font-weight: 600;
-}
+.reg-item { font-size: 0.75rem; }
+.reg-label { color: var(--text-muted); }
+.reg-val { color: var(--primary-gold); font-weight: 600; }
 
 .footer-col h4 {
   font-size: 0.95rem;
@@ -2864,13 +2618,8 @@ img, video {
   gap: 8px;
 }
 
-.footer-col ul a {
-  color: var(--text-muted);
-}
-
-.footer-col ul a:hover {
-  color: var(--primary-gold);
-}
+.footer-col ul a { color: var(--text-muted); }
+.footer-col ul a:hover { color: var(--primary-gold); }
 
 .contact-info {
   display: flex;
@@ -2885,19 +2634,9 @@ img, video {
   color: var(--text-muted);
 }
 
-.contact-lead-name {
-  color: var(--text-main);
-  font-weight: 600;
-}
-
-.contact-alt-phone {
-  font-size: 0.8rem;
-}
-
-.contact-row address {
-  font-style: normal;
-  line-height: 1.4;
-}
+.contact-lead-name { color: var(--text-main); font-weight: 600; }
+.contact-alt-phone { font-size: 0.8rem; }
+.contact-row address { font-style: normal; line-height: 1.4; }
 
 .footer-bottom {
   border-top: 1px solid var(--border-color);
@@ -2917,165 +2656,82 @@ img, video {
 }
 
 /* --------------------------------------------------------------------------
-   25. RESPONSIVE DESIGN & MOBILE BREAKPOINTS (SCREENSHOT AUDITED)
+   25. MOBILE VIEWPORT BREAKPOINTS (AUDITED)
    -------------------------------------------------------------------------- */
 @media (max-width: 1024px) {
-  .header-search-bar {
-    max-width: 240px;
-  }
-  .nav-links {
-    display: none;
-  }
+  .header-search-bar { max-width: 240px; }
+  .nav-links { display: none; }
   .bottle-stage-content,
   .combo-grid-layout,
-  .reviews-container {
-    grid-template-columns: 1fr;
-  }
-  .footer-inner {
-    grid-template-columns: 1fr 1fr;
-  }
+  .reviews-container { grid-template-columns: 1fr; }
+  .footer-inner { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 768px) {
-  /* Header & Action adjustments */
-  .header-search-bar {
-    display: none;
-  }
-  
-  .header-inner {
-    padding: 8px 12px;
-  }
+  .header-search-bar { display: none; }
+  .header-inner { padding: 8px 12px; }
 
-  .site-logo {
-    width: 34px;
-    height: 34px;
-  }
+  .site-logo { width: 34px; height: 34px; }
+  .brand-name { font-size: 1rem; letter-spacing: 1px; }
+  .brand-tagline { font-size: 0.62rem; }
 
-  .brand-name {
-    font-size: 1rem;
-    letter-spacing: 1px;
-  }
+  .btn-auth-pill { height: 34px; padding: 0 10px; font-size: 0.75rem; }
+  .cart-trigger-btn { height: 34px; padding: 0 10px; font-size: 0.8rem; gap: 6px; }
 
-  .brand-tagline {
-    font-size: 0.62rem;
-  }
-
-  .btn-auth-pill {
-    height: 34px;
-    padding: 0 10px;
-    font-size: 0.75rem;
-  }
-
-  .cart-trigger-btn {
-    height: 34px;
-    padding: 0 10px;
-    font-size: 0.8rem;
-    gap: 6px;
-  }
-
-  /* Top announcement bar centering */
+  /* Announcement header centering */
   .announcement-content-wrap {
     flex-direction: column;
     text-align: center;
     gap: 8px;
   }
-
   .top-bar-action-group {
     justify-content: center;
     width: 100%;
   }
 
-  /* Bottle design mobile layout */
-  .bottle-video-wrapper {
-    height: 320px;
-  }
-
-  /* Combo section mobile padding */
-  .combo-card {
-    padding: 24px 16px;
-  }
-
-  .combo-badge {
-    position: static;
-    display: inline-block;
-    margin-bottom: 12px;
-  }
-
-  .combo-info-col h2 {
-    font-size: 1.3rem;
-  }
-
-  .combo-variant-pills {
-    flex-direction: column;
-  }
-
-  .combo-pricing-wrap {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .fk-combo-actions {
-    display: flex;
-    flex-direction: row;
+  /* Responsive landscape hero video on mobile */
+  .hero-clean-video-section {
+    aspect-ratio: 16 / 9;
     width: 100%;
+    height: auto;
+    min-height: unset;
   }
 
-  .fk-combo-actions button {
-    flex: 1;
-    padding: 12px;
+  .video-cta-strip {
+    margin-top: 12px;
   }
 
-  /* Product details and cards */
-  .card-image-wrap {
-    height: 250px;
-  }
+  /* Bottle design mobile height */
+  .bottle-video-wrapper { height: 300px; }
 
-  .detail-top-grid {
-    grid-template-columns: 1fr;
-  }
+  /* Combo section card */
+  .combo-card { padding: 24px 16px; }
+  .combo-badge { position: static; display: inline-block; margin-bottom: 12px; }
+  .combo-info-col h2 { font-size: 1.3rem; }
+  .combo-variant-pills { flex-direction: column; }
+  .combo-pricing-wrap { flex-direction: column; align-items: stretch; }
+  .fk-combo-actions { display: flex; flex-direction: row; width: 100%; }
+  .fk-combo-actions button { flex: 1; padding: 12px; }
+
+  /* Product cards */
+  .card-image-wrap { height: 260px; }
+  .detail-top-grid { grid-template-columns: 1fr; }
 
   /* Modals */
-  .fk-auth-modal-card {
-    flex-direction: column;
-  }
+  .fk-auth-modal-card { flex-direction: column; }
+  .fk-auth-sidebar { width: 100%; padding: 20px; }
+  .fk-auth-body { width: 100%; padding: 20px; }
+  .loyalty-steps-grid { grid-template-columns: 1fr; }
+  .payment-options-three { grid-template-columns: 1fr; }
+  .form-row { flex-direction: column; gap: 0; }
+  .footer-inner { grid-template-columns: 1fr; }
+  .footer-bottom-inner { flex-direction: column; text-align: center; }
 
-  .fk-auth-sidebar {
-    width: 100%;
-    padding: 20px;
-  }
-
-  .fk-auth-body {
-    width: 100%;
-    padding: 20px;
-  }
-
-  .loyalty-steps-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .payment-options-three {
-    grid-template-columns: 1fr;
-  }
-
-  .form-row {
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .footer-inner {
-    grid-template-columns: 1fr;
-  }
-
-  .footer-bottom-inner {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  /* Sound button placement without overlap */
+  /* Floating sound pill bottom spacing */
   .floating-sound-pill {
     bottom: 14px;
     left: 12px;
     font-size: 0.72rem;
-    padding: 5px 10px;
+    padding: 6px 12px;
   }
 }
