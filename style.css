@@ -294,7 +294,7 @@ textarea {
   top: 0;
   width: 100%;
   z-index: 100;
-  padding: 0.75rem 2rem;
+  padding: 0.75rem 1.5rem;
   background: rgba(12, 10, 9, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -308,21 +308,22 @@ textarea {
   justify-content: space-between;
   align-items: center;
   min-height: 52px;
-  gap: 1.2rem;
+  gap: 1rem;
+  width: 100%;
 }
 
 .brand-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.75rem;
   text-decoration: none;
   flex-shrink: 0;
   z-index: 2;
 }
 
 .logo-wrap {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 10px;
   background: #000000;
   border: 1.5px solid rgba(234, 179, 8, 0.6);
@@ -330,7 +331,7 @@ textarea {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  padding: 4px;
+  padding: 3px;
   box-shadow: 0 0 12px rgba(234, 179, 8, 0.4), 0 0 24px rgba(22, 163, 74, 0.25);
   overflow: hidden;
 }
@@ -353,9 +354,9 @@ textarea {
 
 .brand-name {
   font-family: 'Cinzel', serif;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  letter-spacing: 2.5px;
+  letter-spacing: 2px;
   color: #eab308;
 }
 
@@ -402,7 +403,7 @@ textarea {
 
 .nav-links {
   display: flex;
-  gap: 1.4rem;
+  gap: 1.2rem;
   z-index: 1;
   align-items: center;
 }
@@ -424,7 +425,7 @@ textarea {
 .header-right-actions {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.65rem;
   flex-shrink: 0;
   z-index: 2;
 }
@@ -437,15 +438,19 @@ textarea {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(234, 179, 8, 0.35);
   color: #fafaf9;
-  padding: 0.5rem 0.95rem;
+  padding: 0.45rem 0.85rem;
   border-radius: 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.82rem;
+  gap: 0.35rem;
+  font-size: 0.8rem;
   font-weight: 600;
   transition: all 0.2s ease;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .btn-auth-pill:hover {
@@ -508,14 +513,15 @@ textarea {
   background: rgba(234, 179, 8, 0.15);
   border: 1px solid rgba(234, 179, 8, 0.4);
   color: #fafaf9;
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 0.85rem;
   border-radius: 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.88rem;
+  gap: 0.45rem;
+  font-size: 0.82rem;
   font-weight: 600;
+  flex-shrink: 0;
   transition: background 0.2s ease, transform 0.2s ease;
 }
 
@@ -527,7 +533,7 @@ textarea {
 .cart-badge-count {
   background: #eab308;
   color: #0c0a09;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 700;
   border-radius: 50%;
   width: 20px;
@@ -927,10 +933,11 @@ textarea {
   justify-content: center;
 }
 
-.modal-card.fk-product-detail-card {
+.modal-card.fk-product-detail-card,
+.modal-card.product-detail-card {
   width: 100%;
-  max-width: min(1200px, 94vw);
-  max-height: 92vh;
+  max-width: min(1000px, 94vw);
+  max-height: 90vh;
   background: #141211;
   border: 1.5px solid rgba(234, 179, 8, 0.4);
   border-radius: 16px;
@@ -946,6 +953,7 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .fk-brand-pill {
@@ -956,7 +964,7 @@ textarea {
 }
 
 .fk-detail-body {
-  padding: 1.6rem !important;
+  padding: 1.4rem !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch;
@@ -965,8 +973,8 @@ textarea {
 
 .fk-detail-split {
   display: grid;
-  grid-template-columns: minmax(320px, 440px) 1fr;
-  gap: 2.2rem;
+  grid-template-columns: minmax(280px, 420px) 1fr;
+  gap: 2rem;
   align-items: start;
 }
 
@@ -976,11 +984,12 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+  width: 100%;
 }
 
 .fk-main-image-viewer {
   width: 100%;
-  height: clamp(240px, 45vh, 380px);
+  height: clamp(220px, 40vh, 340px);
   background: #090907;
   border: 1px solid rgba(234, 179, 8, 0.3);
   border-radius: 12px;
@@ -1023,23 +1032,24 @@ textarea {
 .fk-gallery-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.8rem;
+  gap: 0.6rem;
   margin-top: 0.4rem;
 }
 
 .fk-gallery-actions button {
-  padding: 0.9rem;
-  font-size: 0.88rem;
+  padding: 0.85rem;
+  font-size: 0.84rem;
 }
 
 .fk-info-col {
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .fk-title {
   font-family: 'Cinzel', serif;
-  font-size: 1.6rem;
+  font-size: 1.55rem;
   color: #fafaf9;
   margin-bottom: 0.4rem;
   line-height: 1.25;
@@ -3451,12 +3461,16 @@ textarea {
     gap: 1.25rem !important;
   }
 
+  .fk-gallery-col {
+    position: static !important;
+  }
+
   .fk-main-image-viewer {
-    height: 260px !important;
+    height: 250px !important;
   }
 
   .fk-main-image-viewer img {
-    max-height: 240px !important;
+    max-height: 230px !important;
   }
 
   .announcement-content-wrap {
@@ -3482,7 +3496,37 @@ textarea {
 
 @media (max-width: 768px) {
   .site-header {
-    padding: 0.6rem 1rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .header-inner {
+    padding: 0 0.25rem;
+    gap: 0.5rem;
+  }
+
+  .logo-wrap {
+    width: 38px;
+    height: 38px;
+  }
+
+  .brand-name {
+    font-size: 1.05rem;
+    letter-spacing: 1px;
+  }
+
+  .header-right-actions {
+    gap: 0.4rem;
+  }
+
+  .btn-auth-pill {
+    padding: 0.38rem 0.6rem;
+    font-size: 0.75rem;
+    max-width: 110px;
+  }
+
+  .cart-trigger-btn {
+    padding: 0.38rem 0.65rem;
+    font-size: 0.75rem;
   }
 
   .product-grid {
@@ -3511,103 +3555,53 @@ textarea {
   }
 
   .modal-card {
-    max-height: 94vh;
-    border-radius: 12px;
+    max-height: 92vh;
+    border-radius: 14px;
   }
 
-  .fk-product-detail-card {
-    max-height: 94vh;
+  .modal-card.fk-product-detail-card,
+  .modal-card.product-detail-card {
+    width: 95vw !important;
+    max-width: 600px !important;
+    max-height: 90vh !important;
+  }
+
+  .fk-detail-split {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  .fk-gallery-col {
+    position: static !important;
+    width: 100% !important;
+  }
+
+  .fk-main-image-viewer {
+    width: 100% !important;
+    height: 230px !important;
+  }
+
+  .fk-main-image-viewer img {
+    max-height: 210px !important;
+  }
+
+  .fk-thumbnail-row {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 0.4rem !important;
+    margin: 0.4rem 0 !important;
+  }
+
+  .fk-gallery-actions {
+    position: static !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.5rem !important;
+    margin: 0.6rem 0 !important;
+  }
+
+  .fk-info-col {
+    width: 100% !important;
   }
 }
-/* ==========================================================================
-   URGENT LAYOUT & OVERLAP REPAIR
-   ========================================================================== */
-
-/* 1. Header fix: Keep logo, user, and cart inside screen on mobile */
-.header-inner {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  width: 100% !important;
-  max-width: 100vw !important;
-  padding: 0 0.5rem !important;
-  gap: 0.5rem !important;
-}
-
-.header-right-actions {
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.4rem !important;
-  flex-shrink: 0 !important;
-}
-
-.btn-auth-pill {
-  padding: 0.4rem 0.6rem !important;
-  font-size: 0.75rem !important;
-  max-width: 120px !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-}
-
-.cart-trigger-btn {
-  padding: 0.4rem 0.6rem !important;
-  font-size: 0.75rem !important;
-  flex-shrink: 0 !important;
-}
-
-/* 2. Modal fix: Clear overlaps between gallery, buttons, and text */
-.fk-product-detail-card,
-.product-detail-card {
-  width: 95vw !important;
-  max-width: 600px !important;
-  max-height: 90vh !important;
-  overflow-y: auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.fk-detail-split {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 1rem !important;
-  width: 100% !important;
-}
-
-.fk-gallery-col {
-  position: static !important;
-  width: 100% !important;
-}
-
-.fk-main-image-viewer {
-  width: 100% !important;
-  height: 240px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.fk-main-image-viewer img {
-  max-height: 220px !important;
-  object-fit: contain !important;
-}
-
-.fk-thumbnail-row {
-  display: flex !important;
-  overflow-x: auto !important;
-  gap: 0.4rem !important;
-  margin: 0.5rem 0 !important;
-}
-
-.fk-gallery-actions {
-  position: static !important;
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 0.5rem !important;
-  margin: 0.8rem 0 !important;
-}
-
-.fk-info-col {
-  width: 100% !important;
-}
-
