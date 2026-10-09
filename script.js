@@ -39,7 +39,7 @@
   // ==========================================
   let authInstance = null;
   let googleAuthProvider = null;
-  let db = null; // Cloud Firestore Instance
+  let db = null;
   let firebaseInitialized = false;
 
   let currentUser = null;
@@ -53,7 +53,7 @@
   let countdownTimerInterval = null;
   let currentCalculatedGrandTotal = 0;
   let currentOrderRef = "";
-  let checkoutSource = "cart"; // "cart" | "buynow" | "retry"
+  let checkoutSource = "cart";
   let buyNowItem = null;
   let retryOrderData = null;
   let lastFailedOrderRef = "";
@@ -130,7 +130,7 @@
   };
 
   // ==========================================
-  // 3. MASTER CATALOG & SPECIFICATIONS
+  // 3. MASTER CATALOG & SPECIFICATIONS (AUTHENTIC PRICING, NO FAKE DISCOUNTS)
   // ==========================================
   const createGallery = (prefix, count = 11) =>
     Array.from({ length: count }, (_, i) => `${R2_PUBLIC_BASE_URL}/${prefix}-${i + 1}.png`);
@@ -276,7 +276,6 @@
       headingText: "Complete Kitchen 3-Oil Essential Box (3 Litres)",
       descText: "Equip your kitchen with South India's 3 core traditional wood-pressed oils. Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Includes 1L Groundnut Oil, 1L Coconut Oil, and 1L Sesame Oil.",
       price: 1299,
-      originalPrice: 1397,
       qrPrice: 1169,
       img: `${R2_PUBLIC_BASE_URL}/combo-all-labels.jpg`
     },
@@ -288,13 +287,11 @@
       headingText: "Complete Kitchen 3-Oil Starter Box (1.5 Litres)",
       descText: "Compact kitchen starter box containing 500ml Groundnut Oil, 500ml Coconut Oil, and 500ml Sesame Oil, packed fresh at our Bangalore packaging and distribution facility.",
       price: 699,
-      originalPrice: 727,
       qrPrice: 629,
       img: `${R2_PUBLIC_BASE_URL}/combo-all-labels.jpg`
     }
   };
 
-  // Indian States & Districts
   const INDIA_STATES_AND_DISTRICTS = {
     "Karnataka": [
       "Bagalkote", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar",
@@ -433,25 +430,21 @@
       case "auth/invalid-credential":
       case "auth/wrong-password":
       case "auth/user-not-found":
-        return "Invalid email or password. Please verify and try again.";
+        return "Invalid phone/email or password. Please verify and try again.";
       case "auth/email-already-in-use":
-        return "An account already exists with this email address. Please sign in instead.";
+        return "An account already exists with these credentials. Please sign in instead.";
       case "auth/weak-password":
-        return "Please choose a stronger password (at least 6 characters).";
+        return "Please choose a password with at least 6 characters.";
       case "auth/invalid-email":
-        return "Please enter a valid email address.";
+        return "Please enter a valid phone number or email address.";
       case "auth/popup-closed-by-user":
         return "Sign-in was cancelled before completion. Please try again.";
-      case "auth/cancelled-popup-request":
-        return "Sign-in popup was superseded. Please try again.";
       case "auth/popup-blocked":
         return "Pop-up blocked by your browser. Please allow popups for this site.";
       case "auth/network-request-failed":
         return "Network connection issue detected. Please check your internet connection.";
       case "auth/too-many-requests":
-        return "Too many unsuccessful attempts. Access is temporarily paused for security. Try again in a few minutes.";
-      case "auth/user-disabled":
-        return "This account has been disabled. Please contact customer support.";
+        return "Too many unsuccessful attempts. Access paused for security. Try again in 2 minutes.";
       default:
         return err.message || "Authentication failed. Please try again.";
     }
@@ -498,7 +491,7 @@
   }
 
   // ==========================================
-  // 6. FIREBASE AUTH & FIRESTORE SYNC
+  // 6. FIREBASE AUTH & UNIVERSAL LOGIN (PHONE OR EMAIL + PASSWORD + GOOGLE)
   // ==========================================
   function initFirebaseAuth() {
     try {
@@ -515,12 +508,28 @@
 
         firebaseInitialized = true;
 
-        authInstance.onAuthStateChanged((user) => {
+        authInstance.onAuthStateChanged(async (user) => {
           if (user) {
+            let phone = "";
+            let name = user.displayName || (user.email ? user.email.split("@")[0] : "Customer");
+            if (name.endsWith("_phone")) name = name.replace("_phone", "");
+
+            if (db) {
+              try {
+                const doc = await db.collection("customers").doc(user.uid).get();
+                if (doc.exists) {
+                  const d = doc.data();
+                  if (d.name) name = d.name;
+                  if (d.phone) phone = d.phone;
+                }
+              } catch (e) {}
+            }
+
             currentUser = {
               uid: user.uid,
-              email: user.email,
-              displayName: user.displayName || (user.email ? user.email.split("@")[0] : "Customer")
+              email: user.email || "",
+              phone: phone || user.phoneNumber || "",
+              displayName: name
             };
             localStorage.setItem("manopavana_active_user", JSON.stringify(currentUser));
           } else {
@@ -567,14 +576,18 @@
     const authPillLabel = document.getElementById("authPillLabel");
     const authUserMeta = document.getElementById("authUserMeta");
     const custNameInput = document.getElementById("custName");
+    const custPhoneInput = document.getElementById("custPhone");
     const logoutItem = document.getElementById("authLogoutItem");
 
     if (currentUser) {
       const name = currentUser.displayName || (currentUser.email ? currentUser.email.split("@")[0] : "Customer");
       if (authPillLabel) authPillLabel.textContent = "👤 " + name;
-      if (authUserMeta) authUserMeta.textContent = `Hello, ${name} (${currentUser.email || ""})`;
+      if (authUserMeta) authUserMeta.textContent = `Hello, ${name}`;
       if (custNameInput && !custNameInput.value && currentUser.displayName) {
         custNameInput.value = currentUser.displayName;
+      }
+      if (custPhoneInput && !custPhoneInput.value && currentUser.phone) {
+        custPhoneInput.value = currentUser.phone;
       }
       if (logoutItem) logoutItem.style.display = "block";
     } else {
@@ -626,7 +639,7 @@
 
     if (mode === "login") {
       if (sidebarTitle) sidebarTitle.textContent = "Login";
-      if (sidebarDesc) sidebarDesc.textContent = "Get access to your Orders, Wishlist, and Artisanal Wood-Pressed Oils discounts.";
+      if (sidebarDesc) sidebarDesc.textContent = "Access your orders, saved addresses, and authentic wood-pressed oils discounts.";
       if (submitBtn) submitBtn.textContent = "Continue";
       if (switchBtn) {
         switchBtn.textContent = "New to MANOPAVANA? Create an account";
@@ -635,7 +648,7 @@
       if (passGroup) passGroup.style.display = "block";
     } else if (mode === "register") {
       if (sidebarTitle) sidebarTitle.textContent = "Register";
-      if (sidebarDesc) sidebarDesc.textContent = "Sign up with your email to track doorstep delivery & earn repeat loyalty benefits.";
+      if (sidebarDesc) sidebarDesc.textContent = "Sign up with your phone or email to track doorstep delivery & earn repeat benefits.";
       if (submitBtn) submitBtn.textContent = "Create Account";
       if (switchBtn) {
         switchBtn.textContent = "Existing User? Log In";
@@ -662,11 +675,11 @@
     }
   };
 
-  window.handleEmailAuthSubmit = async function (e) {
+  window.handleUniversalAuthSubmit = async function (e) {
     if (e && e.preventDefault) e.preventDefault();
 
-    const email = document.getElementById("authEmail")?.value.trim();
-    const password = document.getElementById("authPassword")?.value;
+    let identifier = document.getElementById("authIdentifier")?.value.trim() || "";
+    const password = document.getElementById("authPassword")?.value || "";
     const errBox = document.getElementById("authErrorMsg");
     const successBox = document.getElementById("authSuccessMsg");
     const submitBtn = document.getElementById("btnAuthSubmit");
@@ -674,22 +687,38 @@
     if (errBox) errBox.style.display = "none";
     if (successBox) successBox.style.display = "none";
 
-    if (!email) {
+    if (!identifier) {
       if (errBox) {
-        errBox.textContent = "Please enter a valid email address.";
+        errBox.textContent = "Please enter your Phone Number or Email Address.";
         errBox.style.display = "block";
       }
       return;
     }
 
+    // Phone format conversion for 100% free phone/password authentication
+    let isPhone = false;
+    let authEmail = identifier;
+    const cleanDigits = identifier.replace(/\D/g, "");
+    if (cleanDigits.length === 10 && !identifier.includes("@")) {
+      isPhone = true;
+      authEmail = `${cleanDigits}@phone.manopavana.com`;
+    }
+
     if (currentAuthMode === "reset") {
+      if (isPhone) {
+        if (errBox) {
+          errBox.textContent = "Password resets via link require an email address. If using phone, please contact support.";
+          errBox.style.display = "block";
+        }
+        return;
+      }
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = "Sending...";
       }
       try {
         if (!firebaseInitialized) throw new Error("Authentication service connecting. Please try again.");
-        await authInstance.sendPasswordResetEmail(email);
+        await authInstance.sendPasswordResetEmail(authEmail);
         if (successBox) {
           successBox.textContent = "Password reset instructions sent! Please check your Inbox and Spam.";
           successBox.style.display = "block";
@@ -724,20 +753,32 @@
     try {
       if (currentAuthMode === "login") {
         if (!password) throw new Error("Password is required to sign in.");
-        const userCred = await authInstance.signInWithEmailAndPassword(email, password);
+        const userCred = await authInstance.signInWithEmailAndPassword(authEmail, password);
         const user = userCred.user;
-        const name = user.displayName || user.email.split("@")[0];
+        const name = user.displayName || (isPhone ? cleanDigits : authEmail.split("@")[0]);
 
-        await syncCustomerRecord(user, { name: name, email: user.email }, false);
+        await syncCustomerRecord(user, {
+          name: name,
+          email: isPhone ? "" : authEmail,
+          phone: isPhone ? cleanDigits : ""
+        }, false);
+
         window.closeAuthModal();
         window.showActionToast("Sign In Successful", `🎉 Welcome back, ${name}!`, "👋", "success");
       } else if (currentAuthMode === "register") {
         if (!password || password.length < 6) throw new Error("Password must be at least 6 characters.");
-        const userCred = await authInstance.createUserWithEmailAndPassword(email, password);
+        const userCred = await authInstance.createUserWithEmailAndPassword(authEmail, password);
         const user = userCred.user;
-        const name = user.displayName || user.email.split("@")[0];
+        const name = isPhone ? cleanDigits : authEmail.split("@")[0];
 
-        await syncCustomerRecord(user, { name: name, email: user.email }, true);
+        await user.updateProfile({ displayName: name });
+
+        await syncCustomerRecord(user, {
+          name: name,
+          email: isPhone ? "" : authEmail,
+          phone: isPhone ? cleanDigits : ""
+        }, true);
+
         window.closeAuthModal();
         window.showActionToast("Account Created", `🎉 Welcome to MANOPAVANA, ${name}!`, "🎉", "success");
       }
@@ -809,7 +850,7 @@
   });
 
   // ==========================================
-  // 7. USER DASHBOARD & FLIPKART ORDER TRACKING
+  // 7. USER DASHBOARD, EDITABLE PROFILE & IN-DASHBOARD ADDRESS MANAGEMENT
   // ==========================================
   window.openAccountDashboard = function (initialTab = "orders") {
     const dropdown = document.getElementById("authDropdownMenu");
@@ -866,14 +907,21 @@
   function renderDashboardProfile() {
     const profDisplayName = document.getElementById("profDisplayName");
     const profEmail = document.getElementById("profEmail");
+    const profPhone = document.getElementById("profPhone");
     const profLoyalBadge = document.getElementById("profLoyalBadge");
 
     if (currentUser) {
       if (profDisplayName) profDisplayName.textContent = currentUser.displayName || "Customer";
-      if (profEmail) profEmail.textContent = currentUser.email || "--";
+      if (profEmail) {
+        profEmail.textContent = (currentUser.email && currentUser.email.includes("@phone.manopavana.com"))
+          ? "Registered via Phone"
+          : (currentUser.email || "--");
+      }
+      if (profPhone) profPhone.textContent = currentUser.phone ? `+91 ${currentUser.phone}` : "Not linked yet";
     } else {
       if (profDisplayName) profDisplayName.textContent = "Guest Customer";
       if (profEmail) profEmail.textContent = "Sign in to associate your orders";
+      if (profPhone) profPhone.textContent = "--";
     }
 
     if (profLoyalBadge) {
@@ -881,6 +929,69 @@
     }
   }
 
+  window.toggleProfileEditMode = function (showEdit = true) {
+    const readBox = document.getElementById("profileReadState");
+    const formBox = document.getElementById("profileEditForm");
+    const editBtn = document.getElementById("btnToggleEditProfile");
+
+    if (!currentUser) return;
+
+    if (showEdit) {
+      if (readBox) readBox.style.display = "none";
+      if (formBox) {
+        formBox.style.display = "block";
+        const nameInp = document.getElementById("editProfName");
+        const phoneInp = document.getElementById("editProfPhone");
+        if (nameInp) nameInp.value = currentUser.displayName || "";
+        if (phoneInp) phoneInp.value = currentUser.phone || "";
+      }
+      if (editBtn) editBtn.style.display = "none";
+    } else {
+      if (readBox) readBox.style.display = "block";
+      if (formBox) formBox.style.display = "none";
+      if (editBtn) editBtn.style.display = "inline-block";
+    }
+  };
+
+  window.saveUserProfileChanges = async function (e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!currentUser) return;
+
+    const newName = document.getElementById("editProfName")?.value.trim();
+    const newPhone = document.getElementById("editProfPhone")?.value.trim();
+
+    if (!newName || newPhone.length < 10) {
+      alert("Please enter a valid Name and 10-digit Phone number.");
+      return;
+    }
+
+    currentUser.displayName = newName;
+    currentUser.phone = newPhone;
+    localStorage.setItem("manopavana_active_user", JSON.stringify(currentUser));
+
+    if (authInstance && authInstance.currentUser) {
+      try {
+        await authInstance.currentUser.updateProfile({ displayName: newName });
+      } catch (err) {}
+    }
+
+    if (db) {
+      try {
+        await db.collection("customers").doc(currentUser.uid).set({
+          name: newName,
+          phone: newPhone,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      } catch (err) {}
+    }
+
+    updateAuthUI();
+    renderDashboardProfile();
+    window.toggleProfileEditMode(false);
+    window.showActionToast("Profile Updated", "✅ Profile details saved successfully!", "👤", "success");
+  };
+
+  // IN-DASHBOARD ADDRESS OPERATIONS
   function renderDashboardSavedAddress() {
     let saved = null;
     try {
@@ -889,21 +1000,104 @@
       saved = null;
     }
 
+    const card = document.getElementById("savedAddressDashboardCard");
+    const form = document.getElementById("dashAddressForm");
     const nameEl = document.getElementById("dashAddrName");
     const textEl = document.getElementById("dashAddrText");
     const phoneEl = document.getElementById("dashAddrPhone");
 
+    if (card) card.style.display = "block";
+    if (form) form.style.display = "none";
+
     if (saved && saved.name && saved.address) {
       if (nameEl) nameEl.textContent = saved.name;
-      const cleanCity = saved.city || "Bengaluru";
-      if (textEl) textEl.textContent = `${saved.address}, ${cleanCity}, ${saved.state || "Karnataka"} - ${saved.pincode || "560058"}`;
-      if (phoneEl) phoneEl.textContent = `📞 ${saved.phone}`;
+      if (textEl) textEl.textContent = `${saved.address}, ${saved.city || "Bengaluru"}, ${saved.state || "Karnataka"} - ${saved.pincode || "560058"}`;
+      if (phoneEl) phoneEl.textContent = `📞 +91 ${saved.phone}`;
     } else {
       if (nameEl) nameEl.textContent = "No address saved yet";
-      if (textEl) textEl.textContent = "Complete your first order or checkout to save your default address.";
+      if (textEl) textEl.textContent = "Click Edit / Change to add your default Bangalore doorstep address.";
       if (phoneEl) phoneEl.textContent = "";
     }
   }
+
+  window.openDashboardAddressForm = function () {
+    let saved = null;
+    try {
+      saved = JSON.parse(localStorage.getItem("manopavana_saved_delivery"));
+    } catch (e) {}
+
+    const card = document.getElementById("savedAddressDashboardCard");
+    const form = document.getElementById("dashAddressForm");
+
+    if (card) card.style.display = "none";
+    if (form) {
+      form.style.display = "block";
+      const nameInp = document.getElementById("dashInputName");
+      const phoneInp = document.getElementById("dashInputPhone");
+      const addrInp = document.getElementById("dashInputAddress");
+      const cityInp = document.getElementById("dashInputCity");
+      const pinInp = document.getElementById("dashInputPincode");
+
+      if (saved) {
+        if (nameInp) nameInp.value = saved.name || "";
+        if (phoneInp) phoneInp.value = saved.phone || "";
+        if (addrInp) addrInp.value = saved.address || "";
+        if (cityInp) cityInp.value = saved.city || "Bengaluru";
+        if (pinInp) pinInp.value = saved.pincode || "560058";
+      } else if (currentUser) {
+        if (nameInp) nameInp.value = currentUser.displayName || "";
+        if (phoneInp) phoneInp.value = currentUser.phone || "";
+      }
+    }
+  };
+
+  window.closeDashboardAddressForm = function () {
+    const card = document.getElementById("savedAddressDashboardCard");
+    const form = document.getElementById("dashAddressForm");
+    if (card) card.style.display = "block";
+    if (form) form.style.display = "none";
+  };
+
+  window.saveDashboardAddress = async function (e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const name = document.getElementById("dashInputName")?.value.trim();
+    const phone = document.getElementById("dashInputPhone")?.value.trim();
+    const address = document.getElementById("dashInputAddress")?.value.trim();
+    const city = document.getElementById("dashInputCity")?.value.trim() || "Bengaluru";
+    const pincode = document.getElementById("dashInputPincode")?.value.trim() || "560058";
+
+    if (!name || phone.length < 10 || !address || pincode.length !== 6) {
+      alert("Please fill in all address fields completely.");
+      return;
+    }
+
+    const payload = {
+      name,
+      phone,
+      address,
+      city,
+      state: "Karnataka",
+      district: "Bengaluru Urban",
+      pincode,
+      latitude: DEFAULT_BANGALORE_COORDS[0],
+      longitude: DEFAULT_BANGALORE_COORDS[1]
+    };
+
+    localStorage.setItem("manopavana_saved_delivery", JSON.stringify(payload));
+
+    if (db && currentUser) {
+      try {
+        await db.collection("customers").doc(currentUser.uid).set({
+          defaultAddress: payload
+        }, { merge: true });
+      } catch (err) {}
+    }
+
+    renderDashboardSavedAddress();
+    window.closeDashboardAddressForm();
+    window.showActionToast("Address Saved", "📍 Delivery address saved successfully!", "🏡", "success");
+  };
 
   async function fetchUserOrderHistory() {
     const loading = document.getElementById("dashOrdersLoading");
@@ -911,11 +1105,10 @@
 
     if (loading) {
       loading.style.display = "block";
-      loading.textContent = "🔍 Fetching your orders from our Bangalore facility...";
+      loading.textContent = "🔍 Fetching orders from our facility...";
     }
     if (list) list.style.display = "none";
 
-    // 1. Direct Firestore Instant Read
     if (db && currentUser) {
       try {
         const querySnapshot = await db.collection("orders")
@@ -933,11 +1126,10 @@
           return;
         }
       } catch (err) {
-        console.warn("Firestore query notice, falling back to local history:", err);
+        console.warn("Firestore order history notice:", err);
       }
     }
 
-    // 2. Fallback to local cached orders
     if (loading) loading.style.display = "none";
     if (list) {
       let localMatches = localOrdersHistory;
@@ -955,7 +1147,7 @@
           <div class="empty-orders-view">
             <div class="empty-icon">📦</div>
             <h4>No orders placed yet</h4>
-            <p>Browse our cold wood-pressed oils and place your first order!</p>
+            <p>Browse our fresh cold wood-pressed oils and place your first order!</p>
           </div>
         `;
       }
@@ -1162,7 +1354,7 @@
 
       if (feedbackBox) {
         feedbackBox.className = "quiz-feedback-box success";
-        feedbackBox.innerHTML = "✅ <strong>Label verified!</strong> 10% Loyalty Discount unlocked across all orders for 30 days!";
+        feedbackBox.innerHTML = "✅ <strong>Label verified!</strong> 10% Loyalty Discount unlocked across all repeat orders for 30 days!";
         feedbackBox.style.display = "block";
       }
 
@@ -1188,7 +1380,7 @@
       }
 
       if (onboardingQuizAttemptsLeft <= 0) {
-        alert("Attempts exhausted. You can continue shopping at regular artisanal pricing!");
+        alert("Attempts exhausted. You can continue shopping at regular pricing!");
         window.closeBottleQuizModal();
       }
     }
@@ -1289,7 +1481,7 @@
 
     if (isBangalorePincode) {
       resultBox.className = "pincode-result-box success";
-      resultBox.innerHTML = `<strong>✅ Delivering to Bangalore (${enteredPin})</strong>Direct doorstep delivery in 48–72 hours from our packaging facility. Free on ₹500+ orders.`;
+      resultBox.innerHTML = `<strong>✅ Delivering to Bangalore (${enteredPin})</strong>Direct doorstep delivery in 48–72 hours from our facility. Free on ₹500+ orders.`;
       resultBox.style.display = "block";
       setTimeout(window.closeLocationCheckModal, 1300);
     } else {
@@ -1338,7 +1530,7 @@
   };
 
   // ==========================================
-  // 10. CATALOG SEARCH BAR CONTROLLER
+  // 10. CATALOG SEARCH
   // ==========================================
   window.handleCatalogSearch = function (query) {
     const cleanQuery = (query || "").toLowerCase().trim();
@@ -1364,7 +1556,7 @@
   };
 
   // ==========================================
-  // 11. AUDIO ENGINE & AUTOPLAY (MOBILE SAFE)
+  // 11. AUDIO ENGINE & AUTOPLAY
   // ==========================================
   let isAudioPlaying = false;
   let hasInteracted = false;
@@ -1443,7 +1635,7 @@
   }
 
   // ==========================================
-  // 12. MAP INTEGRATION & ADDRESS PINNING (FAULT-TOLERANT GPS)
+  // 12. MAP INTEGRATION & GEOLOCATION
   // ==========================================
   function initOrUpdateDeliveryMap(lat = DEFAULT_BANGALORE_COORDS[0], lng = DEFAULT_BANGALORE_COORDS[1]) {
     const mapElement = document.getElementById("deliveryMap");
@@ -1525,15 +1717,12 @@
     };
 
     const handleFail = () => {
-      // Automatic fallback to standard network positioning
       navigator.geolocation.getCurrentPosition(
         handleSuccess,
         (err) => {
-          let errDetail = "Could not retrieve exact location.";
+          let errDetail = "Could not retrieve exact location. Please drag the pin on the map.";
           if (err.code === 1) {
-            errDetail = "Location permission denied. Please enable Location in your device/browser settings.";
-          } else if (err.code === 3) {
-            errDetail = "Location request timed out. Please drag the pin manually on the map.";
+            errDetail = "Location permission denied. Please tap the lock/tune icon near your URL bar and allow Location.";
           }
           alert(errDetail);
           if (btn) btn.innerHTML = origText;
@@ -1542,7 +1731,6 @@
       );
     };
 
-    // First attempt: High accuracy
     navigator.geolocation.getCurrentPosition(
       handleSuccess,
       handleFail,
@@ -1602,7 +1790,7 @@
   };
 
   // ==========================================
-  // 13. SAVED ADDRESS RESTORATION
+  // 13. CHECKOUT SAVED DETAILS
   // ==========================================
   function loadSavedDeliveryDetails() {
     let saved = null;
@@ -1662,7 +1850,7 @@
 
       if (addrName) addrName.textContent = saved.name;
       if (addrText) addrText.textContent = `${saved.address}, ${saved.city || "Bengaluru"} - ${saved.pincode || "560058"}`;
-      if (addrPhone) addrPhone.textContent = `📞 ${saved.phone}`;
+      if (addrPhone) addrPhone.textContent = `📞 +91 ${saved.phone}`;
 
       const savedLat = parseFloat(saved.latitude) || DEFAULT_BANGALORE_COORDS[0];
       const savedLng = parseFloat(saved.longitude) || DEFAULT_BANGALORE_COORDS[1];
@@ -1702,7 +1890,7 @@
   };
 
   // ==========================================
-  // 14. CART & BAG OPERATIONS
+  // 14. CART & ACCURATE FINANCIALS
   // ==========================================
   function isLoyaltyDiscountValid() {
     if (!bottleScanTimestampMs) return false;
@@ -1882,7 +2070,7 @@
   }
 
   // ==========================================
-  // 15. FLIPKART STYLE PRODUCT CATALOG DISPLAY (WITH BUY NOW + STEPPER)
+  // 15. FLIPKART CATALOG DISPLAY (ACCURATE PRICING, NO FAKE DISCOUNTS)
   // ==========================================
   function renderStepperButtonHTML(id, title, price, img, quantity) {
     if (!isBangalorePincode) {
@@ -1967,7 +2155,6 @@
     const comboTitleHeading = document.getElementById("comboTitleHeading");
     const comboDescText = document.getElementById("comboDescText");
     const comboCurrentPrice = document.getElementById("comboCurrentPrice");
-    const comboOriginalPrice = document.getElementById("comboOriginalPrice");
     const comboQrDiscountHint = document.getElementById("comboQrDiscountHint");
     const btnComboBuyNowDirect = document.getElementById("btnComboBuyNowDirect");
 
@@ -1975,7 +2162,6 @@
     if (comboTitleHeading) comboTitleHeading.textContent = currentCombo.headingText;
     if (comboDescText) comboDescText.textContent = currentCombo.descText;
     if (comboCurrentPrice) comboCurrentPrice.textContent = `₹${currentCombo.price}`;
-    if (comboOriginalPrice) comboOriginalPrice.textContent = `₹${currentCombo.originalPrice}`;
     if (comboQrDiscountHint) comboQrDiscountHint.textContent = `(₹${currentCombo.qrPrice} with Bottle QR Scan)`;
 
     const btnCombo3L = document.getElementById("btnCombo3L");
@@ -2078,7 +2264,7 @@
           <div class="detail-thumb-strip">${thumbnailsHTML}</div>
         </div>
         <div class="detail-info-col">
-          <span class="detail-badge-pill">🌿 Wood-Pressed • Lab Tested</span>
+          <span class="detail-badge-pill">🌿 Wood-Pressed • Lab Certified</span>
           <h2 class="detail-title">${escapeHtml(product.name)}</h2>
           <p class="detail-short-desc">${escapeHtml(product.shortDesc)}</p>
           <div class="modal-variant-wrap">
@@ -2089,7 +2275,7 @@
             </div>
           </div>
           <div class="modal-action-row">
-            <div><span class="price-sub">Payable Price:</span><div class="modal-price-val">₹${selectedSizeData.price}</div></div>
+            <div><span class="price-sub">Price:</span><div class="modal-price-val">₹${selectedSizeData.price}</div></div>
             <div class="stepper-wrap-inline" id="stepper-container-modal-${selectedSizeData.id}">
               ${renderStepperButtonHTML(selectedSizeData.id, selectedSizeData.title, selectedSizeData.price, product.img, currentQty)}
             </div>
@@ -2113,7 +2299,7 @@
   }
 
   // ==========================================
-  // 17. CHECKOUT, PAYMENT GATEWAY & FIRESTORE SAVE
+  // 17. CHECKOUT, PAYMENT GATEWAY & FIRESTORE ORDER SUBMISSION
   // ==========================================
   window.handleDirectBuyNow = function (id, title, price, img) {
     if (!isBangalorePincode) {
@@ -2208,9 +2394,6 @@
             <span>Locked Grand Total:</span>
             <strong>₹${currentCalculatedGrandTotal.toLocaleString("en-IN")}</strong>
           </div>
-          <small class="retry-notice">
-            💡 Your current active shopping bag remains safely preserved in the background.
-          </small>
         </div>
       `;
       return;
@@ -2388,10 +2571,8 @@
     };
 
     try {
-      // 1. Save directly into Firestore first (Instant ~30ms)
       await saveOrderToFirestore(orderPayload);
 
-      // 2. Handle Online PhonePe Flow vs Instant COD/WhatsApp Flow
       if (paymentMode === "PHONEPE") {
         sessionStorage.setItem("manopavana_pending_checkout_source", checkoutSource);
         sessionStorage.setItem("manopavana_pending_order_ref", currentOrderRef);
@@ -2429,7 +2610,6 @@
           return;
         }
       } else {
-        // DIRECT COD & WHATSAPP
         const orderSnapshot = {
           timestamp: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
           timestampMs: Date.now(),
@@ -2528,7 +2708,7 @@
   };
 
   // ==========================================
-  // 18. PAYMENT FAILURE MODAL & RETRY HANDLERS
+  // 18. PAYMENT RETRY & FAILURE HANDLERS
   // ==========================================
   window.showPaymentFailedModal = function (orderRef, reasonText) {
     lastFailedOrderRef = orderRef;
@@ -2606,7 +2786,7 @@
   };
 
   // ==========================================
-  // 19. CUSTOMER REVIEWS
+  // 19. REVIEWS & DISCUSSIONS
   // ==========================================
   function renderReviews() {
     const grid = document.getElementById("reviewsDisplayGrid");
@@ -2663,7 +2843,7 @@
   };
 
   // ==========================================
-  // 20. LEGAL MODALS & FIXED COUNTDOWN TIMER
+  // 20. MODALS & LOYALTY TIMER
   // ==========================================
   window.openLegalModal = function (modalId) {
     const modal = document.getElementById(modalId);
@@ -2734,7 +2914,7 @@
 
         if (btnBottleClaim) btnBottleClaim.style.display = "none";
       } else {
-        announcementText.innerHTML = `🚚 <strong>FREE Doorstep Delivery</strong> on all orders above ₹500 across Bangalore (Delivered in 48–72 hrs)`;
+        announcementText.innerHTML = `🚚 <strong>FREE Doorstep Delivery</strong> on orders ₹500+ across Bangalore (Delivered in 48–72 hrs)`;
         topBar.classList.remove("loyal-banner");
         if (btnBottleClaim) btnBottleClaim.style.display = "inline-flex";
         clearInterval(countdownTimerInterval);
@@ -2792,7 +2972,7 @@
 
     document.getElementById("submitOrderBtn")?.addEventListener("click", handleCheckoutSubmission);
 
-    ["custPhone", "custPincode", "pincodeCheckInput"].forEach((id) => {
+    ["custPhone", "custPincode", "pincodeCheckInput", "editProfPhone", "dashInputPhone"].forEach((id) => {
       document.getElementById(id)?.addEventListener("input", (e) => {
         e.target.value = e.target.value.replace(/\D/g, "");
       });
