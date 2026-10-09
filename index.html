@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   
-  <!-- Robust Multi-Device Favicon & Brand Icons -->
+  <!-- Multi-Device Favicon & Brand Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="https://pub-9e18bb265ecf4224ae1230cf913745ca.r2.dev/logo2.jpg" />
   <link rel="icon" type="image/png" sizes="16x16" href="https://pub-9e18bb265ecf4224ae1230cf913745ca.r2.dev/logo2.jpg" />
   <link rel="apple-touch-icon" sizes="180x180" href="https://pub-9e18bb265ecf4224ae1230cf913745ca.r2.dev/logo2.jpg" />
@@ -36,13 +36,13 @@
     <source src="https://pub-9e18bb265ecf4224ae1230cf913745ca.r2.dev/marada_gaana_beat.mp3" type="audio/mp3" />
   </audio>
 
-  <!-- Persistent Floating Sound Control Pill -->
+  <!-- Persistent Sound Control Pill -->
   <button id="soundToggleBtn" class="floating-sound-pill" type="button" aria-label="Toggle Sound">
     <span id="soundIcon">🔊</span>
     <span id="soundText">Sound On</span>
   </button>
 
-  <!-- Global Action Notification Toast -->
+  <!-- Notification Toast -->
   <div id="actionToast" class="action-toast" aria-live="polite">
     <div class="action-toast-inner">
       <span id="actionToastIcon" class="action-toast-icon">✨</span>
@@ -53,26 +53,23 @@
     </div>
   </div>
 
-  <!-- Top Announcement Bar with Location & Utility Actions -->
+  <!-- Top Announcement Bar -->
   <div id="topAnnouncementBar" class="top-announcement-bar">
     <div class="announcement-content-wrap">
       <div id="announcementText" class="announcement-text-node">
-        🚚 <strong>FREE Doorstep Delivery</strong> on all orders above ₹500 across Bangalore (Delivered in 48–72 hrs)
+        🚚 <strong>FREE Doorstep Delivery</strong> on orders ₹500+ across Bangalore (Delivered in 48–72 hrs)
       </div>
       
       <div class="top-bar-action-group">
-        <!-- Upfront Pincode Checker Pill -->
         <button type="button" id="headerLocationTrigger" class="btn-location-pill" onclick="openLocationCheckModal()">
           <span class="loc-pin-icon">📍</span>
           <span id="headerLocationLabel">Deliver to: <strong>Bangalore (560xxx)</strong></span>
         </button>
 
-        <!-- Live Order Tracking Button -->
         <button type="button" class="btn-track-pill-top" onclick="openAccountDashboard('orders')">
           📦 Track Order
         </button>
 
-        <!-- Bottle QR Scan Discount Button -->
         <button type="button" id="btnOpenBottleClaimModal" class="btn-claim-bottle-top" onclick="openBottleClaimModal()">
           🏷️ Scanned our Bottle? Claim 10% Off
         </button>
@@ -95,7 +92,7 @@
 
       <!-- Quick Search Bar (Flipkart Style) -->
       <div class="header-search-bar">
-        <input type="text" id="storeSearchInput" placeholder="Search for pure Groundnut, Coconut, Sesame oil, or Kitchen Combos..." onkeyup="handleCatalogSearch(this.value)" />
+        <input type="text" id="storeSearchInput" placeholder="Search pure Groundnut, Coconut, Sesame oil, or Value Combos..." onkeyup="handleCatalogSearch(this.value)" />
         <span class="search-icon">🔍</span>
       </div>
 
@@ -112,7 +109,6 @@
       </nav>
 
       <div class="header-right-actions">
-        <!-- Persistent Flipkart Style Account Dropdown -->
         <div class="auth-pill-container" id="authPillContainer">
           <button type="button" id="authPillBtn" class="btn-auth-pill" onclick="handleAuthPillClick()">
             <span id="authPillLabel">👤 Login</span>
@@ -122,6 +118,7 @@
             <div id="authUserMeta" class="auth-user-meta">Welcome to MANOPAVANA</div>
             <a href="javascript:void(0)" onclick="openAccountDashboard('profile')">👤 My Profile</a>
             <a href="javascript:void(0)" onclick="openAccountDashboard('orders')">📦 My Orders</a>
+            <a href="javascript:void(0)" onclick="openAccountDashboard('addresses')">📍 Delivery Address</a>
             <a href="javascript:void(0)" onclick="openBottleClaimModal()">🏷️ 10% Loyalty QR</a>
             <a href="javascript:void(0)" onclick="handleSignOut()" class="auth-logout-link" id="authLogoutItem" style="display:none;">🚪 Logout</a>
           </div>
@@ -176,19 +173,17 @@
     </div>
   </aside>
 
-  <!-- FLIPKART-STYLE AUTH MODAL (Split View Banner + Clean Form) -->
+  <!-- FLIPKART-STYLE AUTH MODAL (Google + Phone/Email + Password) -->
   <div id="authModalBackdrop" class="modal-backdrop">
     <div class="modal-card fk-auth-modal-card">
       <button class="close-modal-btn fk-auth-close" onclick="closeAuthModal()" type="button">&times;</button>
       
-      <!-- Left Flipkart Accent Banner -->
       <div class="fk-auth-sidebar">
         <h3 id="fkAuthSidebarTitle">Login</h3>
-        <p id="fkAuthSidebarDesc">Get access to your Orders, Wishlist, and Artisanal Wood-Pressed Oils discounts.</p>
+        <p id="fkAuthSidebarDesc">Access your orders, saved addresses, and authentic wood-pressed oils discounts.</p>
         <div class="fk-sidebar-illustration">🌿</div>
       </div>
 
-      <!-- Right Form Controller -->
       <div class="fk-auth-body">
         <button type="button" class="btn-google-auth" onclick="handleGoogleSignIn()">
           <svg class="google-icon" viewBox="0 0 48 48">
@@ -204,15 +199,16 @@
           <span>OR</span>
         </div>
 
-        <form id="authForm" onsubmit="handleEmailAuthSubmit(event)">
+        <form id="authForm" onsubmit="handleUniversalAuthSubmit(event)">
+          <!-- Universal Login: Phone or Email -->
           <div class="form-group fk-floating-group">
-            <input type="email" id="authEmail" class="fk-input" required autocomplete="email" placeholder=" " />
-            <label for="authEmail" class="fk-floating-label">Enter Email Address</label>
+            <input type="text" id="authIdentifier" class="fk-input" required autocomplete="username" placeholder=" " />
+            <label for="authIdentifier" class="fk-floating-label">Phone Number or Email Address</label>
           </div>
 
           <div class="form-group fk-floating-group" id="authPasswordGroup">
             <input type="password" id="authPassword" class="fk-input" autocomplete="current-password" placeholder=" " />
-            <label for="authPassword" class="fk-floating-label">Enter Password</label>
+            <label for="authPassword" class="fk-floating-label">Password</label>
             <a href="javascript:void(0)" id="linkForgotPassword" class="fk-forgot-btn" onclick="toggleAuthMode('reset')">Forgot?</a>
           </div>
 
@@ -235,7 +231,7 @@
     </div>
   </div>
 
-  <!-- FLIPKART-STYLE USER DASHBOARD (Orders & Profile Drawer) -->
+  <!-- FLIPKART-STYLE USER DASHBOARD (Orders, Editable Profile, & Address Manager) -->
   <div id="accountDashboardBackdrop" class="modal-backdrop">
     <div class="modal-card fk-dashboard-card">
       <div class="modal-header">
@@ -252,54 +248,113 @@
         <!-- View 1: Orders -->
         <div id="dashOrdersView" class="fk-tab-content">
           <div id="dashOrdersLoading" class="orders-loading-state">
-            🔍 Fetching your orders from our Bangalore facility...
+            🔍 Fetching orders from our facility...
           </div>
           <div id="dashOrdersList" class="orders-scroll-list" style="display:none;"></div>
         </div>
 
-        <!-- View 2: Profile -->
+        <!-- View 2: Profile (Fully Editable) -->
         <div id="dashProfileView" class="fk-tab-content" style="display:none;">
           <div class="profile-card-fk">
-            <h4>Personal Information</h4>
-            <div class="profile-field-row">
-              <label>Full Name:</label>
-              <span id="profDisplayName">--</span>
+            <div class="profile-header-bar">
+              <h4>Personal Information</h4>
+              <button type="button" id="btnToggleEditProfile" class="btn-edit-action" onclick="toggleProfileEditMode()">✏️ Edit Profile</button>
             </div>
-            <div class="profile-field-row">
-              <label>Email Address:</label>
-              <span id="profEmail">--</span>
+
+            <!-- Profile View State -->
+            <div id="profileReadState">
+              <div class="profile-field-row">
+                <label>Full Name:</label>
+                <span id="profDisplayName">--</span>
+              </div>
+              <div class="profile-field-row">
+                <label>Phone / WhatsApp:</label>
+                <span id="profPhone">--</span>
+              </div>
+              <div class="profile-field-row">
+                <label>Email Address:</label>
+                <span id="profEmail">--</span>
+              </div>
+              <div class="profile-field-row">
+                <label>Account Status:</label>
+                <span id="profCreated">Active Member</span>
+              </div>
+              <div class="profile-badge-row">
+                <span class="badge-verified-buyer">✓ Verified Customer</span>
+                <span class="badge-loyal" id="profLoyalBadge" style="display:none;">🏷️ 10% Loyalty Active</span>
+              </div>
             </div>
-            <div class="profile-field-row">
-              <label>Account Created:</label>
-              <span id="profCreated">Active Member</span>
-            </div>
-            <div class="profile-badge-row">
-              <span class="badge-verified-buyer">✓ Verified Customer</span>
-              <span class="badge-loyal" id="profLoyalBadge" style="display:none;">🏷️ 10% Loyalty Active</span>
-            </div>
+
+            <!-- Profile Edit State -->
+            <form id="profileEditForm" style="display:none;" onsubmit="saveUserProfileChanges(event)">
+              <div class="form-group">
+                <label for="editProfName">Full Name *</label>
+                <input type="text" id="editProfName" required autocomplete="name" />
+              </div>
+              <div class="form-group">
+                <label for="editProfPhone">Phone / WhatsApp Number (10 Digits) *</label>
+                <input type="tel" id="editProfPhone" maxlength="10" required autocomplete="tel" />
+              </div>
+              <div class="edit-profile-actions">
+                <button type="submit" class="btn-save-profile">Save Changes</button>
+                <button type="button" class="btn-cancel-profile" onclick="toggleProfileEditMode(false)">Cancel</button>
+              </div>
+            </form>
           </div>
         </div>
 
-        <!-- View 3: Addresses -->
+        <!-- View 3: Addresses (Fully Editable with Instant Save) -->
         <div id="dashAddressesView" class="fk-tab-content" style="display:none;">
+          <!-- Display Card -->
           <div id="savedAddressDashboardCard" class="saved-address-card">
             <div class="saved-address-header">
               <span class="saved-address-badge">Default Delivery Address</span>
-              <button type="button" class="btn-edit-address" onclick="toggleEditAddress(true)">Edit / Change</button>
+              <button type="button" class="btn-edit-address" onclick="openDashboardAddressForm()">✏️ Edit / Change</button>
             </div>
             <div class="saved-address-content">
               <strong id="dashAddrName">No address saved yet</strong>
-              <p id="dashAddrText">Click checkout or add delivery details to save.</p>
+              <p id="dashAddrText">Add your default Bangalore delivery address below.</p>
               <span id="dashAddrPhone"></span>
             </div>
           </div>
+
+          <!-- In-Dashboard Address Edit Form -->
+          <form id="dashAddressForm" class="dash-address-form" style="display:none;" onsubmit="saveDashboardAddress(event)">
+            <h4>Update Delivery Address</h4>
+            <div class="form-group">
+              <label for="dashInputName">Contact Full Name *</label>
+              <input type="text" id="dashInputName" required />
+            </div>
+            <div class="form-group">
+              <label for="dashInputPhone">10-Digit Mobile Number *</label>
+              <input type="tel" id="dashInputPhone" maxlength="10" required />
+            </div>
+            <div class="form-group">
+              <label for="dashInputAddress">Complete Street Address (Flat / House No, Building, Landmark) *</label>
+              <textarea id="dashInputAddress" rows="2" required></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-col">
+                <label for="dashInputCity">City *</label>
+                <input type="text" id="dashInputCity" value="Bengaluru" required />
+              </div>
+              <div class="form-col">
+                <label for="dashInputPincode">Bangalore Pincode (6 Digits) *</label>
+                <input type="text" id="dashInputPincode" maxlength="6" value="560058" required />
+              </div>
+            </div>
+            <div class="edit-profile-actions">
+              <button type="submit" class="btn-save-profile">Save Delivery Address</button>
+              <button type="button" class="btn-cancel-profile" onclick="closeDashboardAddressForm()">Cancel</button>
+            </div>
+          </form>
         </div>
 
       </div>
     </div>
   </div>
 
-  <!-- LOCATION & ADDRESS MAP ONBOARDING MODAL -->
+  <!-- Location Verification Modal -->
   <div id="locationModalBackdrop" class="modal-backdrop">
     <div class="modal-card fk-location-modal-card">
       <div class="modal-header">
@@ -308,7 +363,7 @@
       </div>
       <div class="modal-body location-modal-body">
         <p class="location-check-sub">
-          Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Pinpoint your address or enter your pincode:
+          Freshly wood-pressed, naturally settled, and packed at our Bangalore facility. Delivered in 48–72 hours across Bangalore:
         </p>
         
         <div class="location-input-row">
@@ -317,10 +372,9 @@
           <button type="button" class="btn-check-pincode" onclick="submitPincodeCheck()">Verify</button>
         </div>
 
-        <!-- Leaflet Map Mount for Quick Location Selection -->
         <div class="form-group map-form-group">
           <div class="map-label-bar">
-            <span class="map-label">Tap or drag pin to your exact building:</span>
+            <span class="map-label">Drag pin to your exact building:</span>
             <span id="onboardMapCoordsBadge" class="map-coords-badge">Centering on Bangalore</span>
           </div>
           <div id="onboardingMap" class="delivery-map-canvas"></div>
@@ -339,7 +393,7 @@
           <div class="info-loc-chip">
             <span>🛒</span>
             <div>
-              <strong>Rest of Karnataka &amp; India</strong>
+              <strong>Rest of India</strong>
               <small>Fulfilled securely via our Official Flipkart Store</small>
             </div>
           </div>
@@ -404,12 +458,12 @@
       </div>
       
       <div class="modal-body fk-detail-body" id="modalProductDetailBody">
-        <!-- Rendered dynamically by script.js with Flipkart dual column layout -->
+        <!-- Rendered dynamically by script.js -->
       </div>
     </div>
   </div>
 
-  <!-- Streamlined Checkout Modal with Saved Address & Leaflet Map Integration -->
+  <!-- Checkout Modal -->
   <div id="checkoutModalBackdrop" class="modal-backdrop">
     <div class="modal-card checkout-modal-card-extended">
       <div class="modal-header">
@@ -458,14 +512,13 @@
             <small class="field-error-text" id="custAddressErr"></small>
           </div>
 
-          <!-- Interactive Leaflet Map Pin-Drop Container -->
+          <!-- Map Pin-Drop Container -->
           <div class="form-group map-form-group">
             <div class="map-label-bar">
-              <span class="map-label">📍 Pinpoint Doorstep Location (Drag marker for exact delivery)</span>
+              <span class="map-label">📍 Pinpoint Doorstep (Drag marker for exact delivery)</span>
               <span id="mapCoordsBadge" class="map-coords-badge">Centering on Bangalore</span>
             </div>
             <div id="deliveryMap" class="delivery-map-canvas"></div>
-            <!-- Hidden coordinates for backend & Google Maps navigation -->
             <input type="hidden" id="custLatitude" value="12.9716" />
             <input type="hidden" id="custLongitude" value="77.5946" />
           </div>
@@ -496,7 +549,6 @@
             </div>
           </div>
 
-          <!-- Save Address Preference Checkbox -->
           <div class="save-address-row">
             <label class="save-address-label">
               <input type="checkbox" id="chkSaveAddress" checked />
@@ -505,7 +557,7 @@
           </div>
         </div>
 
-        <!-- 3 Payment Modes -->
+        <!-- Payment Modes -->
         <div class="payment-selection-wrap">
           <label class="payment-group-label">Select Payment Method</label>
           <div class="payment-options-grid payment-options-three">
@@ -542,7 +594,7 @@
         </div>
 
         <p id="formError" class="form-error-msg"></p>
-        <p class="legal-form-note">By submitting, you agree to our Terms &amp; Delivery Policies. Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Delivered within 48 to 72 hours across Bangalore.</p>
+        <p class="legal-form-note">By submitting, you agree to our Terms &amp; Delivery Policies. Delivered within 48 to 72 hours across Bangalore.</p>
         <button id="submitOrderBtn" class="btn-submit-order" type="button">
           Proceed to Pay via PhonePe ⚡
         </button>
@@ -550,7 +602,7 @@
     </div>
   </div>
 
-  <!-- Outside-Bangalore Flipkart Intercept Modal -->
+  <!-- Outside-Bangalore Intercept Modal -->
   <div id="flipkartModalBackdrop" class="modal-backdrop flipkart-backdrop">
     <div class="modal-card flipkart-modal-card">
       <div class="modal-header">
@@ -560,11 +612,11 @@
       <div class="modal-body flipkart-modal-body">
         <div class="flipkart-modal-icon">🚚</div>
         <h4>Outside Bangalore Delivery Route</h4>
-        <p>Direct doorstep delivery from our Bangalore packaging and distribution facility is currently exclusive to <strong>Bangalore pin codes (560xxx)</strong>.</p>
-        <p>For delivery to any other district in Karnataka or across India, please order genuine, freshly packed batches of MANOPAVANA oils directly through our official Flipkart flagship store!</p>
+        <p>Direct doorstep delivery from our Bangalore facility is currently exclusive to <strong>Bangalore pin codes (560xxx)</strong>.</p>
+        <p>For delivery to any other district in Karnataka or across India, please order genuine batches of MANOPAVANA oils directly through our official Flipkart flagship store!</p>
         <div class="flipkart-actions-wrap">
           <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" class="btn-continue-flipkart">
-            🛒 Continue to Flipkart to Order (10% Off) &rarr;
+            🛒 Continue to Flipkart to Order &rarr;
           </a>
           <button type="button" class="btn-cancel-flipkart" onclick="closeFlipkartModal()">
             Change to Bangalore Pincode
@@ -574,7 +626,7 @@
     </div>
   </div>
 
-  <!-- Order Confirmation Receipt Modal -->
+  <!-- Order Confirmation Modal -->
   <div id="orderConfirmationModalBackdrop" class="modal-backdrop">
     <div class="modal-card order-confirm-card">
       <div class="modal-header">
@@ -585,7 +637,7 @@
         <div class="confirm-badge-icon">🌿</div>
         <h4>Thank you for your order!</h4>
         <p class="confirm-intro-text">
-          Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Delivered to your doorstep within <strong>48 to 72 hours</strong>.
+          Freshly wood-pressed, settled naturally, and packed hygienically at our Bangalore facility. Delivered within <strong>48 to 72 hours</strong>.
         </p>
         <div class="confirm-receipt-summary" id="confirmReceiptDetails"></div>
         <div class="confirm-actions-row">
@@ -600,7 +652,7 @@
     </div>
   </div>
 
-  <!-- Authentic Payment Incomplete & Immediate Retry Modal -->
+  <!-- Payment Failed Modal -->
   <div id="paymentFailedModalBackdrop" class="modal-backdrop">
     <div class="modal-card payment-failed-card">
       <div class="modal-header payment-failed-header">
@@ -613,7 +665,7 @@
         
         <p class="failed-intro-text">
           <strong id="failedModalReason" class="failed-reason-text">Payment was cancelled at the gateway.</strong>
-          No funds were deducted. Your selected items and delivery address are saved so you can retry immediately.
+          No funds were deducted. Your items and delivery details are preserved so you can retry immediately.
         </p>
 
         <div class="confirm-receipt-summary" id="paymentFailedSummaryBox">
@@ -664,12 +716,12 @@
       <span class="intro-tag">GOOD FOOD STARTS HERE</span>
       <h2>Unrefined by Nature, Bottled Fresh</h2>
       <p>
-        Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Free from chemical solvents, and sealed fresh into food-grade bottles to preserve natural aroma and wholesome nutrients.
+        Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore facility. Free from chemical solvents, and sealed fresh into food-grade bottles to preserve natural aroma and wholesome nutrients.
       </p>
     </div>
   </section>
 
-  <!-- Products Section (Flipkart Header + Big Product Cards) -->
+  <!-- Products Section -->
   <section id="products" class="products-section">
     <div class="fk-section-header">
       <div>
@@ -710,7 +762,7 @@
         <div class="design-feature-card">
           <div class="feature-tag">03 • BOTTLE BUILD</div>
           <h3>Lightweight &amp; Shatterproof Body</h3>
-          <p>Food-grade virgin plastic body with an anti-slip grip and wide stable base that won't shatter if dropped.</p>
+          <p>Food-grade body with an anti-slip grip and wide stable base that won't shatter if dropped.</p>
         </div>
       </div>
     </div>
@@ -749,7 +801,6 @@
           <div class="combo-pricing-wrap">
             <div class="combo-price-block">
               <span class="combo-price" id="comboCurrentPrice">₹1,299</span>
-              <span class="combo-original-price" id="comboOriginalPrice">₹1,397</span>
               <small class="combo-sub-label" id="comboQrDiscountHint">(₹1,169 with Bottle QR Scan)</small>
             </div>
             <div class="fk-combo-actions">
@@ -967,7 +1018,7 @@
           <span class="faq-icon">+</span>
         </button>
         <div class="faq-answer">
-          <p>Refined oils undergo chemical bleaching and extreme heating over 200°C. MANOPAVANA oils are sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility with zero external heat or chemicals, preserving natural nutrients and authentic aroma.</p>
+          <p>Refined oils undergo chemical bleaching and extreme heating over 200°C. MANOPAVANA oils are sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore facility with zero external heat or chemicals, preserving natural nutrients and authentic aroma.</p>
         </div>
       </div>
 
@@ -997,7 +1048,7 @@
           <span class="faq-icon">+</span>
         </button>
         <div class="faq-answer">
-          <p>Direct doorstep delivery from our Bangalore packaging and distribution facility is exclusive to Bangalore (560xxx). All orders above ₹500 unlock <strong>Free Doorstep Delivery</strong> (delivered within 48 to 72 hours). A standard delivery fee of ₹49 applies on orders below ₹500. For all other locations across Karnataka and India, orders are fulfilled via our official Flipkart store!</p>
+          <p>Direct doorstep delivery from our packaging and distribution facility is exclusive to Bangalore (560xxx). All orders above ₹500 unlock <strong>Free Doorstep Delivery</strong> (delivered within 48 to 72 hours). A standard delivery fee of ₹49 applies on orders below ₹500. For all other locations across Karnataka and India, orders are fulfilled via our official Flipkart store!</p>
         </div>
       </div>
     </div>
@@ -1012,7 +1063,7 @@
           <span class="brand-tagline">Traditional wood-pressed goodness.</span>
         </div>
         <p class="brand-desc">
-          Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.
+          Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore facility.
         </p>
         <div class="reg-badges">
           <div class="reg-item">
@@ -1083,12 +1134,12 @@
     <div class="footer-bottom">
       <div class="footer-bottom-inner">
         <span>© 2026 MANOPAVANA Oils. All rights reserved.</span>
-        <span>Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.</span>
+        <span>Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore facility.</span>
       </div>
     </div>
   </footer>
 
-  <!-- Complete Legal Modals with Full Disclosures -->
+  <!-- Legal Modals -->
   <div id="termsModal" class="modal-backdrop legal-backdrop">
     <div class="modal-card legal-modal-card">
       <div class="modal-header">
