@@ -1,6 +1,6 @@
 // ==========================================================================
 // MANOPAVANA - ARTISANAL WOOD-PRESSED OILS (BANGALORE)
-// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - MASTER FLIPKART ARCHITECTURE
+// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - MASTER MOBILE-SAFE FLIPKART
 // ==========================================================================
 
 (function () {
@@ -17,7 +17,7 @@
   const QR_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 Days
   const ADMIN_PIN = "1234";
 
-  // Default Bangalore Landmark Center (Vidhana Soudha corridor)
+  // Default Bangalore Center
   const DEFAULT_BANGALORE_COORDS = [12.9716, 77.5946];
 
   // Google Apps Script Proxy for PhonePe Online PG
@@ -49,16 +49,13 @@
     currentUser = null;
   }
 
-  let currentAuthMode = "login"; // "login" | "register" | "reset"
-  let countdownTimerInterval = null;
+  let currentAuthMode = "login";
   let currentCalculatedGrandTotal = 0;
   let currentOrderRef = "";
-  let checkoutSource = "cart"; // "cart" | "buynow" | "retry"
+  let checkoutSource = "cart";
   let buyNowItem = null;
   let retryOrderData = null;
-  let lastFailedOrderRef = "";
   let toastTimeoutTimer = null;
-  let addressTypingTimer = null;
 
   // Audio Engine State
   let isAudioPlaying = false;
@@ -73,7 +70,6 @@
   let userSelectedPincode = localStorage.getItem("manopavana_user_pincode") || "560058";
   let isBangalorePincode = userSelectedPincode.startsWith("560");
 
-  let activeBottleCode = localStorage.getItem("manopavana_bottle_code") || null;
   let bottleScanTimestampMs = localStorage.getItem("manopavana_bottle_scan_time")
     ? parseInt(localStorage.getItem("manopavana_bottle_scan_time"), 10)
     : null;
@@ -104,9 +100,7 @@
   let currentDetailSelectedSize = "1L";
 
   // Upfront Quiz State
-  let onboardingQuizAttemptsLeft = 2;
   let selectedQuizBottleKey = "groundnut";
-  let activeQuizData = null;
   let selectedQuizOptionText = null;
 
   const BOTTLE_QUIZ_POOLS = {
@@ -150,36 +144,13 @@
       rating: "4.8",
       ratingCount: "2,420 Ratings",
       shortDesc: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Unrefined and unbleached, retaining authentic aroma and high smoke-point performance.",
-      features: [
-        { icon: "🌾", label: "Aroma", val: "Naturally Nutty" },
-        { icon: "🫓", label: "Texture", val: "Light & Non-Sticky" },
-        { icon: "🍳", label: "Cooking", val: "Absorbs Less" }
-      ],
       specs: {
         "Extraction Method": "Traditional Wooden Marachekku (<45°C)",
         "Processing Type": "Unrefined, Unbleached & Non-Deodorized",
         "FSSAI License": "Reg. No. 21226008004689",
-        "Packaging Facility": "Bangalore Packaging & Distribution Facility",
-        "Container Type": "Food-Grade Shatterproof Bottle + Drip-Free Spout",
-        "Best For": "Daily Curries, Crispy Dosas, Deep Frying, Sautéing",
-        "Shelf Life": "9-12 Months (Store in cool, dark place)",
-        "Authenticity Standards": "Zero Mineral Oil, No Argemone, No Added Preservatives"
+        "Packaging Facility": "Bangalore Packaging Facility (Peenya 2nd Stage)",
+        "Shelf Life": "9-12 Months (Store in cool, dark place)"
       },
-      nutrition: [
-        { name: "Energy", val: "862.1 Kcal" },
-        { name: "Carbohydrates", val: "0.0 gm" },
-        { name: "Total Fat", val: "99.97 gm" },
-        { name: "Saturated Fat", val: "86.95 gm" },
-        { name: "Mono Unsaturated Fat", val: "6.48 gm" },
-        { name: "Poly Unsaturated Fat", val: "1.83 gm" },
-        { name: "Trans Fat", val: "0.0 gm" },
-        { name: "Cholesterol", val: "0.0 mg" },
-        { name: "Protein", val: "0.0 gm" },
-        { name: "Total Sugar", val: "0.0 gm" },
-        { name: "Dietary Fiber", val: "0.0 gm" },
-        { name: "Moisture", val: "0.05 %" },
-        { name: "Total Ash", val: "0.05 %" }
-      ],
       sizes: {
         "1L": { id: "groundnut-1l", price: 399, originalPrice: 480, badge: "1 Litre", title: "Wood-Pressed Groundnut Oil (1L)" },
         "500ml": { id: "groundnut-500ml", price: 189, originalPrice: 240, badge: "500 ml", title: "Wood-Pressed Groundnut Oil (500ml)" }
@@ -194,37 +165,13 @@
       gallery: createGallery("coconut", 11),
       rating: "4.9",
       ratingCount: "1,890 Ratings",
-      shortDesc: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Extracted from sulfur-free copra with wholesome MCTs.",
-      features: [
-        { icon: "🥥", label: "Aroma", val: "Fresh Copra Scent" },
-        { icon: "✨", label: "Extraction", val: "Slow Wood Chekku" },
-        { icon: "🌿", label: "Usage", val: "Edible & Multi-Use" }
-      ],
+      shortDesc: "Extracted from sulfur-free copra using traditional wooden pestles. Unrefined and packed fresh with natural wholesome MCTs.",
       specs: {
         "Extraction Method": "Traditional Wood Chekku (<40°C)",
         "Processing Type": "Raw, Unrefined & Natural Settling",
         "FSSAI License": "Reg. No. 21226008004689",
-        "Packaging Facility": "Bangalore Packaging & Distribution Facility",
-        "Container Type": "Food-Grade Shatterproof Bottle + Drip-Free Spout",
-        "Best For": "Coastal Curries, Kerala Avial, Vegetable Stew, Hair Care",
-        "Shelf Life": "9-12 Months",
-        "Authenticity Standards": "Zero Liquid Paraffin, No Added Aromas"
+        "Shelf Life": "9-12 Months"
       },
-      nutrition: [
-        { name: "Energy", val: "862.1 Kcal" },
-        { name: "Carbohydrates", val: "0.0 gm" },
-        { name: "Total Fat", val: "99.97 gm" },
-        { name: "Saturated Fat", val: "86.95 gm" },
-        { name: "Mono Unsaturated Fat", val: "6.48 gm" },
-        { name: "Poly Unsaturated Fat", val: "1.83 gm" },
-        { name: "Trans Fat", val: "0.0 gm" },
-        { name: "Cholesterol", val: "0.0 mg" },
-        { name: "Protein", val: "0.0 gm" },
-        { name: "Total Sugar", val: "0.0 gm" },
-        { name: "Dietary Fiber", val: "0.0 gm" },
-        { name: "Moisture", val: "0.05 %" },
-        { name: "Total Ash", val: "0.05 %" }
-      ],
       sizes: {
         "1L": { id: "coconut-1l", price: 499, originalPrice: 580, badge: "1 Litre", title: "Wood-Pressed Coconut Oil (1L)" },
         "500ml": { id: "coconut-500ml", price: 269, originalPrice: 320, badge: "500 ml", title: "Wood-Pressed Coconut Oil (500ml)" }
@@ -239,37 +186,12 @@
       gallery: createGallery("sesame", 11),
       rating: "4.7",
       ratingCount: "980 Ratings",
-      shortDesc: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Ground with pure palm jaggery for traditional nutty warmth.",
-      features: [
-        { icon: "🍯", label: "Aroma", val: "Chekku Scent" },
-        { icon: "🪵", label: "Process", val: "Slow Crushed" },
-        { icon: "☀", label: "Quality", val: "Unrefined Extraction" }
-      ],
+      shortDesc: "Ground slowly with pure palm jaggery in traditional wooden chekku for authentic warmth and rich South Indian culinary flavor.",
       specs: {
         "Extraction Method": "Slow Wooden Press with Palm Jaggery",
-        "Processing Type": "Unbleached, Natural Cloth Filtration",
         "FSSAI License": "Reg. No. 21226008004689",
-        "Packaging Facility": "Bangalore Packaging & Distribution Facility",
-        "Container Type": "Food-Grade Shatterproof Bottle + Drip-Free Spout",
-        "Best For": "Authentic Idli Podi, Puliogare, Rasam Tadka, Oil Pulling",
-        "Shelf Life": "9-12 Months",
-        "Authenticity Standards": "100% Sesame Extract, Zero Synthetic Fragrances"
+        "Shelf Life": "9-12 Months"
       },
-      nutrition: [
-        { name: "Energy", val: "884.3 Kcal" },
-        { name: "Carbohydrates", val: "0.0 gm" },
-        { name: "Total Fat", val: "99.96 gm" },
-        { name: "Saturated Fat", val: "13.9 gm" },
-        { name: "Poly Unsaturated Fat", val: "43.35 gm" },
-        { name: "Mono Unsaturated Fat", val: "42.11 gm" },
-        { name: "Trans Fat", val: "0.0 gm" },
-        { name: "Cholesterol", val: "0.0 mg" },
-        { name: "Protein", val: "0.0 gm" },
-        { name: "Total Sugar", val: "0.0 gm" },
-        { name: "Dietary Fiber", val: "0.0 gm" },
-        { name: "Moisture", val: "0.07 %" },
-        { name: "Total Ash", val: "0.03 %" }
-      ],
       sizes: {
         "1L": { id: "sesame-1l", price: 499, originalPrice: 590, badge: "1 Litre", title: "Wood-Pressed Sesame Oil (1L)" },
         "500ml": { id: "sesame-500ml", price: 269, originalPrice: 320, badge: "500 ml", title: "Wood-Pressed Sesame Oil (500ml)" }
@@ -281,25 +203,15 @@
     "combo-3l": {
       id: "combo-3l",
       title: "Complete 3-Oil Essential Box (3L Trio)",
-      volume: "3 Litres",
-      badgeText: "3 x 1 Litre Kitchen Trio",
-      headingText: "Complete Kitchen 3-Oil Essential Box (3 Litres)",
-      descText: "Equip your kitchen with South India's 3 core traditional wood-pressed oils. Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Includes 1L Groundnut Oil, 1L Coconut Oil, and 1L Sesame Oil.",
       price: 1299,
       originalPrice: 1397,
-      qrPrice: 1169,
       img: `${R2_PUBLIC_BASE_URL}/combo-all-labels.jpg`
     },
     "combo-15l": {
       id: "combo-15l",
       title: "Complete 3-Oil Starter Box (1.5L Trio)",
-      volume: "1.5 Litres",
-      badgeText: "3 x 500ml Kitchen Trio",
-      headingText: "Complete Kitchen 3-Oil Starter Box (1.5 Litres)",
-      descText: "Compact kitchen starter box containing 500ml Groundnut Oil, 500ml Coconut Oil, and 500ml Sesame Oil, packed fresh at our Bangalore packaging and distribution facility.",
       price: 699,
       originalPrice: 727,
-      qrPrice: 629,
       img: `${R2_PUBLIC_BASE_URL}/combo-all-labels.jpg`
     }
   };
@@ -325,34 +237,6 @@
       "Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam",
       "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta",
       "Thiruvananthapuram", "Thrissur", "Wayanad"
-    ],
-    "Andhra Pradesh": [
-      "Alluri Sitharama Raju", "Anakapalli", "Ananthapuramu", "Annamayya", "Bapatla",
-      "Chittoor", "Dr. B.R. Ambedkar Konaseema", "East Godavari", "Eluru", "Guntur",
-      "Kakinada", "Krishna", "Kurnool", "Nandyal", "NTR", "Palnadu",
-      "Parvathipuram Manyam", "Prakasam", "Sri Potti Sriramulu Nellore", "Sri Sathya Sai",
-      "Srikakulam", "Tirupati", "Visakhapatnam", "Vizianagaram", "West Godavari", "YSR Kadapa"
-    ],
-    "Telangana": [
-      "Adilabad", "Bhadradri Kothagudem", "Hanamkonda", "Hyderabad", "Jagtial",
-      "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar",
-      "Khammam", "Kumuram Bheem Asifabad", "Mahabubabad", "Mahabubnagar", "Mancherial",
-      "Medak", "Medchal-Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda",
-      "Narayanpet", "Nirmal", "Nizamabad", "Peddapalli", "Rajanna Sircilla",
-      "Rangareddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad",
-      "Wanaparthy", "Warangal", "Yadadri Bhuvanagiri"
-    ],
-    "Maharashtra": [
-      "Ahmednagar", "Akola", "Amravati", "Chhatrapati Sambhajinagar", "Beed", "Bhandara",
-      "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli",
-      "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban",
-      "Nagpur", "Nanded", "Nandurbar", "Nashik", "Dharashiv", "Palghar",
-      "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara",
-      "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal"
-    ],
-    "Delhi": [
-      "Central Delhi", "East Delhi", "New Delhi", "North Delhi", "North East Delhi",
-      "North West Delhi", "Shahdara", "South Delhi", "South East Delhi", "South West Delhi", "West Delhi"
     ]
   };
 
@@ -430,7 +314,7 @@
     toast.classList.add("show");
     toastTimeoutTimer = setTimeout(() => {
       toast.classList.remove("show");
-    }, 4000);
+    }, 3500);
   };
 
   function getFriendlyAuthErrorMessage(err) {
@@ -497,13 +381,13 @@
   }
 
   // ==========================================
-  // 6. AUDIO ENGINE & AUTOPLAY (MOBILE SAFE)
+  // 6. AUDIO ENGINE (GESTURE RESTORED)
   // ==========================================
   function tryImmediateAudioPlayback() {
     const audio = document.getElementById("heroBgAudio");
-    const btn = document.getElementById("soundToggleBtn");
     const icon = document.getElementById("soundIcon");
     const text = document.getElementById("soundText");
+    const btn = document.getElementById("soundToggleBtn");
     if (!audio) return;
 
     audio.volume = 1.0;
@@ -526,9 +410,9 @@
 
   function toggleAudio() {
     const audio = document.getElementById("heroBgAudio");
-    const btn = document.getElementById("soundToggleBtn");
     const icon = document.getElementById("soundIcon");
     const text = document.getElementById("soundText");
+    const btn = document.getElementById("soundToggleBtn");
     if (!audio) return;
 
     if (isAudioPlaying) {
@@ -550,19 +434,11 @@
   function initVideoAutoplay() {
     const heroVid = document.getElementById("heroVideo");
     const bottleVid = document.getElementById("bottleAutoplayVideo");
-    const fallback = document.getElementById("heroFallbackImage");
-
-    [heroVid, bottleVid].forEach(v => {
+    [heroVid, bottleVid].forEach((v) => {
       if (v) {
         v.muted = true;
-        v.loop = true;
         v.playsInline = true;
-        v.play().catch(() => {
-          if (v === heroVid && fallback) {
-            heroVid.style.display = "none";
-            fallback.style.display = "block";
-          }
-        });
+        v.play().catch(() => {});
       }
     });
   }
@@ -601,7 +477,7 @@
         });
       }
     } catch (err) {
-      console.error("Firebase init error:", err);
+      console.error("Firebase init:", err);
     }
     updateAuthUI();
   }
@@ -661,7 +537,7 @@
   window.handleAuthPillClick = function () {
     const dropdown = document.getElementById("authDropdownMenu");
     if (currentUser) {
-      if (dropdown) dropdown.classList.toggle("open");
+      dropdown?.classList.toggle("open");
     } else {
       window.openAuthModal("login");
     }
@@ -695,11 +571,6 @@
     const submitBtn = document.getElementById("btnAuthSubmit");
     const switchBtn = document.getElementById("btnAuthSwitchMode");
     const passGroup = document.getElementById("authPasswordGroup");
-    const errBox = document.getElementById("authErrorMsg");
-    const successBox = document.getElementById("authSuccessMsg");
-
-    if (errBox) errBox.style.display = "none";
-    if (successBox) successBox.style.display = "none";
 
     if (mode === "login") {
       if (sideTitle) sideTitle.textContent = "Login";
@@ -724,33 +595,13 @@
 
   window.handleEmailAuthSubmit = async function (e) {
     if (e && e.preventDefault) e.preventDefault();
-
     const email = document.getElementById("authEmail")?.value.trim();
     const password = document.getElementById("authPassword")?.value;
-    const errBox = document.getElementById("authErrorMsg");
-    const successBox = document.getElementById("authSuccessMsg");
     const submitBtn = document.getElementById("btnAuthSubmit");
+    const errBox = document.getElementById("authErrorMsg");
 
     if (errBox) errBox.style.display = "none";
-    if (successBox) successBox.style.display = "none";
-
-    if (!email) {
-      if (errBox) { errBox.textContent = "Please enter an email address."; errBox.style.display = "block"; }
-      return;
-    }
-
-    if (currentAuthMode === "reset") {
-      try {
-        await authInstance.sendPasswordResetEmail(email);
-        if (successBox) {
-          successBox.textContent = "Password reset instructions sent to your inbox.";
-          successBox.style.display = "block";
-        }
-      } catch (err) {
-        if (errBox) { errBox.textContent = getFriendlyAuthErrorMessage(err); errBox.style.display = "block"; }
-      }
-      return;
-    }
+    if (!email) return;
 
     if (submitBtn) {
       submitBtn.disabled = true;
@@ -759,17 +610,16 @@
 
     try {
       if (currentAuthMode === "login") {
-        const userCred = await authInstance.signInWithEmailAndPassword(email, password);
-        const name = userCred.user.displayName || userCred.user.email.split("@")[0];
-        await syncCustomerRecord(userCred.user, { name, email }, false);
+        await authInstance.signInWithEmailAndPassword(email, password);
         window.closeAuthModal();
-        window.showActionToast("Signed In", `Welcome back, ${name}!`, "👋", "success");
+        window.showActionToast("Signed In", "Welcome back!", "👋", "success");
       } else if (currentAuthMode === "register") {
-        const userCred = await authInstance.createUserWithEmailAndPassword(email, password);
-        const name = userCred.user.email.split("@")[0];
-        await syncCustomerRecord(userCred.user, { name, email }, true);
+        await authInstance.createUserWithEmailAndPassword(email, password);
         window.closeAuthModal();
-        window.showActionToast("Account Created", `Welcome to MANOPAVANA, ${name}!`, "🎉", "success");
+        window.showActionToast("Account Created", "Welcome to MANOPAVANA!", "🎉", "success");
+      } else if (currentAuthMode === "reset") {
+        await authInstance.sendPasswordResetEmail(email);
+        window.showActionToast("Email Sent", "Reset instructions sent to your inbox.", "✉", "info");
       }
     } catch (err) {
       if (errBox) {
@@ -785,35 +635,22 @@
   };
 
   window.handleGoogleSignIn = async function () {
-    const errBox = document.getElementById("authErrorMsg");
     try {
-      const result = await authInstance.signInWithPopup(googleAuthProvider);
-      const user = result.user;
-      const isNewUser = !!(result.additionalUserInfo && result.additionalUserInfo.isNewUser);
-      const name = user.displayName || user.email.split("@")[0];
-
-      await syncCustomerRecord(user, { name, email: user.email }, isNewUser);
+      await authInstance.signInWithPopup(googleAuthProvider);
       window.closeAuthModal();
-      window.showActionToast(isNewUser ? "Account Created" : "Signed In", `Welcome, ${name}!`, "👋", "success");
+      window.showActionToast("Signed In", "Google Sign-In successful.", "👋", "success");
     } catch (err) {
-      if (errBox) {
-        errBox.textContent = getFriendlyAuthErrorMessage(err);
-        errBox.style.display = "block";
-      }
+      window.showActionToast("Notice", getFriendlyAuthErrorMessage(err), "⚠️", "error");
     }
   };
 
   window.handleSignOut = async function () {
-    const dropdown = document.getElementById("authDropdownMenu");
-    if (dropdown) dropdown.classList.remove("open");
-    if (authInstance) {
-      try { await authInstance.signOut(); } catch (e) {}
-    }
+    if (authInstance) await authInstance.signOut();
     currentUser = null;
     localStorage.removeItem("manopavana_active_user");
     updateAuthUI();
     window.closeAccountDashboard();
-    window.showActionToast("Logged Out", "You have successfully signed out.", "👋", "info");
+    window.showActionToast("Logged Out", "Signed out successfully.", "👋", "info");
   };
 
   document.addEventListener("click", (e) => {
@@ -825,7 +662,7 @@
   });
 
   // ==========================================
-  // 8. USER DASHBOARD & ORDERS
+  // 8. USER DASHBOARD & HISTORY
   // ==========================================
   window.openAccountDashboard = function (initialTab = "orders") {
     if (!currentUser) {
@@ -849,25 +686,22 @@
   };
 
   window.switchDashboardView = function (view) {
-    const tabOrders = document.getElementById("tabDashOrders");
-    const tabProfile = document.getElementById("tabDashProfile");
-    const tabAddresses = document.getElementById("tabDashAddresses");
-
-    const viewOrders = document.getElementById("dashOrdersView");
-    const viewProfile = document.getElementById("dashProfileView");
-    const viewAddresses = document.getElementById("dashAddressesView");
-
-    tabOrders?.classList.toggle("active", view === "orders");
-    tabProfile?.classList.toggle("active", view === "profile");
-    tabAddresses?.classList.toggle("active", view === "addresses");
-
-    if (viewOrders) viewOrders.style.display = view === "orders" ? "block" : "none";
-    if (viewProfile) viewProfile.style.display = view === "profile" ? "block" : "none";
-    if (viewAddresses) viewAddresses.style.display = view === "addresses" ? "block" : "none";
+    document.querySelectorAll(".fk-tab-btn").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".fk-tab-content").forEach((c) => (c.style.display = "none"));
 
     if (view === "orders") {
+      document.getElementById("tabDashOrders")?.classList.add("active");
+      const orderView = document.getElementById("dashOrdersView");
+      if (orderView) orderView.style.display = "block";
       fetchUserOrdersHistory();
+    } else if (view === "profile") {
+      document.getElementById("tabDashProfile")?.classList.add("active");
+      const profView = document.getElementById("dashProfileView");
+      if (profView) profView.style.display = "block";
     } else if (view === "addresses") {
+      document.getElementById("tabDashAddresses")?.classList.add("active");
+      const addrView = document.getElementById("dashAddressesView");
+      if (addrView) addrView.style.display = "block";
       loadSavedDeliveryDetails();
     }
   };
@@ -875,56 +709,44 @@
   async function fetchUserOrdersHistory() {
     const loading = document.getElementById("dashOrdersLoading");
     const list = document.getElementById("dashOrdersList");
-
     if (loading) loading.style.display = "block";
     if (list) list.style.display = "none";
 
     if (db && currentUser) {
       try {
-        const snap = await db.collection("orders")
-          .where("firebaseUid", "==", currentUser.uid)
-          .get();
-
+        const snap = await db.collection("orders").where("firebaseUid", "==", currentUser.uid).get();
         if (loading) loading.style.display = "none";
-
         if (!snap.empty) {
           const orders = [];
-          snap.forEach(d => orders.push(d.data()));
+          snap.forEach((d) => orders.push(d.data()));
           orders.sort((a, b) => (b.timestampMs || 0) - (a.timestampMs || 0));
-          list.innerHTML = renderOrdersTimelineList(orders);
+          list.innerHTML = orders
+            .map(
+              (o) => `
+            <div style="background:#1a202c; border:1px solid #2d3748; padding:1rem; border-radius:4px; margin-bottom:0.8rem;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+                <strong>Order #${escapeHtml(o.orderRef)}</strong>
+                <span style="color:#48bb78; font-weight:800;">₹${escapeHtml(o.grandTotal)}</span>
+              </div>
+              <div style="font-size:0.84rem; color:#cbd5e0;">Items: ${escapeHtml(o.items)}</div>
+              <div style="font-size:0.75rem; color:#a0aec0; margin-top:0.3rem;">Status: ${escapeHtml(o.orderStatus || "Placed")}</div>
+            </div>
+          `
+            )
+            .join("");
           list.style.display = "block";
           return;
         }
-      } catch (err) {
-        console.warn("Orders fetch notice:", err);
+      } catch (e) {
+        console.warn("Orders fetch notice:", e);
       }
     }
 
     if (loading) loading.style.display = "none";
     if (list) {
-      list.innerHTML = `<div style="text-align:center; padding:2rem; color:#a0aec0;">No orders found yet. Select pure wood-pressed oils to order!</div>`;
+      list.innerHTML = `<div style="text-align:center; padding:2rem; color:#a0aec0;">No past orders found.</div>`;
       list.style.display = "block";
     }
-  }
-
-  function renderOrdersTimelineList(orders) {
-    return orders.map((order) => {
-      return `
-        <div class="history-order-card" style="background:#1a202c; border:1px solid #2d3748; padding:1.2rem; border-radius:4px; margin-bottom:1rem;">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #2d3748; padding-bottom:0.5rem; margin-bottom:0.6rem;">
-            <strong>Order #${escapeHtml(order.orderRef)}</strong>
-            <span style="color:#48bb78; font-weight:800; font-size:0.85rem;">₹${escapeHtml(order.grandTotal)}</span>
-          </div>
-          <div style="font-size:0.85rem; color:#cbd5e0; margin-bottom:0.5rem;">
-            <strong>Items:</strong> ${escapeHtml(order.items)}
-          </div>
-          <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#a0aec0;">
-            <span>Status: <strong style="color:#63b3ed;">${escapeHtml(order.orderStatus || "Placed")}</strong></span>
-            <span>${escapeHtml(order.timestamp || "Recent")}</span>
-          </div>
-        </div>
-      `;
-    }).join("");
   }
 
   // ==========================================
@@ -941,11 +763,10 @@
 
       const card = document.createElement("div");
       card.className = "product-card";
-
       card.innerHTML = `
         <span class="card-badge">PURE CHEKKU</span>
         <div class="card-image-wrap" onclick="openProductDetailModal('${key}')">
-          <img src="${p.img}" alt="${escapeHtml(p.name)}" onerror="this.src='https://placehold.co/300x320/1a202c/fff?text=Oil+Bottle'" />
+          <img src="${p.img}" alt="${escapeHtml(p.name)}" />
         </div>
         <h3 class="card-title-clickable" onclick="openProductDetailModal('${key}')">${escapeHtml(p.name)} (1L)</h3>
         
@@ -990,9 +811,13 @@
 
     if (!modal || !body || !p) return;
 
-    const thumbHTML = p.gallery.map((src, i) => `
-      <img src="${src}" class="fk-thumb ${i === 0 ? 'active' : ''}" onclick="switchDetailMainImage('${src}', this)" alt="Thumb" />
-    `).join("");
+    const thumbHTML = p.gallery
+      .map(
+        (src, i) => `
+      <img src="${src}" class="fk-thumb ${i === 0 ? "active" : ""}" onclick="switchDetailMainImage('${src}', this)" alt="Thumb" />
+    `
+      )
+      .join("");
 
     body.innerHTML = `
       <div class="fk-detail-split">
@@ -1000,9 +825,7 @@
           <div class="fk-main-image-viewer">
             <img src="${p.gallery[0]}" id="fkDetailMainImg" alt="${escapeHtml(p.name)}" />
           </div>
-          <div class="fk-thumbnail-row">
-            ${thumbHTML}
-          </div>
+          <div class="fk-thumbnail-row">${thumbHTML}</div>
           <div class="fk-gallery-actions">
             <button type="button" class="btn-fk-yellow" onclick="handleDirectAdd('${sizeData.id}', '${escapeHtml(sizeData.title)}', ${sizeData.price}, '${p.img}')">
               ADD TO CART
@@ -1023,23 +846,14 @@
           <div class="fk-pricing-row">
             <span class="fk-current-price" id="detailPriceVal">₹${sizeData.price}</span>
             <span class="fk-original-price" id="detailOrigPriceVal">₹${sizeData.originalPrice}</span>
-            <span class="fk-discount-percent">Save ₹${sizeData.originalPrice - sizeData.price}</span>
           </div>
 
           <div class="fk-variant-box">
             <label>Select Size / Quantity:</label>
             <div class="fk-size-pills">
-              <button type="button" class="fk-size-btn ${currentDetailSelectedSize === '1L' ? 'active' : ''}" onclick="selectModalVariantSize('1L')">1 Litre</button>
-              <button type="button" class="fk-size-btn ${currentDetailSelectedSize === '500ml' ? 'active' : ''}" onclick="selectModalVariantSize('500ml')">500 ml</button>
+              <button type="button" class="fk-size-btn ${currentDetailSelectedSize === "1L" ? "active" : ""}" onclick="selectModalVariantSize('1L')">1 Litre</button>
+              <button type="button" class="fk-size-btn ${currentDetailSelectedSize === "500ml" ? "active" : ""}" onclick="selectModalVariantSize('500ml')">500 ml</button>
             </div>
-          </div>
-
-          <div class="fk-offers-box">
-            <h4>Available Offers</h4>
-            <ul>
-              <li>🏷️ <strong>Partner Offer:</strong> Claim 10% OFF on all repeat orders by scanning our physical bottle badge.</li>
-              <li>🚚 <strong>Fast Doorstep Delivery:</strong> Free shipping across Bangalore on orders above ₹500.</li>
-            </ul>
           </div>
 
           <p style="color:#cbd5e0; font-size:0.9rem; line-height:1.6; margin-bottom:1rem;">
@@ -1048,7 +862,9 @@
 
           <table class="fk-spec-table">
             <tbody>
-              ${Object.entries(p.specs).map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join("")}
+              ${Object.entries(p.specs)
+                .map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`)
+                .join("")}
             </tbody>
           </table>
         </div>
@@ -1070,7 +886,7 @@
   window.switchDetailMainImage = function (src, el) {
     const mainImg = document.getElementById("fkDetailMainImg");
     if (mainImg) mainImg.src = src;
-    document.querySelectorAll(".fk-thumb").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".fk-thumb").forEach((t) => t.classList.remove("active"));
     if (el) el.classList.add("active");
   };
 
@@ -1080,25 +896,25 @@
     if (!p) return;
     const sizeData = p.sizes[size];
 
-    document.getElementById("detailPriceVal").textContent = `₹${sizeData.price}`;
-    document.getElementById("detailOrigPriceVal").textContent = `₹${sizeData.originalPrice}`;
+    const priceEl = document.getElementById("detailPriceVal");
+    const origPriceEl = document.getElementById("detailOrigPriceVal");
+    if (priceEl) priceEl.textContent = `₹${sizeData.price}`;
+    if (origPriceEl) origPriceEl.textContent = `₹${sizeData.originalPrice}`;
 
-    document.querySelectorAll(".fk-size-btn").forEach(btn => {
+    document.querySelectorAll(".fk-size-btn").forEach((btn) => {
       btn.classList.toggle("active", btn.textContent.includes(size));
     });
   };
 
   window.handleCatalogSearch = function (query) {
     const cleanQ = (query || "").toLowerCase().trim();
-    const cards = document.querySelectorAll("#productGridContainer .product-card");
-    cards.forEach(card => {
-      const text = card.textContent.toLowerCase();
-      card.style.display = text.includes(cleanQ) ? "flex" : "none";
+    document.querySelectorAll("#productGridContainer .product-card").forEach((card) => {
+      card.style.display = card.textContent.toLowerCase().includes(cleanQ) ? "flex" : "none";
     });
   };
 
   // ==========================================
-  // 10. CART & CHECKOUT MANAGEMENT
+  // 10. CART & CHECKOUT
   // ==========================================
   function saveCart() {
     localStorage.setItem("manopavana_cart", JSON.stringify(cart));
@@ -1120,7 +936,7 @@
       window.openFlipkartModal();
       return;
     }
-    const match = cart.find(i => i.id === id);
+    const match = cart.find((i) => i.id === id);
     if (match) {
       match.quantity += 1;
     } else {
@@ -1156,18 +972,20 @@
   window.selectComboVariant = function (key) {
     currentSelectedComboKey = key;
     const combo = COMBO_CATALOG[key];
-    document.getElementById("comboCurrentPrice").textContent = `₹${combo.price}`;
-    document.getElementById("comboOriginalPrice").textContent = `₹${combo.originalPrice}`;
+    const currPrice = document.getElementById("comboCurrentPrice");
+    const origPrice = document.getElementById("comboOriginalPrice");
+    if (currPrice) currPrice.textContent = `₹${combo.price}`;
+    if (origPrice) origPrice.textContent = `₹${combo.originalPrice}`;
     document.getElementById("btnCombo3L")?.classList.toggle("active", key === "combo-3l");
     document.getElementById("btnCombo15L")?.classList.toggle("active", key === "combo-15l");
   };
 
   window.updateQuantity = function (id, delta) {
-    const item = cart.find(i => i.id === id);
+    const item = cart.find((i) => i.id === id);
     if (item) {
       item.quantity += delta;
       if (item.quantity <= 0) {
-        cart = cart.filter(i => i.id !== id);
+        cart = cart.filter((i) => i.id !== id);
       }
     }
     saveCart();
@@ -1178,24 +996,33 @@
     const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
 
     let discountAmount = 0;
-    const isLoyal = bottleScanTimestampMs && (Date.now() - bottleScanTimestampMs < QR_EXPIRY_MS);
+    const isLoyal = bottleScanTimestampMs && Date.now() - bottleScanTimestampMs < QR_EXPIRY_MS;
+    const discountRow = document.getElementById("discountRow");
+    const cartDiscount = document.getElementById("cartDiscount");
+
     if (isLoyal && subtotal > 0) {
       discountAmount = Math.round((subtotal * REORDER_DISCOUNT_PERCENT) / 100);
-      document.getElementById("discountRow").style.display = "flex";
-      document.getElementById("cartDiscount").textContent = `-₹${discountAmount}`;
+      if (discountRow) discountRow.style.display = "flex";
+      if (cartDiscount) cartDiscount.textContent = `-₹${discountAmount}`;
     } else {
-      document.getElementById("discountRow").style.display = "none";
+      if (discountRow) discountRow.style.display = "none";
     }
 
     const discounted = subtotal - discountAmount;
     const deliveryFee = totalCount > 0 ? (discounted >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_DELIVERY_FEE) : 0;
     const grandTotal = discounted + deliveryFee;
 
-    document.getElementById("cartCountBadge").textContent = totalCount;
-    document.getElementById("cartTotalItems").textContent = totalCount;
-    document.getElementById("cartSubtotal").textContent = `₹${subtotal}`;
-    document.getElementById("cartDeliveryCharge").textContent = deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`;
-    document.getElementById("cartGrandTotal").textContent = `₹${grandTotal}`;
+    const countBadge = document.getElementById("cartCountBadge");
+    const totalItems = document.getElementById("cartTotalItems");
+    const cartSub = document.getElementById("cartSubtotal");
+    const deliveryCharge = document.getElementById("cartDeliveryCharge");
+    const cartGrand = document.getElementById("cartGrandTotal");
+
+    if (countBadge) countBadge.textContent = totalCount;
+    if (totalItems) totalItems.textContent = totalCount;
+    if (cartSub) cartSub.textContent = `₹${subtotal}`;
+    if (deliveryCharge) deliveryCharge.textContent = deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`;
+    if (cartGrand) cartGrand.textContent = `₹${grandTotal}`;
 
     const list = document.getElementById("cartItemsList");
     if (!list) return;
@@ -1205,7 +1032,9 @@
       return;
     }
 
-    list.innerHTML = cart.map(i => `
+    list.innerHTML = cart
+      .map(
+        (i) => `
       <div class="cart-item">
         <img src="${i.img}" class="cart-item-thumb" alt="${escapeHtml(i.title)}" />
         <div style="flex:1;">
@@ -1218,7 +1047,9 @@
           </div>
         </div>
       </div>
-    `).join("");
+    `
+      )
+      .join("");
   }
 
   function promptLoginOrOpenCheckout() {
@@ -1238,7 +1069,9 @@
     if (modal) {
       modal.classList.add("open");
       document.body.classList.add("modal-open");
-      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 300);
+      setTimeout(() => {
+        if (leafletMap) leafletMap.invalidateSize();
+      }, 250);
     }
   }
 
@@ -1264,7 +1097,7 @@
         ORDER SUMMARY (${items.length} Items)
       </div>
       <div>
-        ${items.map(i => `<div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.3rem;"><span>${i.title} (x${i.quantity})</span><span>₹${i.price * i.quantity}</span></div>`).join("")}
+        ${items.map((i) => `<div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.3rem;"><span>${escapeHtml(i.title)} (x${i.quantity})</span><span>₹${i.price * i.quantity}</span></div>`).join("")}
       </div>
       <div style="border-top:1px dashed rgba(255,255,255,0.1); padding-top:0.4rem; display:flex; justify-content:space-between; font-weight:800; color:#eab308;">
         <span>Total Payable</span>
@@ -1284,15 +1117,12 @@
     const address = document.getElementById("custAddress")?.value.trim();
     const city = document.getElementById("custCity")?.value.trim() || "Bengaluru";
     const pincode = document.getElementById("custPincode")?.value.trim();
-    const state = document.getElementById("custState")?.value.trim() || "Karnataka";
-    const district = document.getElementById("custDistrict")?.value.trim() || "Bengaluru Urban";
     const lat = document.getElementById("custLatitude")?.value || DEFAULT_BANGALORE_COORDS[0];
     const lng = document.getElementById("custLongitude")?.value || DEFAULT_BANGALORE_COORDS[1];
     const chkSave = document.getElementById("chkSaveAddress")?.checked;
-    const errBox = document.getElementById("formError");
 
     if (!name || phone.length < 10 || !address || pincode.length !== 6) {
-      if (errBox) { errBox.textContent = "Please fill in all mandatory address fields."; errBox.style.display = "block"; }
+      window.showActionToast("Incomplete Address", "Please fill in all mandatory delivery address fields.", "⚠️", "error");
       return;
     }
 
@@ -1302,14 +1132,29 @@
     }
 
     if (chkSave) {
-      localStorage.setItem("manopavana_saved_delivery", JSON.stringify({
-        name, phone, address, city, pincode, state, district, latitude: lat, longitude: lng
-      }));
+      localStorage.setItem(
+        "manopavana_saved_delivery",
+        JSON.stringify({
+          name,
+          phone,
+          address,
+          city,
+          pincode,
+          latitude: lat,
+          longitude: lng
+        })
+      );
     }
 
-    const paymentMode = document.getElementById("payPhonePe")?.checked ? "PHONEPE" : (document.getElementById("payCOD")?.checked ? "COD" : "WHATSAPP");
+    const paymentMode = document.getElementById("payPhonePe")?.checked
+      ? "PHONEPE"
+      : document.getElementById("payCOD")?.checked
+      ? "COD"
+      : "WHATSAPP";
     const sanitizedOrderRef = currentOrderRef.replace(/[^a-zA-Z0-9_-]/g, "").substring(0, 35);
-    const itemsSummary = (checkoutSource === "buynow" && buyNowItem ? [buyNowItem] : cart).map(i => `${i.title} (x${i.quantity})`).join(", ");
+    const itemsSummary = (checkoutSource === "buynow" && buyNowItem ? [buyNowItem] : cart)
+      .map((i) => `${i.title} (x${i.quantity})`)
+      .join(", ");
 
     const orderPayload = {
       orderRef: sanitizedOrderRef,
@@ -1323,7 +1168,12 @@
       grandTotal: currentCalculatedGrandTotal.toString(),
       paymentMode: paymentMode,
       orderStatus: paymentMode === "PHONEPE" ? "Payment Pending" : "Placed",
-      timestamp: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+      timestamp: new Date().toLocaleDateString("en-IN", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      }),
       timestampMs: Date.now()
     };
 
@@ -1331,7 +1181,7 @@
       try {
         await db.collection("orders").doc(sanitizedOrderRef).set(orderPayload);
       } catch (e) {
-        console.warn("Firestore order sync warning:", e);
+        console.warn("Firestore save fallback:", e);
       }
     }
 
@@ -1349,7 +1199,7 @@
       if (response && response.status === "SUCCESS" && response.redirectUrl) {
         window.location.href = response.redirectUrl;
       } else {
-        alert("Unable to reach PhonePe gateway. Please choose Cash on Delivery.");
+        window.showActionToast("Payment Notice", "Payment Gateway unreachable. Please choose Cash on Delivery.", "⚠️", "error");
       }
     } else {
       window.closeCheckoutModal();
@@ -1366,8 +1216,8 @@
     const box = document.getElementById("confirmReceiptDetails");
     if (box) {
       box.innerHTML = `
-        <div><strong>Order Reference:</strong> #${details.orderRef}</div>
-        <div><strong>Payment Mode:</strong> ${details.paymentMode}</div>
+        <div><strong>Order Reference:</strong> #${escapeHtml(details.orderRef)}</div>
+        <div><strong>Payment Mode:</strong> ${escapeHtml(details.paymentMode)}</div>
         <div style="color:#48bb78; font-weight:700;">Delivering to Bangalore in 48–72 Hours</div>
       `;
     }
@@ -1388,7 +1238,7 @@
   };
 
   // ==========================================
-  // 11. LEAFLET MAP & LOCATION INTEGRATION
+  // 11. LEAFLET MAP & LOCATION
   // ==========================================
   function initOrUpdateDeliveryMap(lat = DEFAULT_BANGALORE_COORDS[0], lng = DEFAULT_BANGALORE_COORDS[1]) {
     const el = document.getElementById("deliveryMap");
@@ -1401,19 +1251,12 @@
       mapMarker.on("dragend", (e) => {
         const p = e.target.getLatLng();
         setMapCoords(p.lat, p.lng);
-        reverseGeocode(p.lat, p.lng);
-      });
-      leafletMap.on("click", (e) => {
-        mapMarker.setLatLng(e.latlng);
-        setMapCoords(e.latlng.lat, e.latlng.lng);
-        reverseGeocode(e.latlng.lat, e.latlng.lng);
       });
     } else {
       leafletMap.setView([lat, lng], 14);
       if (mapMarker) mapMarker.setLatLng([lat, lng]);
     }
     setMapCoords(lat, lng);
-    setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 250);
   }
 
   function initOrUpdateOnboardingMap(lat = DEFAULT_BANGALORE_COORDS[0], lng = DEFAULT_BANGALORE_COORDS[1]) {
@@ -1428,15 +1271,10 @@
         const p = e.target.getLatLng();
         reverseGeocode(p.lat, p.lng);
       });
-      onboardingLeafletMap.on("click", (e) => {
-        onboardingMapMarker.setLatLng(e.latlng);
-        reverseGeocode(e.latlng.lat, e.latlng.lng);
-      });
     } else {
       onboardingLeafletMap.setView([lat, lng], 14);
       if (onboardingMapMarker) onboardingMapMarker.setLatLng([lat, lng]);
     }
-    setTimeout(() => { if (onboardingLeafletMap) onboardingLeafletMap.invalidateSize(); }, 250);
   }
 
   function setMapCoords(lat, lng) {
@@ -1449,30 +1287,27 @@
   }
 
   window.detectUserGeolocation = function (isOnboarding = false) {
-    if (!navigator.geolocation) {
-      window.showActionToast("Location Notice", "Geolocation not supported by browser.", "📍", "info");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition((pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      if (isOnboarding) {
-        initOrUpdateOnboardingMap(lat, lng);
-      } else {
-        initOrUpdateDeliveryMap(lat, lng);
-      }
-      reverseGeocode(lat, lng);
-      window.showActionToast("Location Found", "GPS doorstep pinned successfully.", "✅", "success");
-    }, () => {
-      window.showActionToast("Notice", "Could not fetch GPS. Please tap or drag marker on map.", "📍", "info");
-    }, { timeout: 12000, enableHighAccuracy: false });
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        if (isOnboarding) {
+          initOrUpdateOnboardingMap(lat, lng);
+        } else {
+          initOrUpdateDeliveryMap(lat, lng);
+        }
+        reverseGeocode(lat, lng);
+      },
+      () => {},
+      { timeout: 10000, enableHighAccuracy: false }
+    );
   };
 
   function reverseGeocode(lat, lng) {
     fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-      .then(r => r.json())
-      .then(d => {
+      .then((r) => r.json())
+      .then((d) => {
         if (d && d.address) {
           const pin = d.address.postcode || "";
           if (pin && /^\d{6}$/.test(pin)) {
@@ -1481,18 +1316,17 @@
             localStorage.setItem("manopavana_user_pincode", pin);
             updateLocationUI();
           }
-          const addr = document.getElementById("custAddress");
-          if (addr && !addr.value && d.display_name) {
-            addr.value = d.display_name.split(",").slice(0, 3).join(", ");
-          }
         }
-      }).catch(() => {});
+      })
+      .catch(() => {});
   }
 
   function loadSavedDeliveryDetails() {
     let saved = null;
-    try { saved = JSON.parse(localStorage.getItem("manopavana_saved_delivery")); } catch (e) {}
-    
+    try {
+      saved = JSON.parse(localStorage.getItem("manopavana_saved_delivery"));
+    } catch (e) {}
+
     const summaryCard = document.getElementById("savedAddressSummaryCard");
     const fieldsContainer = document.getElementById("deliveryFieldsContainer");
     const dashName = document.getElementById("dashAddrName");
@@ -1580,23 +1414,37 @@
   window.selectOnboardingQuizBottle = function (key) {
     selectedQuizBottleKey = key;
     const q = BOTTLE_QUIZ_POOLS[key][0];
-    document.getElementById("onboardQuizHintText").textContent = q.hint;
-    document.getElementById("onboardQuizQuestionText").textContent = q.question;
+    const hintText = document.getElementById("onboardQuizHintText");
+    const qTitle = document.getElementById("onboardQuizQuestionText");
+
+    if (hintText) hintText.textContent = q.hint;
+    if (qTitle) qTitle.textContent = q.question;
+
+    const distractors = [
+      "Extracted using industrial chemical solvents",
+      "Refined, bleached, and chemically deodorized",
+      "Blended with mineral liquid paraffin"
+    ];
 
     const options = [
       { text: q.correct, correct: true },
-      { text: "Chemically refined with industrial hexane solvents", correct: false },
-      { text: "Blended with mineral liquid paraffin", correct: false }
+      { text: distractors[0], correct: false },
+      { text: distractors[1], correct: false }
     ].sort(() => Math.random() - 0.5);
 
-    activeQuizData = { correct: q.correct };
-
-    document.getElementById("onboardQuizOptionsContainer").innerHTML = options.map((opt, i) => `
-      <label class="quiz-option-card" onclick="window.chooseQuizOpt('${escapeHtml(opt.text)}')">
-        <input type="radio" name="bottleRadio" />
-        <span>${escapeHtml(opt.text)}</span>
-      </label>
-    `).join("");
+    const container = document.getElementById("onboardQuizOptionsContainer");
+    if (container) {
+      container.innerHTML = options
+        .map(
+          (opt) => `
+        <label class="quiz-option-card" onclick="window.chooseQuizOpt('${escapeHtml(opt.text)}')">
+          <input type="radio" name="bottleRadio" />
+          <span>${escapeHtml(opt.text)}</span>
+        </label>
+      `
+        )
+        .join("");
+    }
   };
 
   window.chooseQuizOpt = function (text) {
@@ -1604,15 +1452,26 @@
   };
 
   window.submitOnboardingBottleQuiz = function () {
-    if (selectedQuizOptionText === activeQuizData.correct) {
+    const q = BOTTLE_QUIZ_POOLS[selectedQuizBottleKey][0];
+    if (selectedQuizOptionText === q.correct) {
       bottleScanTimestampMs = Date.now();
       localStorage.setItem("manopavana_bottle_scan_time", bottleScanTimestampMs.toString());
       renderCart();
       window.closeBottleQuizModal();
       window.showActionToast("Discount Unlocked", "10% Bottle Reorder Discount Active!", "🎉", "success");
     } else {
-      alert("Option does not match your physical bottle label.");
+      window.showActionToast("Incorrect Selection", "Option does not match your physical bottle label.", "⚠️", "error");
     }
+  };
+
+  window.openFlipkartModal = function () {
+    document.getElementById("flipkartModalBackdrop")?.classList.add("open");
+    document.body.classList.add("modal-open");
+  };
+
+  window.closeFlipkartModal = function () {
+    document.getElementById("flipkartModalBackdrop")?.classList.remove("open");
+    document.body.classList.remove("modal-open");
   };
 
   window.openLegalModal = function (id) {
@@ -1626,7 +1485,7 @@
   };
 
   // ==========================================
-  // 13. DOM INITIALIZATION
+  // 13. INITIALIZATION & GESTURE AUDIOPLAY
   // ==========================================
   document.addEventListener("DOMContentLoaded", () => {
     initFirebaseAuth();
@@ -1679,7 +1538,11 @@
         rating,
         location,
         comment,
-        date: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })
+        date: new Date().toLocaleDateString("en-IN", {
+          month: "short",
+          day: "numeric",
+          year: "numeric"
+        })
       });
 
       localStorage.setItem("manopavana_user_reviews", JSON.stringify(reviewsList));
