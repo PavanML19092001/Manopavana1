@@ -1,6 +1,6 @@
 // ==========================================================================
 // MANOPAVANA - ARTISANAL WOOD-PRESSED OILS (BANGALORE)
-// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - LOCATION-FIRST & FIRESTORE DIRECT
+// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - MASTER FLIPKART ARCHITECTURE
 // ==========================================================================
 
 (function () {
@@ -20,7 +20,7 @@
   // Default Bangalore Landmark Center (Vidhana Soudha corridor)
   const DEFAULT_BANGALORE_COORDS = [12.9716, 77.5946];
 
-  // Google Apps Script Web App Deployment URL (Stateless PhonePe v2 Gateway Proxy)
+  // Google Apps Script Proxy for PhonePe Online PG
   const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbyQ-8w0XmfJiBUm8fg_W3kBQ7XSXJTftmc6I7188L25N_dwWCKDtYwnpRJTcCii70U-/exec";
 
   // Active Firebase Configuration
@@ -39,7 +39,7 @@
   // ==========================================
   let authInstance = null;
   let googleAuthProvider = null;
-  let db = null; // Cloud Firestore Instance
+  let db = null;
   let firebaseInitialized = false;
 
   let currentUser = null;
@@ -63,6 +63,8 @@
   // Leaflet Map & Marker Instances
   let leafletMap = null;
   let mapMarker = null;
+  let onboardingLeafletMap = null;
+  let onboardingMapMarker = null;
 
   let userSelectedPincode = localStorage.getItem("manopavana_user_pincode") || "560058";
   let isBangalorePincode = userSelectedPincode.startsWith("560");
@@ -97,7 +99,7 @@
   let currentDetailProductKey = null;
   let currentDetailSelectedSize = "1L";
 
-  // Bottle Quiz State
+  // Upfront Quiz State
   let onboardingQuizAttemptsLeft = 2;
   let selectedQuizBottleKey = "groundnut";
   let activeQuizData = null;
@@ -141,6 +143,8 @@
       bgClass: "oil-groundnut",
       img: `${R2_PUBLIC_BASE_URL}/groundnut-1.png`,
       gallery: createGallery("groundnut", 11),
+      rating: "4.8",
+      ratingCount: "2,420 Ratings",
       shortDesc: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Unrefined and unbleached, retaining authentic aroma and high smoke-point performance.",
       features: [
         { icon: "🌾", label: "Aroma", val: "Naturally Nutty" },
@@ -173,8 +177,8 @@
         { name: "Total Ash", val: "0.05 %" }
       ],
       sizes: {
-        "1L": { id: "groundnut-1l", price: 399, badge: "1 Litre", title: "Wood-Pressed Groundnut Oil (1L)" },
-        "500ml": { id: "groundnut-500ml", price: 189, badge: "500 ml", title: "Wood-Pressed Groundnut Oil (500ml)" }
+        "1L": { id: "groundnut-1l", price: 399, originalPrice: 480, badge: "1 Litre", title: "Wood-Pressed Groundnut Oil (1L)" },
+        "500ml": { id: "groundnut-500ml", price: 189, originalPrice: 240, badge: "500 ml", title: "Wood-Pressed Groundnut Oil (500ml)" }
       }
     },
     coconut: {
@@ -184,6 +188,8 @@
       bgClass: "oil-coconut",
       img: `${R2_PUBLIC_BASE_URL}/coconut-1.png`,
       gallery: createGallery("coconut", 11),
+      rating: "4.9",
+      ratingCount: "1,890 Ratings",
       shortDesc: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Extracted from sulfur-free copra with wholesome MCTs.",
       features: [
         { icon: "🥥", label: "Aroma", val: "Fresh Copra Scent" },
@@ -216,8 +222,8 @@
         { name: "Total Ash", val: "0.05 %" }
       ],
       sizes: {
-        "1L": { id: "coconut-1l", price: 499, badge: "1 Litre", title: "Wood-Pressed Coconut Oil (1L)" },
-        "500ml": { id: "coconut-500ml", price: 269, badge: "500 ml", title: "Wood-Pressed Coconut Oil (500ml)" }
+        "1L": { id: "coconut-1l", price: 499, originalPrice: 580, badge: "1 Litre", title: "Wood-Pressed Coconut Oil (1L)" },
+        "500ml": { id: "coconut-500ml", price: 269, originalPrice: 320, badge: "500 ml", title: "Wood-Pressed Coconut Oil (500ml)" }
       }
     },
     sesame: {
@@ -227,6 +233,8 @@
       bgClass: "oil-sesame",
       img: `${R2_PUBLIC_BASE_URL}/sesame-1.png`,
       gallery: createGallery("sesame", 11),
+      rating: "4.7",
+      ratingCount: "980 Ratings",
       shortDesc: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility. Ground with pure palm jaggery for traditional nutty warmth.",
       features: [
         { icon: "🍯", label: "Aroma", val: "Chekku Scent" },
@@ -259,8 +267,8 @@
         { name: "Total Ash", val: "0.03 %" }
       ],
       sizes: {
-        "1L": { id: "sesame-1l", price: 499, badge: "1 Litre", title: "Wood-Pressed Sesame Oil (1L)" },
-        "500ml": { id: "sesame-500ml", price: 269, badge: "500 ml", title: "Wood-Pressed Sesame Oil (500ml)" }
+        "1L": { id: "sesame-1l", price: 499, originalPrice: 590, badge: "1 Litre", title: "Wood-Pressed Sesame Oil (1L)" },
+        "500ml": { id: "sesame-500ml", price: 269, originalPrice: 320, badge: "500 ml", title: "Wood-Pressed Sesame Oil (500ml)" }
       }
     }
   };
@@ -292,7 +300,6 @@
     }
   };
 
-  // Indian States & Districts
   const INDIA_STATES_AND_DISTRICTS = {
     "Karnataka": [
       "Bagalkote", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar",
@@ -345,6 +352,16 @@
     ]
   };
 
+  function escapeHtml(text) {
+    if (!text) return "";
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   function populateStatesDropdown() {
     const stateSelect = document.getElementById("custState");
     const districtSelect = document.getElementById("custDistrict");
@@ -386,18 +403,8 @@
     }
   }
 
-  function escapeHtml(text) {
-    if (!text) return "";
-    return String(text)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
   // ==========================================
-  // 4. ACTION TOAST & ERROR TRANSLATION
+  // 4. ACTION TOAST & AUTH ERROR TRANSLATION
   // ==========================================
   window.showActionToast = function (title, message, icon = "✨", type = "info") {
     const toast = document.getElementById("actionToast");
@@ -406,7 +413,6 @@
     const iconEl = document.getElementById("actionToastIcon");
 
     if (!toast) return;
-
     if (toastTimeoutTimer) clearTimeout(toastTimeoutTimer);
 
     toast.className = "action-toast";
@@ -418,7 +424,6 @@
     if (iconEl) iconEl.textContent = icon;
 
     toast.classList.add("show");
-
     toastTimeoutTimer = setTimeout(() => {
       toast.classList.remove("show");
     }, 4000);
@@ -439,24 +444,16 @@
       case "auth/invalid-email":
         return "Please enter a valid email address.";
       case "auth/popup-closed-by-user":
-        return "Sign-in was cancelled before completion. Please try again.";
-      case "auth/cancelled-popup-request":
-        return "Sign-in popup was superseded. Please try again.";
-      case "auth/popup-blocked":
-        return "Pop-up blocked by your browser. Please allow popups for this site.";
+        return "Sign-in was cancelled before completion.";
       case "auth/network-request-failed":
         return "Network connection issue detected. Please check your internet connection.";
-      case "auth/too-many-requests":
-        return "Too many unsuccessful attempts. Access is temporarily paused for security. Try again in a few minutes.";
-      case "auth/user-disabled":
-        return "This account has been disabled. Please contact customer support.";
       default:
         return err.message || "Authentication failed. Please try again.";
     }
   }
 
   // ==========================================
-  // 5. JSONP BACKEND CALLER (PHONEPE GATEWAY PROXY ONLY)
+  // 5. PHONEPE GATEWAY CALLER
   // ==========================================
   function callBackend(params) {
     return new Promise((resolve, reject) => {
@@ -496,7 +493,7 @@
   }
 
   // ==========================================
-  // 6. FIREBASE AUTH & FIRESTORE CUSTOMER SYNC
+  // 6. FIREBASE AUTH & USER PROFILE
   // ==========================================
   function initFirebaseAuth() {
     try {
@@ -564,18 +561,23 @@
   function updateAuthUI() {
     const authPillLabel = document.getElementById("authPillLabel");
     const authUserMeta = document.getElementById("authUserMeta");
-    const custNameInput = document.getElementById("custName");
+    const logoutItem = document.getElementById("authLogoutItem");
+    const profDisplayName = document.getElementById("profDisplayName");
+    const profEmail = document.getElementById("profEmail");
 
     if (currentUser) {
       const name = currentUser.displayName || (currentUser.email ? currentUser.email.split("@")[0] : "Customer");
       if (authPillLabel) authPillLabel.textContent = "👤 " + name;
-      if (authUserMeta) authUserMeta.textContent = currentUser.email || "";
-      if (custNameInput && !custNameInput.value && currentUser.displayName) {
-        custNameInput.value = currentUser.displayName;
-      }
+      if (authUserMeta) authUserMeta.textContent = `Hello, ${name}`;
+      if (logoutItem) logoutItem.style.display = "block";
+      if (profDisplayName) profDisplayName.textContent = name;
+      if (profEmail) profEmail.textContent = currentUser.email || "--";
     } else {
-      if (authPillLabel) authPillLabel.textContent = "👤 Login / Register";
-      if (authUserMeta) authUserMeta.textContent = "Not Logged In";
+      if (authPillLabel) authPillLabel.textContent = "👤 Login";
+      if (authUserMeta) authUserMeta.textContent = "Welcome to MANOPAVANA";
+      if (logoutItem) logoutItem.style.display = "none";
+      if (profDisplayName) profDisplayName.textContent = "--";
+      if (profEmail) profEmail.textContent = "--";
     }
   }
 
@@ -605,46 +607,40 @@
     }
   };
 
+  window.toggleAuthModeAlternate = function () {
+    window.toggleAuthMode(currentAuthMode === "login" ? "register" : "login");
+  };
+
   window.toggleAuthMode = function (mode) {
     currentAuthMode = mode;
-    const title = document.getElementById("authModalTitle");
+    const sideTitle = document.getElementById("fkAuthSidebarTitle");
+    const sideDesc = document.getElementById("fkAuthSidebarDesc");
     const submitBtn = document.getElementById("btnAuthSubmit");
-    const toggleLabel = document.getElementById("authToggleLabel");
-    const toggleLink = document.getElementById("authToggleLink");
+    const switchBtn = document.getElementById("btnAuthSwitchMode");
     const passGroup = document.getElementById("authPasswordGroup");
     const errBox = document.getElementById("authErrorMsg");
     const successBox = document.getElementById("authSuccessMsg");
 
     if (errBox) errBox.style.display = "none";
     if (successBox) successBox.style.display = "none";
-    if (submitBtn) submitBtn.disabled = false;
 
     if (mode === "login") {
-      if (title) title.textContent = "Sign In to MANOPAVANA";
-      if (submitBtn) submitBtn.textContent = "Sign In";
-      if (toggleLabel) toggleLabel.textContent = "Don't have an account?";
-      if (toggleLink) {
-        toggleLink.textContent = "Create Account";
-        toggleLink.setAttribute("onclick", "toggleAuthMode('register')");
-      }
+      if (sideTitle) sideTitle.textContent = "Login";
+      if (sideDesc) sideDesc.textContent = "Get access to your Orders, Wishlist, and Pure Wood-Pressed Oils.";
+      if (submitBtn) submitBtn.textContent = "Login";
+      if (switchBtn) switchBtn.textContent = "New to MANOPAVANA? Create an account";
       if (passGroup) passGroup.style.display = "block";
     } else if (mode === "register") {
-      if (title) title.textContent = "Create Your Account";
-      if (submitBtn) submitBtn.textContent = "Register Account";
-      if (toggleLabel) toggleLabel.textContent = "Already have an account?";
-      if (toggleLink) {
-        toggleLink.textContent = "Sign In";
-        toggleLink.setAttribute("onclick", "toggleAuthMode('login')");
-      }
+      if (sideTitle) sideTitle.textContent = "Looks like you're new here!";
+      if (sideDesc) sideDesc.textContent = "Sign up with your email to start shopping artisanal wood-pressed oils.";
+      if (submitBtn) submitBtn.textContent = "CONTINUE";
+      if (switchBtn) switchBtn.textContent = "Existing User? Log in";
       if (passGroup) passGroup.style.display = "block";
     } else if (mode === "reset") {
-      if (title) title.textContent = "Reset Your Password";
-      if (submitBtn) submitBtn.textContent = "Send Reset Link";
-      if (toggleLabel) toggleLabel.textContent = "Remembered password?";
-      if (toggleLink) {
-        toggleLink.textContent = "Back to Sign In";
-        toggleLink.setAttribute("onclick", "toggleAuthMode('login')");
-      }
+      if (sideTitle) sideTitle.textContent = "Reset Password";
+      if (sideDesc) sideDesc.textContent = "Enter your email to receive password reset instructions.";
+      if (submitBtn) submitBtn.textContent = "SEND RESET LINK";
+      if (switchBtn) switchBtn.textContent = "Back to Login";
       if (passGroup) passGroup.style.display = "none";
     }
   };
@@ -662,71 +658,41 @@
     if (successBox) successBox.style.display = "none";
 
     if (!email) {
-      if (errBox) {
-        errBox.textContent = "Please enter a valid email address.";
-        errBox.style.display = "block";
-      }
+      if (errBox) { errBox.textContent = "Please enter an email address."; errBox.style.display = "block"; }
       return;
     }
 
     if (currentAuthMode === "reset") {
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Sending...";
-      }
       try {
-        if (!firebaseInitialized) throw new Error("Authentication service connecting. Please try again.");
         await authInstance.sendPasswordResetEmail(email);
         if (successBox) {
-          successBox.textContent = "Password reset instructions sent! Please check your Inbox and Spam.";
+          successBox.textContent = "Password reset instructions sent to your inbox.";
           successBox.style.display = "block";
         }
       } catch (err) {
-        if (errBox) {
-          errBox.textContent = getFriendlyAuthErrorMessage(err);
-          errBox.style.display = "block";
-        }
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = "Send Reset Link";
-        }
-      }
-      return;
-    }
-
-    if (!firebaseInitialized) {
-      if (errBox) {
-        errBox.textContent = "Authentication service connecting. Please try again in a moment.";
-        errBox.style.display = "block";
+        if (errBox) { errBox.textContent = getFriendlyAuthErrorMessage(err); errBox.style.display = "block"; }
       }
       return;
     }
 
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = "Processing...";
+      submitBtn.textContent = "PLEASE WAIT...";
     }
 
     try {
       if (currentAuthMode === "login") {
-        if (!password) throw new Error("Password is required to sign in.");
         const userCred = await authInstance.signInWithEmailAndPassword(email, password);
-        const user = userCred.user;
-        const name = user.displayName || user.email.split("@")[0];
-
-        await syncCustomerRecord(user, { name: name, email: user.email }, false);
+        const name = userCred.user.displayName || userCred.user.email.split("@")[0];
+        await syncCustomerRecord(userCred.user, { name, email }, false);
         window.closeAuthModal();
-        window.showActionToast("Sign In Successful", `🎉 Welcome back, ${name}!`, "👋", "success");
+        window.showActionToast("Signed In", `Welcome back, ${name}!`, "👋", "success");
       } else if (currentAuthMode === "register") {
-        if (!password || password.length < 6) throw new Error("Password must be at least 6 characters.");
         const userCred = await authInstance.createUserWithEmailAndPassword(email, password);
-        const user = userCred.user;
-        const name = user.displayName || user.email.split("@")[0];
-
-        await syncCustomerRecord(user, { name: name, email: user.email }, true);
+        const name = userCred.user.email.split("@")[0];
+        await syncCustomerRecord(userCred.user, { name, email }, true);
         window.closeAuthModal();
-        window.showActionToast("Account Created", `🎉 Welcome to MANOPAVANA, ${name}!`, "🎉", "success");
+        window.showActionToast("Account Created", `Welcome to MANOPAVANA, ${name}!`, "🎉", "success");
       }
     } catch (err) {
       if (errBox) {
@@ -736,36 +702,22 @@
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = currentAuthMode === "login" ? "Sign In" : "Register Account";
+        submitBtn.textContent = currentAuthMode === "login" ? "Login" : "CONTINUE";
       }
     }
   };
 
   window.handleGoogleSignIn = async function () {
     const errBox = document.getElementById("authErrorMsg");
-    if (!firebaseInitialized) {
-      alert("Authentication service connecting. Please try again in a moment.");
-      return;
-    }
     try {
       const result = await authInstance.signInWithPopup(googleAuthProvider);
       const user = result.user;
       const isNewUser = !!(result.additionalUserInfo && result.additionalUserInfo.isNewUser);
       const name = user.displayName || user.email.split("@")[0];
 
-      await syncCustomerRecord(user, {
-        name: name,
-        email: user.email,
-        phone: user.phoneNumber || ""
-      }, isNewUser);
-
+      await syncCustomerRecord(user, { name, email: user.email }, isNewUser);
       window.closeAuthModal();
-
-      if (isNewUser) {
-        window.showActionToast("Account Created", `🎉 Welcome to MANOPAVANA, ${name}!`, "🎉", "success");
-      } else {
-        window.showActionToast("Sign In Successful", `🎉 Welcome back, ${name}!`, "👋", "success");
-      }
+      window.showActionToast(isNewUser ? "Account Created" : "Signed In", `Welcome, ${name}!`, "👋", "success");
     } catch (err) {
       if (errBox) {
         errBox.textContent = getFriendlyAuthErrorMessage(err);
@@ -783,7 +735,8 @@
     currentUser = null;
     localStorage.removeItem("manopavana_active_user");
     updateAuthUI();
-    window.showActionToast("Signed Out", "👋 You have logged out successfully.", "👋", "info");
+    window.closeAccountDashboard();
+    window.showActionToast("Logged Out", "You have successfully signed out.", "👋", "info");
   };
 
   document.addEventListener("click", (e) => {
@@ -795,1200 +748,240 @@
   });
 
   // ==========================================
-  // 7. ORDER TRACKING & FIRESTORE REALTIME READS
+  // 7. USER DASHBOARD & ORDERS
   // ==========================================
-  window.openOrderTrackingModal = function (forceAccountTab = false) {
-    const modal = document.getElementById("trackOrderModalBackdrop");
-    if (!modal) return;
-    modal.classList.add("open");
-    document.body.classList.add("modal-open");
-    if (currentUser || forceAccountTab) {
-      window.switchTrackingTab("account");
-    } else {
-      window.switchTrackingTab("manual");
+  window.openAccountDashboard = function (initialTab = "orders") {
+    if (!currentUser) {
+      window.openAuthModal("login");
+      return;
+    }
+    const modal = document.getElementById("accountDashboardBackdrop");
+    if (modal) {
+      modal.classList.add("open");
+      document.body.classList.add("modal-open");
+      window.switchDashboardView(initialTab);
     }
   };
 
-  window.closeOrderTrackingModal = function () {
-    const modal = document.getElementById("trackOrderModalBackdrop");
+  window.closeAccountDashboard = function () {
+    const modal = document.getElementById("accountDashboardBackdrop");
     if (modal) {
       modal.classList.remove("open");
       document.body.classList.remove("modal-open");
     }
   };
 
-  window.switchTrackingTab = function (tabType) {
-    const accountView = document.getElementById("accountOrdersView");
-    const manualView = document.getElementById("manualTrackingView");
-    const tabAccount = document.getElementById("tabMyOrders");
-    const tabManual = document.getElementById("tabManualTrack");
+  window.switchDashboardView = function (view) {
+    const tabOrders = document.getElementById("tabDashOrders");
+    const tabProfile = document.getElementById("tabDashProfile");
+    const tabAddresses = document.getElementById("tabDashAddresses");
 
-    if (tabType === "account") {
-      if (!currentUser) {
-        window.openAuthModal("login");
-        window.showActionToast("Sign In Required", "Please sign in to view your account order history.", "👤", "info");
-        return;
-      }
-      if (accountView) accountView.style.display = "block";
-      if (manualView) manualView.style.display = "none";
-      if (tabAccount) tabAccount.classList.add("active");
-      if (tabManual) tabManual.classList.remove("active");
-      fetchUserOrderHistory();
-    } else {
-      if (accountView) accountView.style.display = "none";
-      if (manualView) manualView.style.display = "block";
-      if (tabManual) tabManual.classList.add("active");
-      if (tabAccount) tabAccount.classList.remove("active");
+    const viewOrders = document.getElementById("dashOrdersView");
+    const viewProfile = document.getElementById("dashProfileView");
+    const viewAddresses = document.getElementById("dashAddressesView");
+
+    tabOrders?.classList.toggle("active", view === "orders");
+    tabProfile?.classList.toggle("active", view === "profile");
+    tabAddresses?.classList.toggle("active", view === "addresses");
+
+    if (viewOrders) viewOrders.style.display = view === "orders" ? "block" : "none";
+    if (viewProfile) viewProfile.style.display = view === "profile" ? "block" : "none";
+    if (viewAddresses) viewAddresses.style.display = view === "addresses" ? "block" : "none";
+
+    if (view === "orders") {
+      fetchUserOrdersHistory();
+    } else if (view === "addresses") {
+      loadSavedDeliveryDetails();
     }
   };
 
-  async function fetchUserOrderHistory() {
-    const loading = document.getElementById("accountOrdersLoading");
-    const list = document.getElementById("accountOrdersList");
+  async function fetchUserOrdersHistory() {
+    const loading = document.getElementById("dashOrdersLoading");
+    const list = document.getElementById("dashOrdersList");
 
-    if (loading) {
-      loading.style.display = "block";
-      loading.textContent = "🔍 Loading your orders from facility...";
-    }
+    if (loading) loading.style.display = "block";
     if (list) list.style.display = "none";
 
-    // Instant read directly from Firestore
     if (db && currentUser) {
       try {
-        const querySnapshot = await db.collection("orders")
+        const snap = await db.collection("orders")
           .where("firebaseUid", "==", currentUser.uid)
           .get();
 
         if (loading) loading.style.display = "none";
 
-        if (!querySnapshot.empty) {
+        if (!snap.empty) {
           const orders = [];
-          querySnapshot.forEach((doc) => {
-            orders.push(doc.data());
-          });
+          snap.forEach(d => orders.push(d.data()));
           orders.sort((a, b) => (b.timestampMs || 0) - (a.timestampMs || 0));
           list.innerHTML = renderOrdersTimelineList(orders);
           list.style.display = "block";
           return;
         }
       } catch (err) {
-        console.warn("Firestore query notice, checking local cache:", err);
+        console.warn("Orders fetch notice:", err);
       }
     }
 
     if (loading) loading.style.display = "none";
     if (list) {
-      const localMatches = localOrdersHistory.filter(o => 
-        (currentUser && o.firebaseUid === currentUser.uid) || 
-        (currentUser && currentUser.email && o.email === currentUser.email)
-      );
-      if (localMatches.length > 0) {
-        list.innerHTML = renderOrdersTimelineList(localMatches);
-      } else {
-        list.innerHTML = `<div style="text-align:center; padding:2rem; color:#a8a29e;">No past orders found under this account.</div>`;
-      }
+      list.innerHTML = `<div style="text-align:center; padding:2rem; color:#a0aec0;">No orders found yet. Select pure wood-pressed oils to order!</div>`;
       list.style.display = "block";
     }
   }
 
   function renderOrdersTimelineList(orders) {
-    const seenRefs = new Set();
-    const uniqueOrders = [];
-    orders.forEach((o) => {
-      const ref = (o.orderRef || "").trim();
-      if (ref && !seenRefs.has(ref)) {
-        seenRefs.add(ref);
-        uniqueOrders.push(o);
-      }
-    });
-
-    return uniqueOrders.map((order) => {
-      const pMode = (order.paymentMode || "").toUpperCase();
-      const oStat = (order.orderStatus || "").toLowerCase();
-      const isUnpaid = pMode.includes("PENDING") || pMode.includes("UNPAID") || oStat.includes("incomplete") || oStat.includes("pending");
-
-      const orderPayloadAttr = escapeHtml(JSON.stringify(order));
-
+    return orders.map((order) => {
       return `
-        <div class="history-order-card" style="${isUnpaid ? 'border:1px solid #ef4444;' : ''}">
-          <div class="history-card-header">
-            <div>
-              <strong>Order #${escapeHtml(order.orderRef)}</strong>
-              <small style="color:#a8a29e; display:block;">${escapeHtml(order.timestamp || "Recent")} • ₹${escapeHtml(order.grandTotal)}</small>
-            </div>
-            <span class="track-status-pill" style="${isUnpaid ? 'background:#ef4444; color:#fff;' : ''}">
-              ${isUnpaid ? '⚠️ Payment Incomplete' : escapeHtml(order.orderStatus || "Placed")}
-            </span>
+        <div class="history-order-card" style="background:#1a202c; border:1px solid #2d3748; padding:1.2rem; border-radius:4px; margin-bottom:1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #2d3748; padding-bottom:0.5rem; margin-bottom:0.6rem;">
+            <strong>Order #${escapeHtml(order.orderRef)}</strong>
+            <span style="color:#48bb78; font-weight:800; font-size:0.85rem;">₹${escapeHtml(order.grandTotal)}</span>
           </div>
-
-          <div class="history-card-items">
+          <div style="font-size:0.85rem; color:#cbd5e0; margin-bottom:0.5rem;">
             <strong>Items:</strong> ${escapeHtml(order.items)}
           </div>
-
-          ${isUnpaid ? `
-            <div style="margin-top:1rem; padding:0.85rem; background:#291414; border-radius:8px; border:1px solid #7f1d1d;">
-              <p style="margin:0 0 0.5rem 0; color:#fca5a5; font-size:0.85rem; line-height:1.4;">
-                Payment was not completed for this previous order. Complete payment online or switch to Cash on Delivery:
-              </p>
-              <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                <button type="button" class="btn-track-this-order" style="padding:0.6rem 1rem; font-size:0.85rem; flex:1; background:#eab308; color:#0c0a09; font-weight:bold; border-radius:6px; border:none; cursor:pointer;" onclick='window.retryOrderDirectly(${orderPayloadAttr}, "PHONEPE")'>
-                  ⚡ Retry via PhonePe
-                </button>
-                <button type="button" class="btn-track-this-order" style="padding:0.6rem 1rem; font-size:0.85rem; flex:1; background:#292524; color:#fafaf9; border:1px solid #44403c; border-radius:6px; cursor:pointer;" onclick='window.retryOrderDirectly(${orderPayloadAttr}, "COD")'>
-                  💵 Switch to COD
-                </button>
-              </div>
-            </div>
-          ` : `
-            <div class="track-timeline-progress">
-              <div class="track-step-node node-step active">
-                <span class="node-dot active">✓</span>
-                <span class="node-lbl">Placed</span>
-              </div>
-              <div class="track-step-node node-step ${oStat.includes('pack') || oStat.includes('process') || oStat.includes('settl') || oStat.includes('dispatch') || oStat.includes('deliver') ? 'active' : ''}">
-                <span class="node-dot ${oStat.includes('pack') || oStat.includes('process') || oStat.includes('settl') || oStat.includes('dispatch') || oStat.includes('deliver') ? 'active' : ''}">⚙</span>
-                <span class="node-lbl">Packed &amp; Sealed</span>
-              </div>
-              <div class="track-step-node node-step ${oStat.includes('dispatch') || oStat.includes('transit') || oStat.includes('out') || oStat.includes('deliver') ? 'active' : ''}">
-                <span class="node-dot ${oStat.includes('dispatch') || oStat.includes('transit') || oStat.includes('out') || oStat.includes('deliver') ? 'active' : ''}">🚚</span>
-                <span class="node-lbl">Dispatched</span>
-              </div>
-              <div class="track-step-node node-step ${oStat.includes('deliver') ? 'active' : ''}">
-                <span class="node-dot ${oStat.includes('deliver') ? 'active' : ''}">🏡</span>
-                <span class="node-lbl">Delivered</span>
-              </div>
-            </div>
-
-            <div class="history-card-footer">
-              <span style="color:#eab308; font-weight:600;">Facility Status:</span>
-              <span style="color:#d6d3d1;">${escapeHtml(order.trackingNotes || "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.")}</span>
-            </div>
-          `}
+          <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#a0aec0;">
+            <span>Status: <strong style="color:#63b3ed;">${escapeHtml(order.orderStatus || "Placed")}</strong></span>
+            <span>${escapeHtml(order.timestamp || "Recent")}</span>
+          </div>
         </div>
       `;
     }).join("");
   }
 
-  window.retryOrderDirectly = function (orderObj, mode) {
-    window.closeOrderTrackingModal();
-    window.closePaymentFailedModal();
-
-    checkoutSource = "retry";
-    buyNowItem = null;
-    retryOrderData = orderObj;
-    currentOrderRef = orderObj.orderRef;
-    currentCalculatedGrandTotal = parseFloat(orderObj.grandTotal) || 0;
-
-    if (mode === "PHONEPE") {
-      const pRadio = document.getElementById("payPhonePe");
-      if (pRadio) pRadio.checked = true;
-    } else {
-      const cRadio = document.getElementById("payCOD");
-      if (cRadio) cRadio.checked = true;
-    }
-
-    openCheckoutModalUI();
-  };
-
-  window.submitOrderTrackingQuery = async function () {
-    const refInput = document.getElementById("trackOrderRefInput");
-    const phoneInput = document.getElementById("trackPhoneInput");
-    const resultBox = document.getElementById("trackStatusResultBox");
-    const btn = document.getElementById("btnSubmitTrack");
-
-    const orderRef = refInput ? refInput.value.trim() : "";
-    const phone = phoneInput ? phoneInput.value.trim() : "";
-
-    if (!orderRef && !phone) {
-      alert("Please enter either your Order Reference ID or 10-digit mobile number.");
-      return;
-    }
-
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = "Checking Facility Records...";
-    }
-    if (resultBox) resultBox.style.display = "none";
-
-    if (db) {
-      try {
-        let matched = [];
-        if (orderRef) {
-          const doc = await db.collection("orders").doc(orderRef).get();
-          if (doc.exists) matched.push(doc.data());
-        }
-        if (matched.length === 0 && phone) {
-          const snap = await db.collection("orders").where("phone", "==", phone).get();
-          snap.forEach(d => matched.push(d.data()));
-        }
-
-        if (btn) { btn.disabled = false; btn.textContent = "Fetch Live Status 🔍"; }
-
-        if (matched.length > 0) {
-          matched.sort((a, b) => (b.timestampMs || 0) - (a.timestampMs || 0));
-          resultBox.innerHTML = renderOrdersTimelineList(matched);
-          resultBox.style.display = "block";
-          return;
-        }
-      } catch (e) {
-        console.warn("Firestore lookup fallback:", e);
-      }
-    }
-
-    if (btn) { btn.disabled = false; btn.textContent = "Fetch Live Status 🔍"; }
-    const localMatches = localOrdersHistory.filter(o => (orderRef && o.orderRef === orderRef) || (phone && o.phone === phone));
-    if (localMatches.length > 0) {
-      resultBox.innerHTML = renderOrdersTimelineList(localMatches);
-      resultBox.style.display = "block";
-    } else {
-      resultBox.innerHTML = `<span style="color:#ef4444;">❌ No matching orders found. Please verify your details.</span>`;
-      resultBox.style.display = "block";
-    }
-  };
-
   // ==========================================
-  // 8. ONBOARDING & LOCATION-FIRST MODAL
+  // 8. PRODUCT GRID & FLIPKART SPLIT DETAIL MODAL
   // ==========================================
-  // Directs first-time visitors to choose their location/pincode first
-  window.openOnboardingModal = function (step = 2) {
-    const modal = document.getElementById("onboardingModalBackdrop");
-    if (!modal) {
-      window.openLocationCheckModal();
-      return;
-    }
-    onboardingQuizAttemptsLeft = 2;
-    modal.classList.add("open");
-    document.body.classList.add("modal-open");
-    window.goToOnboardingStep(step);
-  };
-
-  window.closeOnboardingModal = function () {
-    const modal = document.getElementById("onboardingModalBackdrop");
-    if (modal) {
-      modal.classList.remove("open");
-      document.body.classList.remove("modal-open");
-    }
-    localStorage.setItem("manopavana_onboarding_completed", "true");
-  };
-
-  window.goToOnboardingStep = function (stepNumber) {
-    const s1 = document.getElementById("onboardingStep1");
-    const s2 = document.getElementById("onboardingStep2");
-    const title = document.getElementById("onboardingModalTitle");
-
-    if (stepNumber === 1) {
-      // Bottle Quiz (Only shown when explicitly chosen or claimed)
-      if (s1) s1.style.display = "flex";
-      if (s2) s2.style.display = "none";
-      if (title) title.innerHTML = "🏷️ Scanned our Bottle? Claim 10% OFF";
-      window.selectOnboardingQuizBottle(selectedQuizBottleKey);
-    } else {
-      // Location Selection (Default for all new visitors)
-      if (s1) s1.style.display = "none";
-      if (s2) s2.style.display = "flex";
-      if (title) title.innerHTML = "📍 Where should we deliver?";
-      const pinInput = document.getElementById("onboardPincodeInput");
-      if (pinInput) {
-        pinInput.value = userSelectedPincode || "";
-        pinInput.focus();
-      }
-    }
-  };
-
-  // Dedicated button/banner trigger for bottle scan quiz
-  window.openBottleClaimModal = function () {
-    window.openOnboardingModal(1);
-  };
-
-  window.selectOnboardingQuizBottle = function (bottleKey) {
-    selectedQuizBottleKey = bottleKey;
-    selectedQuizOptionText = null;
-
-    ["groundnut", "coconut", "sesame"].forEach((k) => {
-      const pill = document.getElementById("onboardPill" + k.charAt(0).toUpperCase() + k.slice(1));
-      if (pill) {
-        pill.classList.toggle("active", k === bottleKey);
-      }
-    });
-
-    const quizData = BOTTLE_QUIZ_POOLS[bottleKey][0];
-    const hintText = document.getElementById("onboardQuizHintText");
-    const qTitle = document.getElementById("onboardQuizQuestionText");
-    const optionsContainer = document.getElementById("onboardQuizOptionsContainer");
-    const feedbackBox = document.getElementById("onboardQuizFeedbackBox");
-
-    if (hintText) hintText.textContent = quizData.hint;
-    if (qTitle) qTitle.textContent = quizData.question;
-    if (feedbackBox) feedbackBox.style.display = "none";
-
-    const distractors = [
-      "Extracted using industrial chemical solvents",
-      "Refined, bleached, and chemically deodorized",
-      "Blended with synthetic liquid paraffin wax",
-      "Processed with artificial preservatives and dyes"
-    ];
-
-    const options = [
-      { text: quizData.correct, correct: true },
-      { text: distractors[0], correct: false },
-      { text: distractors[1], correct: false },
-      { text: distractors[2], correct: false },
-      { text: distractors[3], correct: false }
-    ].sort(() => Math.random() - 0.5);
-
-    activeQuizData = {
-      correct: quizData.correct,
-      options: options
-    };
-
-    if (optionsContainer) {
-      optionsContainer.innerHTML = options.map((opt, i) => `
-        <label class="quiz-option-card" id="quizOptCard_${i}" onclick="window.chooseOnboardingQuizOption('${escapeHtml(opt.text)}', ${i})">
-          <input type="radio" name="bottleQuizRadio" value="${escapeHtml(opt.text)}" />
-          <span>${escapeHtml(opt.text)}</span>
-        </label>
-      `).join("");
-    }
-  };
-
-  window.chooseOnboardingQuizOption = function (text, idx) {
-    selectedQuizOptionText = text;
-    document.querySelectorAll(".quiz-option-card").forEach((card, i) => {
-      card.classList.toggle("selected", i === idx);
-      const radio = card.querySelector("input[type='radio']");
-      if (radio) radio.checked = i === idx;
-    });
-  };
-
-  window.submitOnboardingBottleQuiz = function () {
-    const feedbackBox = document.getElementById("onboardQuizFeedbackBox");
-    const attemptBadge = document.getElementById("onboardAttemptBadge");
-
-    if (!selectedQuizOptionText) {
-      alert("Please select one option printed on your bottle label.");
-      return;
-    }
-
-    if (selectedQuizOptionText === activeQuizData.correct) {
-      activeBottleCode = `VERIFIED_${selectedQuizBottleKey.toUpperCase()}_BOTTLE`;
-      bottleScanTimestampMs = Date.now();
-      localStorage.setItem("manopavana_bottle_code", activeBottleCode);
-      localStorage.setItem("manopavana_bottle_scan_time", bottleScanTimestampMs.toString());
-
-      if (feedbackBox) {
-        feedbackBox.className = "quiz-feedback-box success";
-        feedbackBox.innerHTML = "✅ <strong>Label verified!</strong> 10% Loyalty Discount unlocked across all orders for 30 days!";
-        feedbackBox.style.display = "block";
-      }
-
-      renderCart();
-      startLiveCountdown();
-      renderComboSection();
-      window.showActionToast("Discount Activated", "🎉 10% Bottle Reorder Discount is active!", "✨", "success");
-
-      setTimeout(() => {
-        window.closeOnboardingModal();
-      }, 1200);
-    } else {
-      onboardingQuizAttemptsLeft--;
-      if (attemptBadge) {
-        attemptBadge.textContent = `⚠️ ${onboardingQuizAttemptsLeft} chance${onboardingQuizAttemptsLeft === 1 ? '' : 's'} left to claim 10% OFF`;
-        if (onboardingQuizAttemptsLeft === 1) attemptBadge.className = "attempt-badge danger";
-      }
-
-      if (feedbackBox) {
-        feedbackBox.className = "quiz-feedback-box error";
-        feedbackBox.innerHTML = `❌ Option does not match your bottle label.`;
-        feedbackBox.style.display = "block";
-      }
-
-      if (onboardingQuizAttemptsLeft <= 0) {
-        alert("Attempts exhausted. You can continue shopping directly!");
-        window.closeOnboardingModal();
-      }
-    }
-  };
-
-  window.submitOnboardingPincodeCheck = function () {
-    const pinInput = document.getElementById("onboardPincodeInput");
-    const resBox = document.getElementById("onboardPincodeResultBox");
-    if (!pinInput) return;
-
-    const enteredPin = pinInput.value.trim();
-    if (!/^\d{6}$/.test(enteredPin)) {
-      if (resBox) {
-        resBox.className = "pincode-result-box warning";
-        resBox.innerHTML = "Please enter a valid 6-digit Indian delivery pincode.";
-        resBox.style.display = "block";
-      }
-      return;
-    }
-
-    userSelectedPincode = enteredPin;
-    isBangalorePincode = enteredPin.startsWith("560");
-    localStorage.setItem("manopavana_user_pincode", enteredPin);
-    updateLocationUI();
-
-    if (isBangalorePincode) {
-      if (resBox) {
-        resBox.className = "pincode-result-box success";
-        resBox.innerHTML = `<strong>✅ Delivering to Bangalore (${enteredPin})</strong>Direct doorstep delivery in 48–72 hours! Free delivery on ₹500+ orders.`;
-        resBox.style.display = "block";
-      }
-      setTimeout(window.closeOnboardingModal, 1200);
-    } else {
-      if (resBox) {
-        resBox.className = "pincode-result-box warning";
-        resBox.innerHTML = `<strong>📍 Outside Bangalore (${enteredPin})</strong>Direct doorstep delivery from our facility is exclusive to Bangalore (560xxx). Orders for your location are fulfilled securely via our <strong>Official Flipkart Store</strong>.<br><br>
-        <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" class="btn-continue-flipkart" style="display:inline-flex; width:auto; padding:0.6rem 1.2rem;">
-          🛒 Shop on Flipkart &rarr;
-        </a>`;
-        resBox.style.display = "block";
-      }
-      setTimeout(window.closeOnboardingModal, 3000);
-    }
-  };
-
-  function checkAndTriggerUpfrontOnboarding() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const scanParam = urlParams.get("scan");
-
-    // If customer scanned a physical QR code containing ?scan=bottle
-    if (scanParam) {
-      window.openOnboardingModal(1);
-      return;
-    }
-
-    // Default flow for new visitors: Location & Pincode confirmation (Step 2)
-    const completed = localStorage.getItem("manopavana_onboarding_completed");
-    if (completed !== "true") {
-      window.openOnboardingModal(2);
-    }
-  }
-
-  // ==========================================
-  // 9. LOCATION & PINCODE CHECKER MODAL
-  // ==========================================
-  window.openLocationCheckModal = function () {
-    const modal = document.getElementById("locationModalBackdrop");
-    const pinInput = document.getElementById("pincodeCheckInput");
-    const resultBox = document.getElementById("pincodeCheckResultBox");
-    if (!modal) return;
-
-    if (pinInput) pinInput.value = userSelectedPincode;
-    if (resultBox) resultBox.style.display = "none";
-    modal.classList.add("open");
-    document.body.classList.add("modal-open");
-  };
-
-  window.closeLocationCheckModal = function () {
-    const modal = document.getElementById("locationModalBackdrop");
-    if (modal) {
-      modal.classList.remove("open");
-      document.body.classList.remove("modal-open");
-    }
-  };
-
-  window.submitPincodeCheck = function () {
-    const pinInput = document.getElementById("pincodeCheckInput");
-    const resultBox = document.getElementById("pincodeCheckResultBox");
-    if (!pinInput || !resultBox) return;
-
-    const enteredPin = pinInput.value.trim();
-    if (!/^\d{6}$/.test(enteredPin)) {
-      resultBox.className = "pincode-result-box warning";
-      resultBox.innerHTML = `<strong>Invalid Pincode</strong>Please enter a valid 6-digit Indian pincode.`;
-      resultBox.style.display = "block";
-      return;
-    }
-
-    userSelectedPincode = enteredPin;
-    isBangalorePincode = enteredPin.startsWith("560");
-    localStorage.setItem("manopavana_user_pincode", enteredPin);
-    updateLocationUI();
-
-    if (isBangalorePincode) {
-      resultBox.className = "pincode-result-box success";
-      resultBox.innerHTML = `<strong>✅ Delivering to Bangalore (${enteredPin})</strong>Direct doorstep delivery in 48–72 hours from our packaging facility. Free on ₹500+ orders.`;
-      resultBox.style.display = "block";
-      setTimeout(window.closeLocationCheckModal, 1300);
-    } else {
-      resultBox.className = "pincode-result-box warning";
-      resultBox.innerHTML = `<strong>📍 Outside Bangalore (${enteredPin})</strong>Direct doorstep delivery is exclusive to Bangalore (560xxx). Orders for your location are fulfilled securely via our <strong>Official Flipkart Store</strong>.<br><br>
-      <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" class="btn-continue-flipkart" style="display:inline-flex; width:auto; padding:0.6rem 1.2rem; margin-top:0.5rem;">
-        🛒 Shop on Flipkart &rarr;
-      </a>`;
-      resultBox.style.display = "block";
-    }
-  };
-
-  function updateLocationUI() {
-    const headerLoc = document.getElementById("headerLocationLabel");
-    const cartLoc = document.getElementById("cartDrawerLocLabel");
-    const custPin = document.getElementById("custPincode");
-
-    if (custPin) custPin.value = userSelectedPincode;
-
-    if (isBangalorePincode) {
-      if (headerLoc) headerLoc.innerHTML = `Deliver to: <strong>Bangalore (${userSelectedPincode})</strong>`;
-      if (cartLoc) cartLoc.textContent = `Bangalore (${userSelectedPincode})`;
-    } else {
-      if (headerLoc) headerLoc.innerHTML = `Deliver to: <strong>${userSelectedPincode} (Flipkart)</strong>`;
-      if (cartLoc) cartLoc.textContent = `${userSelectedPincode} (Flipkart)`;
-    }
-
-    renderProductsGrid();
-    renderComboSection();
-  }
-
-  window.openFlipkartModal = function () {
-    const modal = document.getElementById("flipkartModalBackdrop");
-    if (modal) {
-      modal.classList.add("open");
-      document.body.classList.add("modal-open");
-    }
-  };
-
-  window.closeFlipkartModal = function () {
-    const modal = document.getElementById("flipkartModalBackdrop");
-    if (modal) {
-      modal.classList.remove("open");
-      document.body.classList.remove("modal-open");
-    }
-  };
-
-  // ==========================================
-  // 10. AUDIO ENGINE & AUTOPLAY (MOBILE SAFE)
-  // ==========================================
-  let isAudioPlaying = false;
-  let hasInteracted = false;
-
-  function tryImmediateAudioPlayback() {
-    const audio = document.getElementById("heroBgAudio");
-    const btn = document.getElementById("soundToggleBtn");
-    const icon = document.getElementById("soundIcon");
-    const text = document.getElementById("soundText");
-    if (!audio) return;
-
-    audio.volume = 1.0;
-    const playPromise = audio.play();
-
-    if (playPromise !== undefined) {
-      playPromise.then(() => {
-        isAudioPlaying = true;
-        if (icon) icon.textContent = "🔊";
-        if (text) text.textContent = "Sound On";
-        btn?.classList.add("playing");
-      }).catch(() => {
-        isAudioPlaying = false;
-        if (icon) icon.textContent = "🔇";
-        if (text) text.textContent = "Tap for Sound";
-        btn?.classList.remove("playing");
-      });
-    }
-  }
-
-  function toggleAudio() {
-    const audio = document.getElementById("heroBgAudio");
-    const btn = document.getElementById("soundToggleBtn");
-    const icon = document.getElementById("soundIcon");
-    const text = document.getElementById("soundText");
-    if (!audio) return;
-
-    if (isAudioPlaying) {
-      audio.pause();
-      isAudioPlaying = false;
-      if (icon) icon.textContent = "🔇";
-      if (text) text.textContent = "Sound Off";
-      btn?.classList.remove("playing");
-    } else {
-      audio.play().then(() => {
-        isAudioPlaying = true;
-        if (icon) icon.textContent = "🔊";
-        if (text) text.textContent = "Sound On";
-        btn?.classList.add("playing");
-      }).catch(() => {});
-    }
-  }
-
-  function initVideoAutoplay() {
-    const video = document.getElementById("heroVideo");
-    const fallback = document.getElementById("heroFallbackImage");
-    if (!video) return;
-
-    video.muted = true;
-    video.loop = true;
-    video.playsInline = true;
-
-    video.play().catch(() => {
-      if (fallback) {
-        video.style.display = "none";
-        fallback.style.display = "block";
-      }
-    });
-  }
-
-  // ==========================================
-  // 11. MAP INTEGRATION & ADDRESS PINNING
-  // ==========================================
-  function initOrUpdateDeliveryMap(lat = DEFAULT_BANGALORE_COORDS[0], lng = DEFAULT_BANGALORE_COORDS[1]) {
-    const mapElement = document.getElementById("deliveryMap");
-    if (!mapElement || typeof L === "undefined") return;
-
-    if (!leafletMap) {
-      leafletMap = L.map("deliveryMap", {
-        center: [lat, lng],
-        zoom: 14,
-        zoomControl: true,
-        scrollWheelZoom: false
-      });
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; OpenStreetMap',
-        maxZoom: 19
-      }).addTo(leafletMap);
-
-      mapMarker = L.marker([lat, lng], { draggable: true }).addTo(leafletMap);
-
-      mapMarker.on("dragend", function (e) {
-        const position = e.target.getLatLng();
-        setMapCoordinates(position.lat, position.lng);
-      });
-
-      leafletMap.on("click", function (e) {
-        mapMarker.setLatLng(e.latlng);
-        setMapCoordinates(e.latlng.lat, e.latlng.lng);
-      });
-    } else {
-      leafletMap.setView([lat, lng], 14);
-      if (mapMarker) mapMarker.setLatLng([lat, lng]);
-    }
-
-    setMapCoordinates(lat, lng);
-    setTimeout(() => {
-      if (leafletMap) leafletMap.invalidateSize();
-    }, 250);
-  }
-
-  function setMapCoordinates(lat, lng) {
-    const latInput = document.getElementById("custLatitude");
-    const lngInput = document.getElementById("custLongitude");
-    const coordsBadge = document.getElementById("mapCoordsBadge");
-
-    const roundLat = parseFloat(lat).toFixed(5);
-    const roundLng = parseFloat(lng).toFixed(5);
-
-    if (latInput) latInput.value = roundLat;
-    if (lngInput) lngInput.value = roundLng;
-    if (coordsBadge) coordsBadge.textContent = `GPS: ${roundLat}, ${roundLng}`;
-  }
-
-  window.detectUserGeolocation = function () {
-    const btn = document.querySelector(".btn-gps-locate");
-    const origText = btn ? btn.innerHTML : "";
-
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your current browser.");
-      return;
-    }
-
-    if (btn) btn.innerHTML = "⏳ Locating...";
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        initOrUpdateDeliveryMap(lat, lng);
-        reverseGeocodeOpenStreetMap(lat, lng);
-
-        if (btn) btn.innerHTML = "✅ Located!";
-        setTimeout(() => { if (btn) btn.innerHTML = origText; }, 2000);
-      },
-      () => {
-        alert("Could not retrieve exact location. Please drag the marker pin manually to your gate or building.");
-        if (btn) btn.innerHTML = origText;
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-    );
-  };
-
-  function reverseGeocodeOpenStreetMap(lat, lng) {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data || !data.address) return;
-        const addr = data.address;
-        const pin = addr.postcode || "";
-        const city = addr.city || addr.town || addr.suburb || addr.neighbourhood || "Bengaluru";
-
-        const custCity = document.getElementById("custCity");
-        const custPin = document.getElementById("custPincode");
-        const custAddress = document.getElementById("custAddress");
-
-        if (custCity && !custCity.value) custCity.value = city;
-        if (custPin && pin && /^\d{6}$/.test(pin)) {
-          custPin.value = pin;
-          userSelectedPincode = pin;
-          isBangalorePincode = pin.startsWith("560");
-          updateLocationUI();
-        }
-
-        if (custAddress && !custAddress.value && data.display_name) {
-          custAddress.value = data.display_name.split(",").slice(0, 3).join(",").trim();
-        }
-      })
-      .catch((e) => console.warn("Reverse geocode notice:", e));
-  }
-
-  window.handleAddressForwardGeocode = function (query) {
-    if (addressTypingTimer) clearTimeout(addressTypingTimer);
-    if (!query || query.trim().length < 5) return;
-
-    addressTypingTimer = setTimeout(() => {
-      const searchCity = document.getElementById("custCity")?.value || "Bengaluru";
-      const fullQuery = `${query.trim()}, ${searchCity}, Karnataka, India`;
-
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullQuery)}&limit=1`)
-        .then(res => res.json())
-        .then(results => {
-          if (results && results.length > 0) {
-            const lat = parseFloat(results[0].lat);
-            const lon = parseFloat(results[0].lon);
-            initOrUpdateDeliveryMap(lat, lon);
-          }
-        })
-        .catch(err => console.warn("Forward geocode notice:", err));
-    }, 800);
-  };
-
-  // ==========================================
-  // 12. SAVED ADDRESS RESTORATION
-  // ==========================================
-  function loadSavedDeliveryDetails() {
-    let saved = null;
-    try {
-      saved = JSON.parse(localStorage.getItem("manopavana_saved_delivery"));
-    } catch (e) {
-      saved = null;
-    }
-
-    const summaryCard = document.getElementById("savedAddressSummaryCard");
-    const fieldsContainer = document.getElementById("deliveryFieldsContainer");
-
-    if (checkoutSource === "retry" && retryOrderData) {
-      const custName = document.getElementById("custName");
-      const custPhone = document.getElementById("custPhone");
-      const custAddress = document.getElementById("custAddress");
-      const custPincode = document.getElementById("custPincode");
-
-      if (custName && retryOrderData.customerName) custName.value = retryOrderData.customerName;
-      if (custPhone && retryOrderData.phone) custPhone.value = retryOrderData.phone;
-      if (custAddress && retryOrderData.address) custAddress.value = retryOrderData.address;
-      if (custPincode && retryOrderData.pincode) custPincode.value = retryOrderData.pincode;
-
-      if (summaryCard) summaryCard.style.display = "none";
-      if (fieldsContainer) fieldsContainer.style.display = "block";
-      initOrUpdateDeliveryMap();
-      return;
-    }
-
-    if (saved && saved.name && saved.phone && saved.address) {
-      const custName = document.getElementById("custName");
-      const custPhone = document.getElementById("custPhone");
-      const custAddress = document.getElementById("custAddress");
-      const custState = document.getElementById("custState");
-      const custDistrict = document.getElementById("custDistrict");
-      const custCity = document.getElementById("custCity");
-      const custPincode = document.getElementById("custPincode");
-
-      if (custName) custName.value = saved.name;
-      if (custPhone) custPhone.value = saved.phone;
-      if (custAddress) custAddress.value = saved.address;
-      if (custCity) custCity.value = saved.city || "Bengaluru";
-      if (custPincode) custPincode.value = saved.pincode || "560058";
-
-      if (custState && saved.state) {
-        custState.value = saved.state;
-        populateDistrictsForState(saved.state);
-      }
-      if (custDistrict && saved.district) {
-        custDistrict.value = saved.district;
-      }
-
-      const addrName = document.getElementById("savedAddrName");
-      const addrText = document.getElementById("savedAddrText");
-      const addrPhone = document.getElementById("savedAddrPhone");
-      const gpsNotice = document.getElementById("savedAddrGpsNotice");
-
-      if (addrName) addrName.textContent = saved.name;
-      if (addrText) addrText.textContent = `${saved.address}, ${saved.city || "Bengaluru"} - ${saved.pincode || "560058"}`;
-      if (addrPhone) addrPhone.textContent = `📞 ${saved.phone}`;
-
-      const savedLat = parseFloat(saved.latitude) || DEFAULT_BANGALORE_COORDS[0];
-      const savedLng = parseFloat(saved.longitude) || DEFAULT_BANGALORE_COORDS[1];
-
-      if (gpsNotice) {
-        gpsNotice.style.display = (saved.latitude && saved.longitude) ? "inline-block" : "none";
-      }
-
-      if (summaryCard) summaryCard.style.display = "block";
-      if (fieldsContainer) fieldsContainer.style.display = "none";
-
-      initOrUpdateDeliveryMap(savedLat, savedLng);
-    } else {
-      if (summaryCard) summaryCard.style.display = "none";
-      if (fieldsContainer) fieldsContainer.style.display = "block";
-
-      const currentLat = parseFloat(document.getElementById("custLatitude")?.value) || DEFAULT_BANGALORE_COORDS[0];
-      const currentLng = parseFloat(document.getElementById("custLongitude")?.value) || DEFAULT_BANGALORE_COORDS[1];
-      initOrUpdateDeliveryMap(currentLat, currentLng);
-    }
-  }
-
-  window.toggleEditAddress = function (showForm = true) {
-    const summaryCard = document.getElementById("savedAddressSummaryCard");
-    const fieldsContainer = document.getElementById("deliveryFieldsContainer");
-
-    if (showForm) {
-      if (summaryCard) summaryCard.style.display = "none";
-      if (fieldsContainer) fieldsContainer.style.display = "block";
-      setTimeout(() => {
-        if (leafletMap) leafletMap.invalidateSize();
-      }, 200);
-    } else {
-      if (summaryCard) summaryCard.style.display = "block";
-      if (fieldsContainer) fieldsContainer.style.display = "none";
-    }
-  };
-
-  // ==========================================
-  // 13. CART & BAG OPERATIONS
-  // ==========================================
-  function isLoyaltyDiscountValid() {
-    if (!bottleScanTimestampMs) return false;
-    return (Date.now() - bottleScanTimestampMs) < QR_EXPIRY_MS;
-  }
-
-  function triggerBadgeAnimation() {
-    const badge = document.getElementById("cartCountBadge");
-    if (badge) {
-      badge.classList.remove("badge-pop");
-      void badge.offsetWidth;
-      badge.classList.add("badge-pop");
-      setTimeout(() => badge.classList.remove("badge-pop"), 250);
-    }
-  }
-
-  function saveCart() {
-    localStorage.setItem("manopavana_cart", JSON.stringify(cart));
-    renderCart();
-    renderProductsGrid();
-    if (currentDetailProductKey) {
-      renderProductDetailModalContent();
-    }
-    triggerBadgeAnimation();
-  }
-
-  window.openCart = function () {
-    const drawer = document.getElementById("cartDrawer");
-    const backdrop = document.getElementById("cartBackdrop");
-    if (drawer) drawer.classList.add("open");
-    if (backdrop) backdrop.classList.add("open");
-  };
-
-  window.closeCart = function () {
-    const drawer = document.getElementById("cartDrawer");
-    const backdrop = document.getElementById("cartBackdrop");
-    if (drawer) drawer.classList.remove("open");
-    if (backdrop) backdrop.classList.remove("open");
-  };
-
-  function getCartItemQuantity(itemId) {
-    const item = cart.find((i) => i.id === itemId);
-    return item ? item.quantity : 0;
-  }
-
-  window.handleDirectAdd = function (id, title, price, img) {
-    if (!isBangalorePincode) {
-      window.openFlipkartModal();
-      return;
-    }
-    const existing = cart.find((item) => item.id === id);
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      cart.push({ id, title, price: parseInt(price, 10), img, quantity: 1 });
-    }
-    saveCart();
-    window.showActionToast("Added to Bag", `🛒 Added ${title} to your bag.`, "🛒", "success");
-  };
-
-  window.updateQuantity = function (id, delta) {
-    const item = cart.find((item) => item.id === id);
-    if (!item) {
-      if (delta > 0) {
-        if (COMBO_CATALOG[id]) {
-          const combo = COMBO_CATALOG[id];
-          cart.push({ id: combo.id, title: combo.title, price: combo.price, img: combo.img, quantity: 1 });
-          window.showActionToast("Added to Bag", `🛒 Added ${combo.title} to your bag.`, "🛒", "success");
-        } else {
-          const [prodKey, sizeKey] = id.split("-");
-          const formattedSize = sizeKey === "1l" ? "1L" : "500ml";
-          const catItem = PRODUCT_CATALOG[prodKey]?.sizes[formattedSize];
-          if (catItem) {
-            cart.push({ id: catItem.id, title: catItem.title, price: catItem.price, img: PRODUCT_CATALOG[prodKey].img, quantity: 1 });
-            window.showActionToast("Added to Bag", `🛒 Added ${catItem.title} to your bag.`, "🛒", "success");
-          }
-        }
-      }
-    } else {
-      item.quantity += delta;
-      if (item.quantity <= 0) {
-        cart = cart.filter((i) => i.id !== id);
-      }
-    }
-    saveCart();
-  };
-
-  window.removeItem = function (id) {
-    cart = cart.filter((item) => item.id !== id);
-    saveCart();
-  };
-
-  function renderCart() {
-    const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-    let discountAmount = 0;
-    const isLoyal = isLoyaltyDiscountValid();
-
-    const discountRow = document.getElementById("discountRow");
-    const cartDiscount = document.getElementById("cartDiscount");
-
-    if (isLoyal && subtotal > 0) {
-      discountAmount = Math.round((subtotal * REORDER_DISCOUNT_PERCENT) / 100);
-      if (discountRow) discountRow.style.display = "flex";
-      if (cartDiscount) cartDiscount.textContent = `-₹${discountAmount.toLocaleString("en-IN")}`;
-    } else {
-      if (discountRow) discountRow.style.display = "none";
-    }
-
-    const discountedSubtotal = subtotal - discountAmount;
-    let deliveryFee = 0;
-    if (totalCount > 0) {
-      deliveryFee = discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_DELIVERY_FEE;
-    }
-    const grandTotal = discountedSubtotal + deliveryFee;
-
-    const cartCountBadge = document.getElementById("cartCountBadge");
-    const cartTotalItems = document.getElementById("cartTotalItems");
-    const cartSubtotal = document.getElementById("cartSubtotal");
-    const cartDeliveryCharge = document.getElementById("cartDeliveryCharge");
-    const cartGrandTotal = document.getElementById("cartGrandTotal");
-    const shippingNote = document.getElementById("shippingNote");
-
-    if (cartCountBadge) cartCountBadge.textContent = totalCount;
-    if (cartTotalItems) cartTotalItems.textContent = totalCount;
-    if (cartSubtotal) cartSubtotal.textContent = `₹${subtotal.toLocaleString("en-IN")}`;
-
-    if (cartDeliveryCharge) {
-      cartDeliveryCharge.innerHTML = totalCount === 0 ? "₹0" : (deliveryFee === 0 ? `<span class="free-tag">FREE</span>` : `₹${STANDARD_DELIVERY_FEE}`);
-    }
-
-    if (cartGrandTotal) {
-      cartGrandTotal.textContent = `₹${grandTotal.toLocaleString("en-IN")}`;
-    }
-
-    if (shippingNote) {
-      if (totalCount === 0) {
-        shippingNote.textContent = `Add ₹500+ for FREE Doorstep Delivery across Bangalore`;
-      } else if (discountedSubtotal >= FREE_SHIPPING_THRESHOLD) {
-        shippingNote.innerHTML = `🎉 You unlocked <strong>FREE Bangalore Delivery</strong> (48–72 hrs)!`;
-      } else {
-        const remaining = FREE_SHIPPING_THRESHOLD - discountedSubtotal;
-        shippingNote.innerHTML = `Add <strong>₹${remaining}</strong> more for <strong>FREE Bangalore Delivery</strong>!`;
-      }
-    }
-
-    const cartItemsList = document.getElementById("cartItemsList");
-    if (!cartItemsList) return;
-
-    if (cart.length === 0) {
-      cartItemsList.innerHTML = `<div class="empty-cart-msg">Your artisanal bag is empty.<br>Select any bottle or combo above to begin.</div>`;
-      return;
-    }
-
-    cartItemsList.innerHTML = cart.map((item) => `
-      <div class="cart-item">
-        <img src="${item.img}" class="cart-item-thumb" alt="${escapeHtml(item.title)}" onerror="this.src='https://placehold.co/100x120/171412/eab308?text=Bottle'" />
-        <div class="cart-item-details">
-          <div class="cart-item-title">${escapeHtml(item.title)}</div>
-          <div class="cart-item-price">₹${item.price}</div>
-          <div class="cart-item-qty">
-            <button class="qty-btn" onclick="updateQuantity('${item.id}', -1)" type="button">-</button>
-            <span class="qty-count">${item.quantity}</span>
-            <button class="qty-btn" onclick="updateQuantity('${item.id}', 1)" type="button">+</button>
-            <button class="btn-remove-item" onclick="removeItem('${item.id}')" type="button">Remove</button>
-          </div>
-        </div>
-      </div>
-    `).join("");
-  }
-
-  // ==========================================
-  // 14. PRODUCT CATALOG DISPLAY & STEPPERS
-  // ==========================================
-  function renderStepperButtonHTML(id, title, price, img, quantity) {
-    if (!isBangalorePincode) {
-      return `
-        <a href="https://www.flipkart.com" target="_blank" rel="noopener noreferrer" class="btn-buy-flipkart-inline" style="text-decoration:none;">
-          🛒 Buy on Flipkart
-        </a>
-      `;
-    }
-
-    if (quantity > 0) {
-      return `
-        <div class="stepper-active-box">
-          <button class="stepper-btn" onclick="updateQuantity('${id}', -1)" type="button" aria-label="Decrease">−</button>
-          <span class="stepper-value">${quantity}</span>
-          <button class="stepper-btn" onclick="updateQuantity('${id}', 1)" type="button" aria-label="Increase">+</button>
-        </div>
-      `;
-    }
-
-    return `
-      <button class="btn-buy" onclick="handleDirectAdd('${id}', '${escapeHtml(title)}', ${price}, '${img}')" type="button">
-        Add to Bag
-      </button>
-    `;
-  }
-
   function renderProductsGrid() {
     const container = document.getElementById("productGridContainer");
     if (!container) return;
     container.innerHTML = "";
 
     Object.keys(PRODUCT_CATALOG).forEach((key) => {
-      const product = PRODUCT_CATALOG[key];
-      const defaultData = product.sizes["1L"];
-      const currentQty = getCartItemQuantity(defaultData.id);
+      const p = PRODUCT_CATALOG[key];
+      const defaultData = p.sizes["1L"];
 
       const card = document.createElement("div");
-      card.className = `product-card ${product.badgeTheme}`;
-
-      const featuresHTML = product.features.map((f) => `<li>${f.icon} <strong>${f.label}:</strong> ${f.val}</li>`).join("");
+      card.className = "product-card";
 
       card.innerHTML = `
-        <span class="card-badge">Wood Pressed</span>
-        <div class="card-image-wrap ${product.bgClass}" onclick="openProductDetailModal('${key}')">
-          <img src="${product.img}" alt="${escapeHtml(product.name)}" class="product-img" onerror="this.src='https://placehold.co/200x260/171412/eab308?text=Oil'" />
-          <span class="card-quick-hint">Tap for Details</span>
+        <span class="card-badge">PURE CHEKKU</span>
+        <div class="card-image-wrap" onclick="openProductDetailModal('${key}')">
+          <img src="${p.img}" alt="${escapeHtml(p.name)}" onerror="this.src='https://placehold.co/300x320/1a202c/fff?text=Oil+Bottle'" />
         </div>
-        <div class="card-content">
-          <h3 class="card-title-clickable" onclick="openProductDetailModal('${key}')">${escapeHtml(product.name)}</h3>
-          <ul class="product-feature-list">${featuresHTML}</ul>
-          <div class="card-footer">
-            <div class="price-block">
-              <span class="price">₹${defaultData.price} <small>/ 1L</small></span>
-            </div>
-            <div class="stepper-wrap-inline" id="stepper-container-${defaultData.id}">
-              ${renderStepperButtonHTML(defaultData.id, defaultData.title, defaultData.price, product.img, currentQty)}
-            </div>
-          </div>
+        <h3 class="card-title-clickable" onclick="openProductDetailModal('${key}')">${escapeHtml(p.name)} (1L)</h3>
+        
+        <div class="fk-rating-row">
+          <span class="fk-rating-pill">★ ${p.rating}</span>
+          <span class="fk-rating-count">${p.ratingCount}</span>
+        </div>
+
+        <div class="fk-pricing-row">
+          <span class="fk-current-price">₹${defaultData.price}</span>
+          <span class="fk-original-price">₹${defaultData.originalPrice}</span>
+          <span class="fk-discount-percent">17% off</span>
+        </div>
+
+        <div class="fk-card-actions">
+          <button type="button" class="btn-fk-yellow" onclick="handleDirectAdd('${defaultData.id}', '${escapeHtml(defaultData.title)}', ${defaultData.price}, '${p.img}')">
+            ADD TO CART
+          </button>
+          <button type="button" class="btn-fk-orange" onclick="handleDirectBuyNow('${defaultData.id}', '${escapeHtml(defaultData.title)}', ${defaultData.price}, '${p.img}')">
+            BUY NOW
+          </button>
         </div>
       `;
-
       container.appendChild(card);
     });
-
-    renderComboSection();
   }
 
-  function renderComboSection() {
-    const currentCombo = COMBO_CATALOG[currentSelectedComboKey];
-    if (!currentCombo) return;
-
-    const comboBadgeText = document.getElementById("comboBadgeText");
-    const comboTitleHeading = document.getElementById("comboTitleHeading");
-    const comboDescText = document.getElementById("comboDescText");
-    const comboCurrentPrice = document.getElementById("comboCurrentPrice");
-    const comboOriginalPrice = document.getElementById("comboOriginalPrice");
-    const comboQrDiscountHint = document.getElementById("comboQrDiscountHint");
-    const stepperComboContainer = document.getElementById("stepper-combo-container");
-    const btnComboBuyNowDirect = document.getElementById("btnComboBuyNowDirect");
-
-    if (comboBadgeText) comboBadgeText.textContent = currentCombo.badgeText;
-    if (comboTitleHeading) comboTitleHeading.textContent = currentCombo.headingText;
-    if (comboDescText) comboDescText.textContent = currentCombo.descText;
-    if (comboCurrentPrice) comboCurrentPrice.textContent = `₹${currentCombo.price}`;
-    if (comboOriginalPrice) comboOriginalPrice.textContent = `₹${currentCombo.originalPrice}`;
-    if (comboQrDiscountHint) comboQrDiscountHint.textContent = `(₹${currentCombo.qrPrice} with Bottle QR Scan)`;
-
-    const btnCombo3L = document.getElementById("btnCombo3L");
-    const btnCombo15L = document.getElementById("btnCombo15L");
-    if (btnCombo3L && btnCombo15L) {
-      btnCombo3L.classList.toggle("active", currentSelectedComboKey === "combo-3l");
-      btnCombo15L.classList.toggle("active", currentSelectedComboKey === "combo-15l");
-    }
-
-    const currentQty = getCartItemQuantity(currentCombo.id);
-    if (stepperComboContainer) {
-      stepperComboContainer.innerHTML = renderStepperButtonHTML(
-        currentCombo.id,
-        currentCombo.title,
-        currentCombo.price,
-        currentCombo.img,
-        currentQty
-      );
-    }
-
-    if (btnComboBuyNowDirect) {
-      if (!isBangalorePincode) {
-        btnComboBuyNowDirect.innerHTML = `🛒 Buy Combo on Flipkart`;
-        btnComboBuyNowDirect.onclick = function () { window.open("https://www.flipkart.com", "_blank"); };
-      } else {
-        btnComboBuyNowDirect.innerHTML = `⚡ Buy Now`;
-        btnComboBuyNowDirect.onclick = window.handleDirectComboBuyNow;
-      }
-    }
-  }
-
-  window.selectComboVariant = function (comboKey) {
-    currentSelectedComboKey = comboKey;
-    renderComboSection();
-  };
-
-  window.handleDirectComboBuyNow = function () {
-    if (!isBangalorePincode) {
-      window.openFlipkartModal();
+  window.openProductDetailModal = function (productKey) {
+    if (productKey === "combo-3l") {
+      const combo = COMBO_CATALOG["combo-3l"];
+      window.handleDirectBuyNow(combo.id, combo.title, combo.price, combo.img);
       return;
     }
-    const currentCombo = COMBO_CATALOG[currentSelectedComboKey];
-    window.handleDirectBuyNow(currentCombo.id, currentCombo.title, currentCombo.price, currentCombo.img);
-  };
-
-  // ==========================================
-  // 15. PRODUCT DETAIL MODAL CONTROLLER
-  // ==========================================
-  window.openProductDetailModal = function (productKey) {
-    const product = PRODUCT_CATALOG[productKey];
-    if (!product) return;
 
     currentDetailProductKey = productKey;
     currentDetailSelectedSize = "1L";
 
-    const titleEl = document.getElementById("modalProductHeaderTitle");
-    if (titleEl) titleEl.textContent = `${product.name} Details`;
-
-    renderProductDetailModalContent();
-
     const modal = document.getElementById("productDetailModalBackdrop");
-    if (modal) {
-      modal.classList.add("open");
-      document.body.classList.add("modal-open");
-    }
+    const body = document.getElementById("modalProductDetailBody");
+    const p = PRODUCT_CATALOG[productKey];
+    const sizeData = p.sizes[currentDetailSelectedSize];
+
+    if (!modal || !body || !p) return;
+
+    const thumbHTML = p.gallery.map((src, i) => `
+      <img src="${src}" class="fk-thumb ${i === 0 ? 'active' : ''}" onclick="switchDetailMainImage('${src}', this)" alt="Thumb" />
+    `).join("");
+
+    body.innerHTML = `
+      <div class="fk-detail-split">
+        <!-- Left Big Image Gallery Column -->
+        <div class="fk-gallery-col">
+          <div class="fk-main-image-viewer">
+            <img src="${p.gallery[0]}" id="fkDetailMainImg" alt="${escapeHtml(p.name)}" />
+          </div>
+          <div class="fk-thumbnail-row">
+            ${thumbHTML}
+          </div>
+          <div class="fk-gallery-actions">
+            <button type="button" class="btn-fk-yellow" onclick="handleDirectAdd('${sizeData.id}', '${escapeHtml(sizeData.title)}', ${sizeData.price}, '${p.img}')">
+              ADD TO CART
+            </button>
+            <button type="button" class="btn-fk-orange" onclick="handleDirectBuyNow('${sizeData.id}', '${escapeHtml(sizeData.title)}', ${sizeData.price}, '${p.img}')">
+              BUY NOW
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Flipkart Info Column -->
+        <div class="fk-info-col">
+          <h2 class="fk-title">${escapeHtml(p.name)}</h2>
+          <div class="fk-rating-row">
+            <span class="fk-rating-pill">★ ${p.rating}</span>
+            <span class="fk-rating-count">${p.ratingCount} • Verified Bangalore Delivery</span>
+          </div>
+          <span class="fk-badge-special">Special Price</span>
+          <div class="fk-pricing-row">
+            <span class="fk-current-price" id="detailPriceVal">₹${sizeData.price}</span>
+            <span class="fk-original-price" id="detailOrigPriceVal">₹${sizeData.originalPrice}</span>
+            <span class="fk-discount-percent">Save ₹${sizeData.originalPrice - sizeData.price}</span>
+          </div>
+
+          <div class="fk-variant-box">
+            <label>Select Size / Quantity:</label>
+            <div class="fk-size-pills">
+              <button type="button" class="fk-size-btn ${currentDetailSelectedSize === '1L' ? 'active' : ''}" onclick="selectModalVariantSize('1L')">1 Litre</button>
+              <button type="button" class="fk-size-btn ${currentDetailSelectedSize === '500ml' ? 'active' : ''}" onclick="selectModalVariantSize('500ml')">500 ml</button>
+            </div>
+          </div>
+
+          <div class="fk-offers-box">
+            <h4>Available Offers</h4>
+            <ul>
+              <li>🏷️ <strong>Partner Offer:</strong> Claim 10% OFF on all repeat orders by scanning our physical bottle badge.</li>
+              <li>🚚 <strong>Fast Doorstep Delivery:</strong> Free shipping across Bangalore on orders above ₹500.</li>
+            </ul>
+          </div>
+
+          <p style="color:#cbd5e0; font-size:0.9rem; line-height:1.6; margin-bottom:1rem;">
+            ${escapeHtml(p.shortDesc)}
+          </p>
+
+          <table class="fk-spec-table">
+            <tbody>
+              ${Object.entries(p.specs).map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    modal.classList.add("open");
+    document.body.classList.add("modal-open");
   };
 
   window.closeProductDetailModal = function () {
@@ -1997,138 +990,180 @@
       modal.classList.remove("open");
       document.body.classList.remove("modal-open");
     }
-    currentDetailProductKey = null;
   };
 
-  window.selectModalVariantSize = function (sizeKey) {
-    currentDetailSelectedSize = sizeKey;
-    renderProductDetailModalContent();
-  };
-
-  window.switchDetailMainImage = function (src, thumbEl) {
-    const mainImg = document.getElementById("detailMainImg");
+  window.switchDetailMainImage = function (src, el) {
+    const mainImg = document.getElementById("fkDetailMainImg");
     if (mainImg) mainImg.src = src;
-
-    document.querySelectorAll(".detail-thumb-img").forEach((el) => el.classList.remove("active"));
-    if (thumbEl) thumbEl.classList.add("active");
+    document.querySelectorAll(".fk-thumb").forEach(t => t.classList.remove("active"));
+    if (el) el.classList.add("active");
   };
 
-  function renderProductDetailModalContent() {
-    const body = document.getElementById("modalProductDetailBody");
-    if (!currentDetailProductKey || !body) return;
+  window.selectModalVariantSize = function (size) {
+    currentDetailSelectedSize = size;
+    const p = PRODUCT_CATALOG[currentDetailProductKey];
+    if (!p) return;
+    const sizeData = p.sizes[size];
 
-    const product = PRODUCT_CATALOG[currentDetailProductKey];
-    const selectedSizeData = product.sizes[currentDetailSelectedSize];
-    const currentQty = getCartItemQuantity(selectedSizeData.id);
+    document.getElementById("detailPriceVal").textContent = `₹${sizeData.price}`;
+    document.getElementById("detailOrigPriceVal").textContent = `₹${sizeData.originalPrice}`;
 
-    const specRows = Object.entries(product.specs)
-      .map(([k, v]) => `<tr><td class="spec-lbl">${k}</td><td class="spec-val">${v}</td></tr>`)
-      .join("");
+    document.querySelectorAll(".fk-size-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.textContent.includes(size));
+    });
+  };
 
-    const nutritionBoxes = product.nutrition
-      .map((n) => `<div class="nutri-cell"><span class="nutri-lbl">${n.name}</span><div class="nutri-num">${n.val}</div></div>`)
-      .join("");
+  window.handleCatalogSearch = function (query) {
+    const cleanQ = (query || "").toLowerCase().trim();
+    const cards = document.querySelectorAll("#productGridContainer .product-card");
+    cards.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      card.style.display = text.includes(cleanQ) ? "flex" : "none";
+    });
+  };
 
-    const thumbnailsHTML = product.gallery
-      .map((imgSrc, idx) => `<img src="${imgSrc}" class="detail-thumb-img ${idx === 0 ? "active" : ""}" onclick="switchDetailMainImage('${imgSrc}', this)" alt="Thumb" />`)
-      .join("");
-
-    body.innerHTML = `
-      <div class="detail-top-grid">
-        <div class="detail-gallery">
-          <div class="detail-main-img-box"><img src="${product.gallery[0]}" class="detail-main-img" id="detailMainImg" alt="${escapeHtml(product.name)}" /></div>
-          <div class="detail-thumb-strip">${thumbnailsHTML}</div>
-        </div>
-        <div class="detail-info-col">
-          <span class="detail-badge-pill">🌿 Wood-Pressed • Lab Tested</span>
-          <h2 class="detail-title">${escapeHtml(product.name)}</h2>
-          <p class="detail-short-desc">${escapeHtml(product.shortDesc)}</p>
-          <div class="modal-variant-wrap">
-            <span class="modal-variant-label">Choose Volume:</span>
-            <div class="modal-variant-pills">
-              <button type="button" class="modal-size-pill ${currentDetailSelectedSize === "1L" ? "active" : ""}" onclick="selectModalVariantSize('1L')">1 Litre (₹${product.sizes["1L"].price})</button>
-              <button type="button" class="modal-size-pill ${currentDetailSelectedSize === "500ml" ? "active" : ""}" onclick="selectModalVariantSize('500ml')">500 ml (₹${product.sizes["500ml"].price})</button>
-            </div>
-          </div>
-          <div class="modal-action-row">
-            <div><span class="price-sub">Payable Price:</span><div class="modal-price-val">₹${selectedSizeData.price}</div></div>
-            <div class="stepper-wrap-inline" id="stepper-container-modal-${selectedSizeData.id}">
-              ${renderStepperButtonHTML(selectedSizeData.id, selectedSizeData.title, selectedSizeData.price, product.img, currentQty)}
-            </div>
-          </div>
-          <div class="modal-direct-buy-wrap">
-            <button type="button" class="btn-direct-buy-now" onclick="handleDirectBuyNow('${selectedSizeData.id}', '${escapeHtml(selectedSizeData.title)}', ${selectedSizeData.price}, '${product.img}')">
-              ⚡ Buy Now — Proceed to Delivery
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="detail-spec-box">
-        <h4>Extraction Specifications</h4>
-        <table class="specs-table-grid"><tbody>${specRows}</tbody></table>
-      </div>
-      <div class="detail-spec-box">
-        <h4>Nutritional Breakdown</h4>
-        <div class="detail-nutrition-grid">${nutritionBoxes}</div>
-      </div>
-    `;
+  // ==========================================
+  // 9. CART & CHECKOUT MANAGEMENT
+  // ==========================================
+  function saveCart() {
+    localStorage.setItem("manopavana_cart", JSON.stringify(cart));
+    renderCart();
   }
 
-  // ==========================================
-  // 16. CHECKOUT & INSTANT FIRESTORE RECORDING
-  // ==========================================
+  window.openCart = function () {
+    document.getElementById("cartDrawer")?.classList.add("open");
+    document.getElementById("cartBackdrop")?.classList.add("open");
+  };
+
+  window.closeCart = function () {
+    document.getElementById("cartDrawer")?.classList.remove("open");
+    document.getElementById("cartBackdrop")?.classList.remove("open");
+  };
+
+  window.handleDirectAdd = function (id, title, price, img) {
+    if (!isBangalorePincode) {
+      window.openFlipkartModal();
+      return;
+    }
+    const match = cart.find(i => i.id === id);
+    if (match) {
+      match.quantity += 1;
+    } else {
+      cart.push({ id, title, price: parseInt(price, 10), img, quantity: 1 });
+    }
+    saveCart();
+    window.showActionToast("Added to Cart", `${title} added.`, "🛒", "success");
+    window.openCart();
+  };
+
   window.handleDirectBuyNow = function (id, title, price, img) {
     if (!isBangalorePincode) {
       window.openFlipkartModal();
       return;
     }
     checkoutSource = "buynow";
-    retryOrderData = null;
     buyNowItem = { id, title, price: parseInt(price, 10), quantity: 1, img };
     window.closeProductDetailModal();
+    window.closeCart();
     promptLoginOrOpenCheckout();
   };
+
+  window.handleDirectComboAdd = function () {
+    const combo = COMBO_CATALOG[currentSelectedComboKey];
+    window.handleDirectAdd(combo.id, combo.title, combo.price, combo.img);
+  };
+
+  window.handleDirectComboBuyNow = function () {
+    const combo = COMBO_CATALOG[currentSelectedComboKey];
+    window.handleDirectBuyNow(combo.id, combo.title, combo.price, combo.img);
+  };
+
+  window.selectComboVariant = function (key) {
+    currentSelectedComboKey = key;
+    const combo = COMBO_CATALOG[key];
+    document.getElementById("comboCurrentPrice").textContent = `₹${combo.price}`;
+    document.getElementById("comboOriginalPrice").textContent = `₹${combo.originalPrice}`;
+    document.getElementById("btnCombo3L")?.classList.toggle("active", key === "combo-3l");
+    document.getElementById("btnCombo15L")?.classList.toggle("active", key === "combo-15l");
+  };
+
+  window.updateQuantity = function (id, delta) {
+    const item = cart.find(i => i.id === id);
+    if (item) {
+      item.quantity += delta;
+      if (item.quantity <= 0) {
+        cart = cart.filter(i => i.id !== id);
+      }
+    }
+    saveCart();
+  };
+
+  function renderCart() {
+    const totalCount = cart.reduce((s, i) => s + i.quantity, 0);
+    const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+
+    let discountAmount = 0;
+    const isLoyal = bottleScanTimestampMs && (Date.now() - bottleScanTimestampMs < QR_EXPIRY_MS);
+    if (isLoyal && subtotal > 0) {
+      discountAmount = Math.round((subtotal * REORDER_DISCOUNT_PERCENT) / 100);
+      document.getElementById("discountRow").style.display = "flex";
+      document.getElementById("cartDiscount").textContent = `-₹${discountAmount}`;
+    } else {
+      document.getElementById("discountRow").style.display = "none";
+    }
+
+    const discounted = subtotal - discountAmount;
+    const deliveryFee = totalCount > 0 ? (discounted >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_DELIVERY_FEE) : 0;
+    const grandTotal = discounted + deliveryFee;
+
+    document.getElementById("cartCountBadge").textContent = totalCount;
+    document.getElementById("cartTotalItems").textContent = totalCount;
+    document.getElementById("cartSubtotal").textContent = `₹${subtotal}`;
+    document.getElementById("cartDeliveryCharge").textContent = deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`;
+    document.getElementById("cartGrandTotal").textContent = `₹${grandTotal}`;
+
+    const list = document.getElementById("cartItemsList");
+    if (!list) return;
+
+    if (cart.length === 0) {
+      list.innerHTML = `<div style="text-align:center; margin-top:3rem; color:#718096;">Your cart is empty.</div>`;
+      return;
+    }
+
+    list.innerHTML = cart.map(i => `
+      <div class="cart-item">
+        <img src="${i.img}" class="cart-item-thumb" alt="${escapeHtml(i.title)}" />
+        <div style="flex:1;">
+          <div style="font-weight:600; font-size:0.85rem;">${escapeHtml(i.title)}</div>
+          <div style="color:#eab308; font-size:0.85rem; font-weight:700;">₹${i.price}</div>
+          <div style="display:flex; gap:0.5rem; align-items:center; margin-top:0.3rem;">
+            <button onclick="updateQuantity('${i.id}', -1)" style="padding:2px 8px; background:#292524; color:#fafaf9; border:none; border-radius:4px; cursor:pointer;">-</button>
+            <span style="font-weight:600;">${i.quantity}</span>
+            <button onclick="updateQuantity('${i.id}', 1)" style="padding:2px 8px; background:#292524; color:#fafaf9; border:none; border-radius:4px; cursor:pointer;">+</button>
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
 
   function promptLoginOrOpenCheckout() {
     if (!currentUser) {
       window.openAuthModal("login");
-      const errBox = document.getElementById("authErrorMsg");
-      if (errBox) {
-        errBox.textContent = "Please sign in or create an account to tie your order to your profile.";
-        errBox.style.display = "block";
-      }
     } else {
       openCheckoutModalUI();
     }
   }
 
   function openCheckoutModalUI() {
-    if (checkoutSource !== "retry" || !currentOrderRef) {
-      currentOrderRef = "MP_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900);
-    }
-
-    const titleEl = document.getElementById("modalCheckoutTitle");
-    if (titleEl) {
-      if (checkoutSource === "retry" && retryOrderData) {
-        titleEl.textContent = `Verify & Complete Payment: #${retryOrderData.orderRef}`;
-      } else if (checkoutSource === "buynow" && buyNowItem) {
-        titleEl.textContent = `Delivery & Payment: ${buyNowItem.title}`;
-      } else {
-        titleEl.textContent = "Delivery & Payment Details";
-      }
-    }
-
-    updateCheckoutFinancials();
-    updatePaymentModeUI();
+    currentOrderRef = "MP_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900);
     loadSavedDeliveryDetails();
+    updateCheckoutFinancials();
 
     const modal = document.getElementById("checkoutModalBackdrop");
     if (modal) {
       modal.classList.add("open");
       document.body.classList.add("modal-open");
-      setTimeout(() => {
-        if (leafletMap) leafletMap.invalidateSize();
-      }, 300);
+      setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 300);
     }
   }
 
@@ -2138,138 +1173,29 @@
       modal.classList.remove("open");
       document.body.classList.remove("modal-open");
     }
-    if (checkoutSource === "retry") {
-      checkoutSource = "cart";
-      retryOrderData = null;
-    }
   };
 
   function updateCheckoutFinancials() {
     const preview = document.getElementById("checkoutOrderPreview");
     if (!preview) return;
 
-    if (checkoutSource === "retry" && retryOrderData) {
-      currentCalculatedGrandTotal = parseFloat(retryOrderData.grandTotal) || 0;
-      currentOrderRef = retryOrderData.orderRef;
-
-      preview.innerHTML = `
-        <div style="background:#26221f; border:1px solid #44403c; border-radius:8px; padding:1rem; margin-bottom:1rem;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; border-bottom:1px solid #3d3834; padding-bottom:0.5rem;">
-            <span style="color:#eab308; font-weight:700; font-size:0.88rem;">📋 Retrying Order Reference</span>
-            <strong style="color:#fafaf9; font-size:0.95rem;">#${escapeHtml(retryOrderData.orderRef)}</strong>
-          </div>
-          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:#d6d3d1;">
-            <strong style="color:#a8a29e;">Items to be Paid:</strong>
-            <div style="color:#fde047; margin-top:0.2rem;">${escapeHtml(retryOrderData.items)}</div>
-          </div>
-          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:#d6d3d1;">
-            <strong style="color:#a8a29e;">Delivery Destination:</strong>
-            <div style="margin-top:0.2rem;">${escapeHtml(retryOrderData.address || "Bangalore")} (${escapeHtml(retryOrderData.pincode || "560058")})</div>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #3d3834; padding-top:0.6rem; margin-top:0.6rem;">
-            <span style="color:#fafaf9; font-weight:700; font-size:0.95rem;">Locked Grand Total:</span>
-            <strong style="color:#eab308; font-size:1.15rem;">₹${currentCalculatedGrandTotal.toLocaleString("en-IN")}</strong>
-          </div>
-          <small style="color:#a8a29e; display:block; margin-top:0.4rem; font-size:0.75rem;">
-            💡 Your current active shopping bag remains safely preserved in the background.
-          </small>
-        </div>
-      `;
-      return;
-    }
-
-    let subtotal = 0;
-    let itemsCount = 0;
-    let previewHTML = "";
-
     const items = checkoutSource === "buynow" && buyNowItem ? [buyNowItem] : cart;
-
-    items.forEach((item) => {
-      subtotal += item.price * item.quantity;
-      itemsCount += item.quantity;
-      previewHTML += `
-        <div class="checkout-preview-item">
-          <img src="${item.img}" class="checkout-preview-thumb" alt="${escapeHtml(item.title)}" onerror="this.src='https://placehold.co/50x60/171412/eab308?text=Bottle'" />
-          <div class="checkout-preview-info">
-            <strong>${escapeHtml(item.title)}</strong>
-            <span>Qty: ${item.quantity} × ₹${item.price}</span>
-          </div>
-          <div class="checkout-preview-cost">₹${(item.price * item.quantity).toLocaleString("en-IN")}</div>
-        </div>
-      `;
-    });
-
-    const isLoyal = isLoyaltyDiscountValid();
-    let discountAmount = 0;
-    if (isLoyal && subtotal > 0) {
-      discountAmount = Math.round((subtotal * REORDER_DISCOUNT_PERCENT) / 100);
-    }
-
-    const discountedSubtotal = subtotal - discountAmount;
-    let deliveryFee = 0;
-    if (itemsCount > 0) {
-      deliveryFee = discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_DELIVERY_FEE;
-    }
-    const grandTotal = discountedSubtotal + (itemsCount > 0 ? deliveryFee : 0);
-    currentCalculatedGrandTotal = grandTotal;
+    const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const deliveryFee = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_DELIVERY_FEE;
+    currentCalculatedGrandTotal = subtotal + deliveryFee;
 
     preview.innerHTML = `
-      <div class="checkout-preview-header">
-        <span>Items (${itemsCount})</span>
-        <span>Subtotal: ₹${subtotal.toLocaleString("en-IN")}</span>
+      <div style="font-weight:700; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:0.4rem; margin-bottom:0.6rem;">
+        ORDER SUMMARY (${items.length} Items)
       </div>
-      <div class="checkout-preview-list">${previewHTML}</div>
-      <div class="checkout-preview-footer">
-        ${discountAmount > 0 ? `<div class="checkout-row discount-text"><span>Loyalty Discount (10%):</span><span>-₹${discountAmount.toLocaleString("en-IN")}</span></div>` : ""}
-        <div class="checkout-row"><span>Delivery:</span><span>${deliveryFee === 0 ? '<strong class="free-tag">FREE</strong>' : `₹${deliveryFee}`}</span></div>
-        <div class="checkout-row total-highlight"><span>Total Payable:</span><span>₹${grandTotal.toLocaleString("en-IN")}</span></div>
+      <div>
+        ${items.map(i => `<div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.3rem;"><span>${i.title} (x${i.quantity})</span><span>₹${i.price * i.quantity}</span></div>`).join("")}
+      </div>
+      <div style="border-top:1px dashed rgba(255,255,255,0.1); padding-top:0.4rem; display:flex; justify-content:space-between; font-weight:800; color:#eab308;">
+        <span>Total Payable</span>
+        <span>₹${currentCalculatedGrandTotal}</span>
       </div>
     `;
-  }
-
-  function updatePaymentModeUI() {
-    const isPhonePe = document.getElementById("payPhonePe")?.checked;
-    const isCOD = document.getElementById("payCOD")?.checked;
-    const submitBtn = document.getElementById("submitOrderBtn");
-    const infoBox = document.getElementById("phonepePaymentInfoBox");
-
-    document.getElementById("labelPayPhonePe")?.classList.toggle("active", !!isPhonePe);
-    document.getElementById("labelPayCOD")?.classList.toggle("active", !!isCOD);
-    document.getElementById("labelPayWhatsApp")?.classList.toggle("active", !isPhonePe && !isCOD);
-
-    if (infoBox) infoBox.style.display = isPhonePe ? "block" : "none";
-
-    if (submitBtn) {
-      if (isPhonePe) submitBtn.textContent = "Proceed to Pay via PhonePe ⚡";
-      else if (isCOD) submitBtn.textContent = "Confirm Cash on Delivery Order 💵";
-      else submitBtn.textContent = "Confirm Order on WhatsApp 💬";
-    }
-  }
-
-  async function saveOrderToFirestore(orderData) {
-    if (!db) return;
-    try {
-      await db.collection("orders").doc(orderData.orderRef).set({
-        orderRef: orderData.orderRef,
-        firebaseUid: orderData.firebaseUid,
-        customerName: orderData.customerName,
-        phone: orderData.phone,
-        email: orderData.email || "",
-        address: orderData.address,
-        pincode: orderData.pincode,
-        items: orderData.items,
-        grandTotal: orderData.grandTotal,
-        paymentMode: orderData.paymentMode,
-        orderStatus: orderData.orderStatus,
-        bottleCode: orderData.bottleCode || "",
-        trackingNotes: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.",
-        timestamp: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
-        timestampMs: Date.now(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-    } catch (e) {
-      console.warn("Firestore order save error:", e);
-    }
   }
 
   async function handleCheckoutSubmission() {
@@ -2281,20 +1207,17 @@
     const name = document.getElementById("custName")?.value.trim();
     const phone = document.getElementById("custPhone")?.value.trim();
     const address = document.getElementById("custAddress")?.value.trim();
-    const state = document.getElementById("custState")?.value.trim() || "Karnataka";
-    const district = document.getElementById("custDistrict")?.value.trim() || "Bengaluru Urban";
     const city = document.getElementById("custCity")?.value.trim() || "Bengaluru";
     const pincode = document.getElementById("custPincode")?.value.trim();
-    const latitude = document.getElementById("custLatitude")?.value || DEFAULT_BANGALORE_COORDS[0];
-    const longitude = document.getElementById("custLongitude")?.value || DEFAULT_BANGALORE_COORDS[1];
+    const state = document.getElementById("custState")?.value.trim() || "Karnataka";
+    const district = document.getElementById("custDistrict")?.value.trim() || "Bengaluru Urban";
+    const lat = document.getElementById("custLatitude")?.value || DEFAULT_BANGALORE_COORDS[0];
+    const lng = document.getElementById("custLongitude")?.value || DEFAULT_BANGALORE_COORDS[1];
     const chkSave = document.getElementById("chkSaveAddress")?.checked;
     const errBox = document.getElementById("formError");
 
     if (!name || phone.length < 10 || !address || pincode.length !== 6) {
-      if (errBox) {
-        errBox.textContent = "Please fill in all mandatory delivery address fields properly.";
-        errBox.style.display = "block";
-      }
+      if (errBox) { errBox.textContent = "Please fill in all mandatory address fields."; errBox.style.display = "block"; }
       return;
     }
 
@@ -2303,43 +1226,19 @@
       return;
     }
 
-    if (errBox) errBox.style.display = "none";
-
     if (chkSave) {
-      const deliveryPayload = {
-        name, phone, address, state, district, city, pincode, latitude, longitude
-      };
-      localStorage.setItem("manopavana_saved_delivery", JSON.stringify(deliveryPayload));
+      localStorage.setItem("manopavana_saved_delivery", JSON.stringify({
+        name, phone, address, city, pincode, state, district, latitude: lat, longitude: lng
+      }));
     }
 
-    let itemsSummary = "";
-    if (checkoutSource === "retry" && retryOrderData) {
-      itemsSummary = retryOrderData.items;
-    } else {
-      const itemsToCheckout = checkoutSource === "buynow" && buyNowItem ? [buyNowItem] : cart;
-      itemsSummary = itemsToCheckout.map((i) => `${i.title} (x${i.quantity})`).join(", ");
-    }
-
-    const paymentMode = document.getElementById("payPhonePe")?.checked
-      ? "PHONEPE"
-      : (document.getElementById("payCOD")?.checked ? "COD" : "WHATSAPP");
-
-    const submitBtn = document.getElementById("submitOrderBtn");
-    const origText = submitBtn ? submitBtn.textContent : "";
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Processing Order...";
-    }
-
-    const uid = currentUser.uid || ("GUEST_" + phone);
-    const currentOrigin = window.location.origin + window.location.pathname;
-
-    // Sanitize order ref for safe PhonePe v2 constraints (max 35 alphanumeric characters)
+    const paymentMode = document.getElementById("payPhonePe")?.checked ? "PHONEPE" : (document.getElementById("payCOD")?.checked ? "COD" : "WHATSAPP");
     const sanitizedOrderRef = currentOrderRef.replace(/[^a-zA-Z0-9_-]/g, "").substring(0, 35);
+    const itemsSummary = (checkoutSource === "buynow" && buyNowItem ? [buyNowItem] : cart).map(i => `${i.title} (x${i.quantity})`).join(", ");
 
     const orderPayload = {
       orderRef: sanitizedOrderRef,
-      firebaseUid: uid,
+      firebaseUid: currentUser.uid,
       customerName: name,
       phone: phone,
       email: currentUser.email || "",
@@ -2349,131 +1248,54 @@
       grandTotal: currentCalculatedGrandTotal.toString(),
       paymentMode: paymentMode,
       orderStatus: paymentMode === "PHONEPE" ? "Payment Pending" : "Placed",
-      bottleCode: activeBottleCode || ""
+      timestamp: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+      timestampMs: Date.now()
     };
 
-    try {
-      // 1. Direct Firestore write: Instant ~30ms ledger recording
-      await saveOrderToFirestore(orderPayload);
+    if (db) {
+      try {
+        await db.collection("orders").doc(sanitizedOrderRef).set(orderPayload);
+      } catch (e) {
+        console.warn("Firestore order sync warning:", e);
+      }
+    }
 
-      // 2. Gateway vs Direct Confirmation Routing
-      if (paymentMode === "PHONEPE") {
-        sessionStorage.setItem("manopavana_pending_checkout_source", checkoutSource);
-        sessionStorage.setItem("manopavana_pending_order_ref", sanitizedOrderRef);
+    if (paymentMode === "PHONEPE") {
+      const response = await callBackend({
+        action: "create_phonepe_order",
+        orderRef: sanitizedOrderRef,
+        firebaseUid: currentUser.uid,
+        amount: currentCalculatedGrandTotal,
+        name: name,
+        phone: phone,
+        redirectBaseUrl: window.location.origin + window.location.pathname
+      });
 
-        const response = await callBackend({
-          action: "create_phonepe_order",
-          orderRef: sanitizedOrderRef,
-          firebaseUid: uid,
-          amount: currentCalculatedGrandTotal,
-          name: name,
-          phone: phone,
-          email: currentUser.email || "",
-          address: `${address}, ${city}`,
-          state: state,
-          district: district,
-          pincode: pincode,
-          items: itemsSummary,
-          bottleCode: activeBottleCode || "",
-          latitude: latitude,
-          longitude: longitude,
-          redirectBaseUrl: currentOrigin
-        });
-
-        if (response && response.status === "SUCCESS" && response.redirectUrl) {
-          const targetUrl = String(response.redirectUrl).trim();
-          if (targetUrl.indexOf("script.google.com") !== -1 || targetUrl.indexOf("script.googleusercontent.com") !== -1) {
-            alert("PhonePe Gateway session could not be established. Please select 'Cash on Delivery' or 'WhatsApp Order'.");
-            return;
-          }
-          window.location.href = targetUrl;
-          return;
-        } else {
-          const errDetail = (response && response.message) ? response.message : "Unable to initiate PhonePe session.";
-          alert("Payment Error: " + errDetail + "\n\nPlease try Cash on Delivery or WhatsApp Order.");
-          return;
-        }
+      if (response && response.status === "SUCCESS" && response.redirectUrl) {
+        window.location.href = response.redirectUrl;
       } else {
-        // Cash on Delivery & WhatsApp Orders complete immediately with zero gateway delays
-        const orderSnapshot = {
-          timestamp: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
-          timestampMs: Date.now(),
-          orderRef: sanitizedOrderRef,
-          firebaseUid: uid,
-          customerName: name,
-          phone: phone,
-          email: currentUser.email || "",
-          items: itemsSummary,
-          grandTotal: currentCalculatedGrandTotal.toString(),
-          paymentMode: paymentMode,
-          orderStatus: "Placed",
-          trackingNotes: "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.",
-          latitude: latitude,
-          longitude: longitude
-        };
-
-        const existingIdx = localOrdersHistory.findIndex(o => o.orderRef === sanitizedOrderRef);
-        if (existingIdx !== -1) {
-          localOrdersHistory[existingIdx] = orderSnapshot;
-        } else {
-          localOrdersHistory.unshift(orderSnapshot);
-        }
-        localStorage.setItem("manopavana_local_orders", JSON.stringify(localOrdersHistory));
-
-        if (checkoutSource === "cart") {
-          cart = [];
-          localStorage.removeItem("manopavana_cart");
-          renderCart();
-        }
-
-        window.closeCheckoutModal();
-
-        showOrderConfirmationModal({
-          orderRef: sanitizedOrderRef,
-          customerName: name,
-          paymentMode: paymentMode === "COD" ? "Cash on Delivery (COD)" : "WhatsApp Manual Order"
-        });
-
-        if (paymentMode === "WHATSAPP") {
-          let msg = `🌿 *New Order - MANOPAVANA Wood-Pressed Oils*\n`;
-          msg += `*Ref:* #${sanitizedOrderRef}\n*UID:* ${uid}\n`;
-          msg += `*Name:* ${name}\n*Phone:* ${phone}\n*Address:* ${address}, ${city} - ${pincode}\n`;
-          msg += `*Location:* https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}\n`;
-          msg += `*Items:* ${itemsSummary}\n*Total:* ₹${currentCalculatedGrandTotal}\n*Payment:* WhatsApp Manual`;
-          window.open(`https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-        }
+        alert("Unable to reach PhonePe gateway. Please choose Cash on Delivery.");
       }
-    } catch (err) {
-      console.warn("Checkout processing notice:", err);
-      alert(err.message || "Failed to process checkout. Please choose Cash on Delivery or WhatsApp Order.");
-    } finally {
-      // Re-enable button and reset reference ID to ensure customer can retry anytime
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = origText;
+    } else {
+      window.closeCheckoutModal();
+      if (checkoutSource === "cart") {
+        cart = [];
+        saveCart();
       }
-      currentOrderRef = "MP_" + Date.now() + "_" + Math.floor(100 + Math.random() * 900);
+      showOrderConfirmationModal({ orderRef: sanitizedOrderRef, paymentMode });
     }
   }
 
   function showOrderConfirmationModal(details) {
     const modal = document.getElementById("orderConfirmationModalBackdrop");
     const box = document.getElementById("confirmReceiptDetails");
-    const waBtn = document.getElementById("btnWhatsAppTrackReceipt");
-
     if (box) {
       box.innerHTML = `
-        <div class="confirm-receipt-row"><span>Order Reference:</span><strong>#${details.orderRef}</strong></div>
-        <div class="confirm-receipt-row"><span>Payment Method:</span><strong>${details.paymentMode}</strong></div>
-        <div class="confirm-receipt-row"><span>Estimated Delivery:</span><strong style="color:#4ade80;">48 – 72 Hours (Bangalore)</strong></div>
-        <div class="confirm-receipt-row total-row"><span>Status:</span><strong style="color:#eab308;">Confirmed &amp; Queued for Packaging</strong></div>
+        <div><strong>Order Reference:</strong> #${details.orderRef}</div>
+        <div><strong>Payment Mode:</strong> ${details.paymentMode}</div>
+        <div style="color:#48bb78; font-weight:700;">Delivering to Bangalore in 48–72 Hours</div>
       `;
     }
-
-    if (waBtn) {
-      waBtn.href = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}?text=${encodeURIComponent("Live tracking for Order #" + details.orderRef)}`;
-    }
-
     if (modal) {
       modal.classList.add("open");
       document.body.classList.add("modal-open");
@@ -2481,290 +1303,291 @@
   }
 
   window.closeOrderConfirmationModal = function () {
-    const modal = document.getElementById("orderConfirmationModalBackdrop");
-    if (modal) {
-      modal.classList.remove("open");
-      document.body.classList.remove("modal-open");
-    }
+    document.getElementById("orderConfirmationModalBackdrop")?.classList.remove("open");
+    document.body.classList.remove("modal-open");
   };
 
   window.openLiveTrackingFromConfirmation = function () {
     window.closeOrderConfirmationModal();
-    window.openOrderTrackingModal(true);
+    window.openAccountDashboard("orders");
   };
 
   // ==========================================
-  // 17. PAYMENT FAILURE MODAL & RETRY
+  // 10. LEAFLET MAP & LOCATION INTEGRATION
   // ==========================================
-  window.showPaymentFailedModal = function (orderRef, reasonText) {
-    lastFailedOrderRef = orderRef;
-    const modal = document.getElementById("paymentFailedModalBackdrop");
-    const refEl = document.getElementById("failedModalRef");
-    const reasonEl = document.getElementById("failedModalReason");
+  function initOrUpdateDeliveryMap(lat = DEFAULT_BANGALORE_COORDS[0], lng = DEFAULT_BANGALORE_COORDS[1]) {
+    const el = document.getElementById("deliveryMap");
+    if (!el || typeof L === "undefined") return;
 
-    if (refEl) refEl.textContent = "#" + orderRef;
-    if (reasonEl) {
-      reasonEl.textContent = reasonText || "Payment was cancelled or was not confirmed by the bank.";
-    }
-
-    if (db && orderRef) {
-      db.collection("orders").doc(orderRef).set({
-        paymentMode: "PHONEPE",
-        orderStatus: "Payment Incomplete",
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true }).catch(() => {});
-    }
-
-    if (modal) {
-      modal.classList.add("open");
-      document.body.classList.add("modal-open");
-    }
-  };
-
-  window.closePaymentFailedModal = function () {
-    const modal = document.getElementById("paymentFailedModalBackdrop");
-    if (modal) {
-      modal.classList.remove("open");
-      document.body.classList.remove("modal-open");
-    }
-  };
-
-  window.retryPaymentFromModal = async function () {
-    window.closePaymentFailedModal();
-
-    let matched = localOrdersHistory.find(o => o.orderRef === lastFailedOrderRef);
-    if (!matched && db && lastFailedOrderRef) {
-      try {
-        const doc = await db.collection("orders").doc(lastFailedOrderRef).get();
-        if (doc.exists) matched = doc.data();
-      } catch (e) {}
-    }
-
-    if (matched) {
-      window.retryOrderDirectly(matched, "PHONEPE");
+    if (!leafletMap) {
+      leafletMap = L.map("deliveryMap", { center: [lat, lng], zoom: 14 });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(leafletMap);
+      mapMarker = L.marker([lat, lng], { draggable: true }).addTo(leafletMap);
+      mapMarker.on("dragend", (e) => {
+        const p = e.target.getLatLng();
+        setMapCoords(p.lat, p.lng);
+        reverseGeocode(p.lat, p.lng);
+      });
     } else {
-      const pRadio = document.getElementById("payPhonePe");
-      if (pRadio) pRadio.checked = true;
-      updatePaymentModeUI();
-      openCheckoutModalUI();
+      leafletMap.setView([lat, lng], 14);
+      if (mapMarker) mapMarker.setLatLng([lat, lng]);
     }
-  };
+    setMapCoords(lat, lng);
+  }
 
-  window.switchToCodFromModal = async function () {
-    window.closePaymentFailedModal();
+  function initOrUpdateOnboardingMap(lat = DEFAULT_BANGALORE_COORDS[0], lng = DEFAULT_BANGALORE_COORDS[1]) {
+    const el = document.getElementById("onboardingMap");
+    if (!el || typeof L === "undefined") return;
 
-    let matched = localOrdersHistory.find(o => o.orderRef === lastFailedOrderRef);
-    if (!matched && db && lastFailedOrderRef) {
-      try {
-        const doc = await db.collection("orders").doc(lastFailedOrderRef).get();
-        if (doc.exists) matched = doc.data();
-      } catch (e) {}
-    }
-
-    if (matched) {
-      window.retryOrderDirectly(matched, "COD");
+    if (!onboardingLeafletMap) {
+      onboardingLeafletMap = L.map("onboardingMap", { center: [lat, lng], zoom: 14 });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(onboardingLeafletMap);
+      onboardingMapMarker = L.marker([lat, lng], { draggable: true }).addTo(onboardingLeafletMap);
+      onboardingMapMarker.on("dragend", (e) => {
+        const p = e.target.getLatLng();
+        reverseGeocode(p.lat, p.lng);
+      });
     } else {
-      const cRadio = document.getElementById("payCOD");
-      if (cRadio) cRadio.checked = true;
-      updatePaymentModeUI();
-      openCheckoutModalUI();
+      onboardingLeafletMap.setView([lat, lng], 14);
+      if (onboardingMapMarker) onboardingMapMarker.setLatLng([lat, lng]);
     }
-  };
+  }
 
-  // ==========================================
-  // 18. CUSTOMER REVIEWS
-  // ==========================================
-  function renderReviews() {
-    const grid = document.getElementById("reviewsDisplayGrid");
-    if (!grid) return;
+  function setMapCoords(lat, lng) {
+    const latIn = document.getElementById("custLatitude");
+    const lngIn = document.getElementById("custLongitude");
+    const badge = document.getElementById("mapCoordsBadge");
+    if (latIn) latIn.value = lat;
+    if (lngIn) lngIn.value = lng;
+    if (badge) badge.textContent = `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  }
 
-    if (reviewsList.length === 0) {
-      grid.innerHTML = `
-        <div class="empty-reviews-notice">
-          <span>🌱</span>
-          <p>No customer reviews posted yet.<br>Be the first to share your kitchen experience using the form below!</p>
-        </div>
-      `;
+  window.detectUserGeolocation = function (isOnboarding = false) {
+    if (!navigator.geolocation) {
+      window.showActionToast("Location Notice", "Geolocation not supported by browser.", "📍", "info");
       return;
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const isAdmin = urlParams.get("admin") === "true";
-
-    grid.innerHTML = reviewsList
-      .map((rev) => {
-        const starRatingNum = Math.max(1, Math.min(5, parseInt(rev.rating, 10) || 5));
-        const starsDisplay = "★".repeat(starRatingNum) + "☆".repeat(5 - starRatingNum);
-
-        return `
-          <div class="review-card" id="card-${rev.id}">
-            <div>
-              <div class="review-card-top">
-                <div class="review-stars">${starsDisplay}</div>
-                ${isAdmin ? `<button class="btn-admin-delete" onclick="deleteReview('${rev.id}')" title="Admin Delete">🗑️ Delete</button>` : ""}
-              </div>
-              <p class="review-text">"${escapeHtml(rev.comment)}"</p>
-            </div>
-            <div class="reviewer-meta">
-              <strong>${escapeHtml(rev.name)}</strong>
-              <span>${escapeHtml(rev.location)} • ${escapeHtml(rev.product)}</span>
-              <small class="review-date">${escapeHtml(rev.date)}</small>
-            </div>
-          </div>
-        `;
-      })
-      .join("");
-  }
-
-  window.deleteReview = function (reviewId) {
-    const enteredPin = prompt("Admin Verification: Enter Secret PIN to remove this review:");
-    if (enteredPin === ADMIN_PIN) {
-      reviewsList = reviewsList.filter((item) => item.id !== reviewId);
-      localStorage.setItem("manopavana_user_reviews", JSON.stringify(reviewsList));
-      renderReviews();
-      alert("Review removed successfully.");
-    } else if (enteredPin !== null) {
-      alert("Incorrect PIN. Action denied.");
-    }
-  };
-
-  // ==========================================
-  // 19. LEGAL MODALS & FIXED COUNTDOWN TIMER
-  // ==========================================
-  window.openLegalModal = function (modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-      modal.classList.add("open");
-      document.body.classList.add("modal-open");
-    }
-  };
-
-  window.closeLegalModal = function (modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-      modal.classList.remove("open");
-      document.body.classList.remove("modal-open");
-    }
-  };
-
-  function initLoyaltyFromStorage() {
-    const storedTime = localStorage.getItem("manopavana_bottle_scan_time");
-    if (storedTime) {
-      const elapsed = Date.now() - parseInt(storedTime, 10);
-      if (elapsed < QR_EXPIRY_MS) {
-        bottleScanTimestampMs = parseInt(storedTime, 10);
-        activeBottleCode = localStorage.getItem("manopavana_bottle_code") || "VERIFIED_BOTTLE";
-        startLiveCountdown();
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      if (isOnboarding) {
+        initOrUpdateOnboardingMap(lat, lng);
       } else {
-        window.clearLoyaltyDiscount();
+        initOrUpdateDeliveryMap(lat, lng);
       }
-    }
-  }
-
-  window.clearLoyaltyDiscount = function () {
-    activeBottleCode = null;
-    bottleScanTimestampMs = null;
-    localStorage.removeItem("manopavana_bottle_code");
-    localStorage.removeItem("manopavana_bottle_scan_time");
-    renderCart();
-    startLiveCountdown();
-    renderComboSection();
+      reverseGeocode(lat, lng);
+      window.showActionToast("Location Found", "GPS doorstep pinned successfully.", "✅", "success");
+    }, () => {
+      window.showActionToast("Notice", "Could not fetch GPS. Please tap or drag marker on map.", "📍", "info");
+    }, { timeout: 12000, enableHighAccuracy: false });
   };
 
-  function startLiveCountdown() {
-    if (countdownTimerInterval) clearInterval(countdownTimerInterval);
-
-    function updateTimer() {
-      const announcementText = document.getElementById("announcementText");
-      const topBar = document.getElementById("topAnnouncementBar");
-      const btnBottleClaim = document.getElementById("btnOpenBottleClaimModal");
-
-      if (!announcementText || !topBar) return;
-
-      if (isLoyaltyDiscountValid()) {
-        const remainingMs = Math.max(0, QR_EXPIRY_MS - (Date.now() - bottleScanTimestampMs));
-        if (remainingMs <= 0) {
-          window.clearLoyaltyDiscount();
-          return;
+  function reverseGeocode(lat, lng) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d && d.address) {
+          const pin = d.address.postcode || "";
+          if (pin && /^\d{6}$/.test(pin)) {
+            userSelectedPincode = pin;
+            isBangalorePincode = pin.startsWith("560");
+            localStorage.setItem("manopavana_user_pincode", pin);
+            updateLocationUI();
+          }
+          const addr = document.getElementById("custAddress");
+          if (addr && !addr.value && d.display_name) {
+            addr.value = d.display_name.split(",").slice(0, 3).join(", ");
+          }
         }
-
-        const totalSeconds = Math.floor(remainingMs / 1000);
-        const days = Math.floor(totalSeconds / 86400);
-        const hours = Math.floor((totalSeconds % 86400) / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-
-        const formatted = `${days}d ${String(hours).padStart(2, "0")}h ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
-        announcementText.innerHTML = `🏷 <strong>Bottle Scan Verified:</strong> 10% Loyalty Discount Active! <span class="countdown-pill">⏱ ${formatted}</span>`;
-        topBar.classList.add("loyal-banner");
-
-        if (btnBottleClaim) btnBottleClaim.style.display = "none";
-      } else {
-        announcementText.innerHTML = `🚚 <strong>FREE Doorstep Delivery</strong> on all orders above ₹500 across Bangalore (Delivered in 48–72 hrs)`;
-        topBar.classList.remove("loyal-banner");
-        if (btnBottleClaim) btnBottleClaim.style.display = "inline-flex";
-        clearInterval(countdownTimerInterval);
-      }
-    }
-
-    updateTimer();
-    countdownTimerInterval = setInterval(updateTimer, 1000);
+      }).catch(() => {});
   }
 
+  function loadSavedDeliveryDetails() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem("manopavana_saved_delivery")); } catch (e) {}
+    
+    const summaryCard = document.getElementById("savedAddressSummaryCard");
+    const fieldsContainer = document.getElementById("deliveryFieldsContainer");
+    const dashName = document.getElementById("dashAddrName");
+    const dashText = document.getElementById("dashAddrText");
+    const dashPhone = document.getElementById("dashAddrPhone");
+
+    if (saved && saved.name && saved.address) {
+      const nameEl = document.getElementById("savedAddrName");
+      const textEl = document.getElementById("savedAddrText");
+      const phoneEl = document.getElementById("savedAddrPhone");
+
+      if (nameEl) nameEl.textContent = saved.name;
+      if (textEl) textEl.textContent = `${saved.address}, ${saved.pincode}`;
+      if (phoneEl) phoneEl.textContent = saved.phone;
+
+      if (dashName) dashName.textContent = saved.name;
+      if (dashText) dashText.textContent = `${saved.address}, ${saved.pincode}`;
+      if (dashPhone) dashPhone.textContent = saved.phone;
+
+      if (summaryCard) summaryCard.style.display = "block";
+      if (fieldsContainer) fieldsContainer.style.display = "none";
+      initOrUpdateDeliveryMap(saved.latitude || DEFAULT_BANGALORE_COORDS[0], saved.longitude || DEFAULT_BANGALORE_COORDS[1]);
+    } else {
+      if (summaryCard) summaryCard.style.display = "none";
+      if (fieldsContainer) fieldsContainer.style.display = "block";
+      initOrUpdateDeliveryMap();
+    }
+  }
+
+  window.toggleEditAddress = function (showForm = true) {
+    const summaryCard = document.getElementById("savedAddressSummaryCard");
+    const fieldsContainer = document.getElementById("deliveryFieldsContainer");
+    if (summaryCard) summaryCard.style.display = showForm ? "none" : "block";
+    if (fieldsContainer) fieldsContainer.style.display = showForm ? "block" : "none";
+    if (showForm && leafletMap) {
+      setTimeout(() => leafletMap.invalidateSize(), 200);
+    }
+  };
+
+  function updateLocationUI() {
+    const headerLbl = document.getElementById("headerLocationLabel");
+    const cartLbl = document.getElementById("cartDrawerLocLabel");
+    if (headerLbl) headerLbl.innerHTML = `Deliver to: <strong>Bangalore (${userSelectedPincode})</strong>`;
+    if (cartLbl) cartLbl.textContent = `Bangalore (${userSelectedPincode})`;
+  }
+
+  window.openLocationCheckModal = function () {
+    const modal = document.getElementById("locationModalBackdrop");
+    modal?.classList.add("open");
+    document.body.classList.add("modal-open");
+    setTimeout(() => initOrUpdateOnboardingMap(), 250);
+  };
+
+  window.closeLocationCheckModal = function () {
+    document.getElementById("locationModalBackdrop")?.classList.remove("open");
+    document.body.classList.remove("modal-open");
+  };
+
+  window.submitPincodeCheck = function () {
+    const pin = document.getElementById("pincodeCheckInput")?.value.trim();
+    if (/^\d{6}$/.test(pin)) {
+      userSelectedPincode = pin;
+      isBangalorePincode = pin.startsWith("560");
+      localStorage.setItem("manopavana_user_pincode", pin);
+      updateLocationUI();
+      window.closeLocationCheckModal();
+      window.showActionToast("Location Updated", `Deliveries set to ${pin}`, "📍", "success");
+    }
+  };
+
   // ==========================================
-  // 20. DOM INITIALIZATION
+  // 11. BOTTLE CLAIM 10% DISCOUNT
+  // ==========================================
+  window.openBottleClaimModal = function () {
+    document.getElementById("bottleQuizModalBackdrop")?.classList.add("open");
+    document.body.classList.add("modal-open");
+    window.selectOnboardingQuizBottle("groundnut");
+  };
+
+  window.closeBottleQuizModal = function () {
+    document.getElementById("bottleQuizModalBackdrop")?.classList.remove("open");
+    document.body.classList.remove("modal-open");
+  };
+
+  window.selectOnboardingQuizBottle = function (key) {
+    selectedQuizBottleKey = key;
+    const q = BOTTLE_QUIZ_POOLS[key][0];
+    const hintText = document.getElementById("onboardQuizHintText");
+    const qTitle = document.getElementById("onboardQuizQuestionText");
+
+    if (hintText) hintText.textContent = q.hint;
+    if (qTitle) qTitle.textContent = q.question;
+
+    const distractors = [
+      "Extracted using industrial chemical solvents",
+      "Refined, bleached, and chemically deodorized",
+      "Blended with synthetic liquid paraffin wax"
+    ];
+
+    const options = [
+      { text: q.correct, correct: true },
+      { text: distractors[0], correct: false },
+      { text: distractors[1], correct: false }
+    ].sort(() => Math.random() - 0.5);
+
+    activeQuizData = { correct: q.correct };
+
+    const container = document.getElementById("onboardQuizOptionsContainer");
+    if (container) {
+      container.innerHTML = options.map((opt, i) => `
+        <label class="quiz-option-card" onclick="window.chooseQuizOpt('${escapeHtml(opt.text)}')">
+          <input type="radio" name="bottleRadio" />
+          <span>${escapeHtml(opt.text)}</span>
+        </label>
+      `).join("");
+    }
+  };
+
+  window.chooseQuizOpt = function (text) {
+    selectedQuizOptionText = text;
+  };
+
+  window.submitOnboardingBottleQuiz = function () {
+    if (selectedQuizOptionText === activeQuizData.correct) {
+      bottleScanTimestampMs = Date.now();
+      localStorage.setItem("manopavana_bottle_scan_time", bottleScanTimestampMs.toString());
+      renderCart();
+      window.closeBottleQuizModal();
+      window.showActionToast("Discount Unlocked", "10% Bottle Reorder Discount Active!", "🎉", "success");
+    } else {
+      alert("Option does not match your physical bottle label.");
+    }
+  };
+
+  window.openFlipkartModal = function () {
+    document.getElementById("flipkartModalBackdrop")?.classList.add("open");
+    document.body.classList.add("modal-open");
+  };
+
+  window.closeFlipkartModal = function () {
+    document.getElementById("flipkartModalBackdrop")?.classList.remove("open");
+    document.body.classList.remove("modal-open");
+  };
+
+  window.openLegalModal = function (id) {
+    document.getElementById(id)?.classList.add("open");
+    document.body.classList.add("modal-open");
+  };
+
+  window.closeLegalModal = function (id) {
+    document.getElementById(id)?.classList.remove("open");
+    document.body.classList.remove("modal-open");
+  };
+
+  // ==========================================
+  // 12. INITIALIZATION & REVIEWS
   // ==========================================
   document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("soundToggleBtn")?.addEventListener("click", toggleAudio);
-    initVideoAutoplay();
-
-    tryImmediateAudioPlayback();
-
-    const enableAudioOnGesture = () => {
-      if (!hasInteracted) {
-        hasInteracted = true;
-        tryImmediateAudioPlayback();
-      }
-      ["click", "touchend"].forEach((e) => window.removeEventListener(e, enableAudioOnGesture));
-    };
-    ["click", "touchend"].forEach((e) => window.addEventListener(e, enableAudioOnGesture, { passive: true }));
+    initFirebaseAuth();
+    populateStatesDropdown();
+    renderProductsGrid();
+    renderCart();
+    updateLocationUI();
 
     document.getElementById("openCartBtn")?.addEventListener("click", window.openCart);
     document.getElementById("closeCartBtn")?.addEventListener("click", window.closeCart);
     document.getElementById("cartBackdrop")?.addEventListener("click", window.closeCart);
-
-    // Direct claim button listener in top announcement bar
-    document.getElementById("btnOpenBottleClaimModal")?.addEventListener("click", window.openBottleClaimModal);
-
-    document.getElementById("openCheckoutModalBtn")?.addEventListener("click", () => {
-      if (cart.length === 0) {
-        alert("Please add at least one bottle to your bag first!");
-        return;
-      }
-      if (!isBangalorePincode) {
-        window.openFlipkartModal();
-        return;
-      }
-      checkoutSource = "cart";
-      buyNowItem = null;
-      retryOrderData = null;
-      window.closeCart();
-      promptLoginOrOpenCheckout();
-    });
-
+    document.getElementById("openCheckoutModalBtn")?.addEventListener("click", promptLoginOrOpenCheckout);
     document.getElementById("closeModalBtn")?.addEventListener("click", window.closeCheckoutModal);
-    document.getElementById("closeDetailModalBtn")?.addEventListener("click", window.closeProductDetailModal);
-
-    document.getElementById("payPhonePe")?.addEventListener("change", updatePaymentModeUI);
-    document.getElementById("payCOD")?.addEventListener("change", updatePaymentModeUI);
-    document.getElementById("payWhatsApp")?.addEventListener("change", updatePaymentModeUI);
-
     document.getElementById("submitOrderBtn")?.addEventListener("click", handleCheckoutSubmission);
 
-    ["custPhone", "custPincode", "onboardPincodeInput", "pincodeCheckInput"].forEach((id) => {
-      document.getElementById(id)?.addEventListener("input", (e) => {
-        e.target.value = e.target.value.replace(/\D/g, "");
-      });
+    document.getElementById("soundToggleBtn")?.addEventListener("click", () => {
+      const audio = document.getElementById("heroBgAudio");
+      if (!audio) return;
+      if (audio.paused) {
+        audio.play();
+        document.getElementById("soundText").textContent = "Sound On";
+      } else {
+        audio.pause();
+        document.getElementById("soundText").textContent = "Sound Off";
+      }
     });
 
     document.getElementById("productReviewForm")?.addEventListener("submit", (e) => {
@@ -2775,10 +1598,7 @@
       const location = document.getElementById("revLocation")?.value.trim() || "Bangalore";
       const comment = document.getElementById("revComment")?.value.trim();
 
-      if (!name || !comment) {
-        alert("Please fill in your name and kitchen feedback.");
-        return;
-      }
+      if (!name || !comment) return;
 
       reviewsList.unshift({
         id: "REV-" + Date.now(),
@@ -2791,99 +1611,8 @@
       });
 
       localStorage.setItem("manopavana_user_reviews", JSON.stringify(reviewsList));
-      renderReviews();
       e.target.reset();
-      window.showActionToast("Review Submitted", "✨ Thank you! Your review has been posted.", "✨", "success");
+      window.showActionToast("Review Submitted", "Thank you! Your feedback has been posted.", "✨", "success");
     });
-
-    document.querySelectorAll(".faq-question").forEach((button) => {
-      button.addEventListener("click", () => {
-        const item = button.parentElement;
-        const isActive = item.classList.contains("active");
-        document.querySelectorAll(".faq-item").forEach((el) => el.classList.remove("active"));
-        if (!isActive) item.classList.add("active");
-      });
-    });
-
-    // Verify PhonePe Return
-    const urlParams = new URLSearchParams(window.location.search);
-    const incomingOrderRef = urlParams.get("orderRef");
-    const incomingStatus = (urlParams.get("status") || "").toLowerCase();
-
-    if (incomingOrderRef) {
-      const sanitizedIncomingRef = incomingOrderRef.replace(/[^a-zA-Z0-9_-]/g, "").substring(0, 35);
-      const savedCheckoutSource = sessionStorage.getItem("manopavana_pending_checkout_source") || "cart";
-
-      if (incomingStatus.includes("fail") || incomingStatus.includes("cancel") || incomingStatus.includes("error")) {
-        window.showPaymentFailedModal(sanitizedIncomingRef, "Payment session was cancelled at PhonePe gateway.");
-        sessionStorage.removeItem("manopavana_pending_checkout_source");
-        sessionStorage.removeItem("manopavana_pending_order_ref");
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } else {
-        window.showActionToast("Checking Status", "Verifying with PhonePe... ⏳", "⏳", "info");
-
-        let handled = false;
-        const cutoffTimer = setTimeout(() => {
-          if (!handled) {
-            handled = true;
-            window.showPaymentFailedModal(sanitizedIncomingRef, "Payment was not confirmed by the bank. Order not yet placed.");
-            sessionStorage.removeItem("manopavana_pending_checkout_source");
-            sessionStorage.removeItem("manopavana_pending_order_ref");
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-        }, 3500);
-
-        callBackend({ action: "verify_payment", orderRef: sanitizedIncomingRef })
-          .then((verification) => {
-            if (handled) return;
-            clearTimeout(cutoffTimer);
-            handled = true;
-
-            if (verification && verification.paymentStatus === "COMPLETED") {
-              if (db) {
-                try {
-                  db.collection("orders").doc(sanitizedIncomingRef).set({
-                    paymentMode: "PHONEPE_PAID",
-                    orderStatus: "Placed",
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                  }, { merge: true }).catch((fsErr) => console.warn("Notice updating Firestore status:", fsErr));
-                } catch (e) {}
-              }
-
-              if (savedCheckoutSource === "cart") {
-                cart = [];
-                localStorage.removeItem("manopavana_cart");
-                renderCart();
-              }
-              showOrderConfirmationModal({
-                orderRef: sanitizedIncomingRef,
-                paymentMode: "PhonePe Online (Verified)"
-              });
-            } else {
-              window.showPaymentFailedModal(sanitizedIncomingRef, verification.reason || "Payment was cancelled or declined by bank.");
-            }
-          })
-          .catch(() => {
-            if (handled) return;
-            clearTimeout(cutoffTimer);
-            handled = true;
-            window.showPaymentFailedModal(sanitizedIncomingRef, "Payment was not confirmed. Connection dropped.");
-          })
-          .finally(() => {
-            sessionStorage.removeItem("manopavana_pending_checkout_source");
-            sessionStorage.removeItem("manopavana_pending_order_ref");
-            window.history.replaceState({}, document.title, window.location.pathname);
-          });
-      }
-    }
-
-    populateStatesDropdown();
-    updateLocationUI();
-    initLoyaltyFromStorage();
-    renderProductsGrid();
-    renderCart();
-    renderReviews();
-    initFirebaseAuth();
-    checkAndTriggerUpfrontOnboarding();
   });
 })();
