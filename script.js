@@ -1,6 +1,6 @@
 // ==========================================================================
 // MANOPAVANA - ARTISANAL WOOD-PRESSED OILS (BANGALORE)
-// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - FIRESTORE DIRECT
+// COMPLETE PRODUCTION CLIENT SCRIPT (script.js) - LOCATION-FIRST & FIRESTORE DIRECT
 // ==========================================================================
 
 (function () {
@@ -20,7 +20,7 @@
   // Default Bangalore Landmark Center (Vidhana Soudha corridor)
   const DEFAULT_BANGALORE_COORDS = [12.9716, 77.5946];
 
-  // Google Apps Script URL (RETAINED EXCLUSIVELY FOR PHONEPE SECRET HANDSHAKE)
+  // Google Apps Script Web App Deployment URL (Stateless PhonePe v2 Gateway Proxy)
   const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbyQ-8w0XmfJiBUm8fg_W3kBQ7XSXJTftmc6I7188L25N_dwWCKDtYwnpRJTcCii70U-/exec";
 
   // Active Firebase Configuration
@@ -97,7 +97,7 @@
   let currentDetailProductKey = null;
   let currentDetailSelectedSize = "1L";
 
-  // Upfront Onboarding State
+  // Bottle Quiz State
   let onboardingQuizAttemptsLeft = 2;
   let selectedQuizBottleKey = "groundnut";
   let activeQuizData = null;
@@ -397,7 +397,7 @@
   }
 
   // ==========================================
-  // 4. ACTION TOAST & ERROR TRANSLATOR
+  // 4. ACTION TOAST & ERROR TRANSLATION
   // ==========================================
   window.showActionToast = function (title, message, icon = "✨", type = "info") {
     const toast = document.getElementById("actionToast");
@@ -424,7 +424,6 @@
     }, 4000);
   };
 
-  // Converts Firebase raw errors into clean, professional user explanations
   function getFriendlyAuthErrorMessage(err) {
     if (!err) return "An unexpected error occurred. Please try again.";
     const code = err.code || "";
@@ -457,7 +456,7 @@
   }
 
   // ==========================================
-  // 5. JSONP BACKEND CALLER (FOR PHONEPE PG ONLY)
+  // 5. JSONP BACKEND CALLER (PHONEPE GATEWAY PROXY ONLY)
   // ==========================================
   function callBackend(params) {
     return new Promise((resolve, reject) => {
@@ -489,7 +488,7 @@
       timer = setTimeout(function () {
         delete window[callbackName];
         if (script && script.parentNode) script.parentNode.removeChild(script);
-        reject(new Error("Server response timed out. Action cached locally."));
+        reject(new Error("Gateway connection timed out."));
       }, 15000);
 
       document.body.appendChild(script);
@@ -535,7 +534,6 @@
     updateAuthUI();
   }
 
-  // Synchronizes customer profile directly into Firestore
   async function syncCustomerRecord(user, extraData, isNewUser) {
     if (!db || !user) return;
     try {
@@ -797,7 +795,7 @@
   });
 
   // ==========================================
-  // 7. ORDER TRACKING & FIRESTORE HISTORY (< 30ms)
+  // 7. ORDER TRACKING & FIRESTORE REALTIME READS
   // ==========================================
   window.openOrderTrackingModal = function (forceAccountTab = false) {
     const modal = document.getElementById("trackOrderModalBackdrop");
@@ -854,7 +852,7 @@
     }
     if (list) list.style.display = "none";
 
-    // 1. Direct Firestore Instant Read (20–30ms)
+    // Instant read directly from Firestore
     if (db && currentUser) {
       try {
         const querySnapshot = await db.collection("orders")
@@ -868,7 +866,6 @@
           querySnapshot.forEach((doc) => {
             orders.push(doc.data());
           });
-          // Sort newest first in memory
           orders.sort((a, b) => (b.timestampMs || 0) - (a.timestampMs || 0));
           list.innerHTML = renderOrdersTimelineList(orders);
           list.style.display = "block";
@@ -879,7 +876,6 @@
       }
     }
 
-    // 2. Fallback to local cached orders if offline or Firestore query is empty
     if (loading) loading.style.display = "none";
     if (list) {
       const localMatches = localOrdersHistory.filter(o => 
@@ -1014,7 +1010,6 @@
     }
     if (resultBox) resultBox.style.display = "none";
 
-    // Instant read directly from Firestore
     if (db) {
       try {
         let matched = [];
@@ -1040,7 +1035,6 @@
       }
     }
 
-    // Local storage cache fallback
     if (btn) { btn.disabled = false; btn.textContent = "Fetch Live Status 🔍"; }
     const localMatches = localOrdersHistory.filter(o => (orderRef && o.orderRef === orderRef) || (phone && o.phone === phone));
     if (localMatches.length > 0) {
@@ -1053,11 +1047,15 @@
   };
 
   // ==========================================
-  // 8. UPFRONT 2-STEP ONBOARDING
+  // 8. ONBOARDING & LOCATION-FIRST MODAL
   // ==========================================
-  window.openOnboardingModal = function (step = 1) {
+  // Directs first-time visitors to choose their location/pincode first
+  window.openOnboardingModal = function (step = 2) {
     const modal = document.getElementById("onboardingModalBackdrop");
-    if (!modal) return;
+    if (!modal) {
+      window.openLocationCheckModal();
+      return;
+    }
     onboardingQuizAttemptsLeft = 2;
     modal.classList.add("open");
     document.body.classList.add("modal-open");
@@ -1079,11 +1077,13 @@
     const title = document.getElementById("onboardingModalTitle");
 
     if (stepNumber === 1) {
+      // Bottle Quiz (Only shown when explicitly chosen or claimed)
       if (s1) s1.style.display = "flex";
       if (s2) s2.style.display = "none";
-      if (title) title.innerHTML = "🏷️ Scanned our Bottle?";
+      if (title) title.innerHTML = "🏷️ Scanned our Bottle? Claim 10% OFF";
       window.selectOnboardingQuizBottle(selectedQuizBottleKey);
     } else {
+      // Location Selection (Default for all new visitors)
       if (s1) s1.style.display = "none";
       if (s2) s2.style.display = "flex";
       if (title) title.innerHTML = "📍 Where should we deliver?";
@@ -1093,6 +1093,11 @@
         pinInput.focus();
       }
     }
+  };
+
+  // Dedicated button/banner trigger for bottle scan quiz
+  window.openBottleClaimModal = function () {
+    window.openOnboardingModal(1);
   };
 
   window.selectOnboardingQuizBottle = function (bottleKey) {
@@ -1182,7 +1187,7 @@
       window.showActionToast("Discount Activated", "🎉 10% Bottle Reorder Discount is active!", "✨", "success");
 
       setTimeout(() => {
-        window.goToOnboardingStep(2);
+        window.closeOnboardingModal();
       }, 1200);
     } else {
       onboardingQuizAttemptsLeft--;
@@ -1199,7 +1204,7 @@
 
       if (onboardingQuizAttemptsLeft <= 0) {
         alert("Attempts exhausted. You can continue shopping directly!");
-        window.goToOnboardingStep(2);
+        window.closeOnboardingModal();
       }
     }
   };
@@ -1245,9 +1250,19 @@
   };
 
   function checkAndTriggerUpfrontOnboarding() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const scanParam = urlParams.get("scan");
+
+    // If customer scanned a physical QR code containing ?scan=bottle
+    if (scanParam) {
+      window.openOnboardingModal(1);
+      return;
+    }
+
+    // Default flow for new visitors: Location & Pincode confirmation (Step 2)
     const completed = localStorage.getItem("manopavana_onboarding_completed");
     if (completed !== "true") {
-      window.openOnboardingModal(1);
+      window.openOnboardingModal(2);
     }
   }
 
@@ -2060,7 +2075,7 @@
   }
 
   // ==========================================
-  // 16. CHECKOUT, PAYMENT GATEWAY & FIRESTORE SAVE
+  // 16. CHECKOUT & INSTANT FIRESTORE RECORDING
   // ==========================================
   window.handleDirectBuyNow = function (id, title, price, img) {
     if (!isBangalorePincode) {
@@ -2319,8 +2334,11 @@
     const uid = currentUser.uid || ("GUEST_" + phone);
     const currentOrigin = window.location.origin + window.location.pathname;
 
+    // Sanitize order ref for safe PhonePe v2 constraints (max 35 alphanumeric characters)
+    const sanitizedOrderRef = currentOrderRef.replace(/[^a-zA-Z0-9_-]/g, "").substring(0, 35);
+
     const orderPayload = {
-      orderRef: currentOrderRef,
+      orderRef: sanitizedOrderRef,
       firebaseUid: uid,
       customerName: name,
       phone: phone,
@@ -2335,17 +2353,17 @@
     };
 
     try {
-      // 1. Save directly into Firestore first (Instant ~30ms)
+      // 1. Direct Firestore write: Instant ~30ms ledger recording
       await saveOrderToFirestore(orderPayload);
 
-      // 2. Handle Online PhonePe Flow vs Instant COD/WhatsApp Flow
+      // 2. Gateway vs Direct Confirmation Routing
       if (paymentMode === "PHONEPE") {
         sessionStorage.setItem("manopavana_pending_checkout_source", checkoutSource);
-        sessionStorage.setItem("manopavana_pending_order_ref", currentOrderRef);
+        sessionStorage.setItem("manopavana_pending_order_ref", sanitizedOrderRef);
 
         const response = await callBackend({
           action: "create_phonepe_order",
-          orderRef: currentOrderRef,
+          orderRef: sanitizedOrderRef,
           firebaseUid: uid,
           amount: currentCalculatedGrandTotal,
           name: name,
@@ -2376,11 +2394,11 @@
           return;
         }
       } else {
-        // DIRECT COD & WHATSAPP: NO GOOGLE SHEETS / APPS SCRIPT BOTTLENECK
+        // Cash on Delivery & WhatsApp Orders complete immediately with zero gateway delays
         const orderSnapshot = {
           timestamp: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
           timestampMs: Date.now(),
-          orderRef: currentOrderRef,
+          orderRef: sanitizedOrderRef,
           firebaseUid: uid,
           customerName: name,
           phone: phone,
@@ -2394,7 +2412,7 @@
           longitude: longitude
         };
 
-        const existingIdx = localOrdersHistory.findIndex(o => o.orderRef === currentOrderRef);
+        const existingIdx = localOrdersHistory.findIndex(o => o.orderRef === sanitizedOrderRef);
         if (existingIdx !== -1) {
           localOrdersHistory[existingIdx] = orderSnapshot;
         } else {
@@ -2411,14 +2429,14 @@
         window.closeCheckoutModal();
 
         showOrderConfirmationModal({
-          orderRef: currentOrderRef,
+          orderRef: sanitizedOrderRef,
           customerName: name,
           paymentMode: paymentMode === "COD" ? "Cash on Delivery (COD)" : "WhatsApp Manual Order"
         });
 
         if (paymentMode === "WHATSAPP") {
           let msg = `🌿 *New Order - MANOPAVANA Wood-Pressed Oils*\n`;
-          msg += `*Ref:* #${currentOrderRef}\n*UID:* ${uid}\n`;
+          msg += `*Ref:* #${sanitizedOrderRef}\n*UID:* ${uid}\n`;
           msg += `*Name:* ${name}\n*Phone:* ${phone}\n*Address:* ${address}, ${city} - ${pincode}\n`;
           msg += `*Location:* https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}\n`;
           msg += `*Items:* ${itemsSummary}\n*Total:* ₹${currentCalculatedGrandTotal}\n*Payment:* WhatsApp Manual`;
@@ -2429,7 +2447,7 @@
       console.warn("Checkout processing notice:", err);
       alert(err.message || "Failed to process checkout. Please choose Cash on Delivery or WhatsApp Order.");
     } finally {
-      // PREVENTS CHECKOUT LOCKOUT: Always re-enable button and reset reference ID
+      // Re-enable button and reset reference ID to ensure customer can retry anytime
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = origText;
@@ -2476,7 +2494,7 @@
   };
 
   // ==========================================
-  // 17. PAYMENT FAILURE MODAL & RETRY HANDLERS
+  // 17. PAYMENT FAILURE MODAL & RETRY
   // ==========================================
   window.showPaymentFailedModal = function (orderRef, reasonText) {
     lastFailedOrderRef = orderRef;
@@ -2489,7 +2507,6 @@
       reasonEl.textContent = reasonText || "Payment was cancelled or was not confirmed by the bank.";
     }
 
-    // Update Firestore status to reflect incomplete attempt
     if (db && orderRef) {
       db.collection("orders").doc(orderRef).set({
         paymentMode: "PHONEPE",
@@ -2716,6 +2733,9 @@
     document.getElementById("closeCartBtn")?.addEventListener("click", window.closeCart);
     document.getElementById("cartBackdrop")?.addEventListener("click", window.closeCart);
 
+    // Direct claim button listener in top announcement bar
+    document.getElementById("btnOpenBottleClaimModal")?.addEventListener("click", window.openBottleClaimModal);
+
     document.getElementById("openCheckoutModalBtn")?.addEventListener("click", () => {
       if (cart.length === 0) {
         alert("Please add at least one bottle to your bag first!");
@@ -2791,10 +2811,11 @@
     const incomingStatus = (urlParams.get("status") || "").toLowerCase();
 
     if (incomingOrderRef) {
+      const sanitizedIncomingRef = incomingOrderRef.replace(/[^a-zA-Z0-9_-]/g, "").substring(0, 35);
       const savedCheckoutSource = sessionStorage.getItem("manopavana_pending_checkout_source") || "cart";
 
       if (incomingStatus.includes("fail") || incomingStatus.includes("cancel") || incomingStatus.includes("error")) {
-        window.showPaymentFailedModal(incomingOrderRef, "Payment session was cancelled at PhonePe gateway.");
+        window.showPaymentFailedModal(sanitizedIncomingRef, "Payment session was cancelled at PhonePe gateway.");
         sessionStorage.removeItem("manopavana_pending_checkout_source");
         sessionStorage.removeItem("manopavana_pending_order_ref");
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -2805,14 +2826,14 @@
         const cutoffTimer = setTimeout(() => {
           if (!handled) {
             handled = true;
-            window.showPaymentFailedModal(incomingOrderRef, "Payment was not confirmed by the bank. Order not yet placed.");
+            window.showPaymentFailedModal(sanitizedIncomingRef, "Payment was not confirmed by the bank. Order not yet placed.");
             sessionStorage.removeItem("manopavana_pending_checkout_source");
             sessionStorage.removeItem("manopavana_pending_order_ref");
             window.history.replaceState({}, document.title, window.location.pathname);
           }
-        }, 2500);
+        }, 3500);
 
-        callBackend({ action: "verify_payment", orderRef: incomingOrderRef })
+        callBackend({ action: "verify_payment", orderRef: sanitizedIncomingRef })
           .then((verification) => {
             if (handled) return;
             clearTimeout(cutoffTimer);
@@ -2820,11 +2841,13 @@
 
             if (verification && verification.paymentStatus === "COMPLETED") {
               if (db) {
-                db.collection("orders").doc(incomingOrderRef).set({
-                  paymentMode: "PHONEPE_PAID",
-                  orderStatus: "Placed",
-                  updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true }).catch(() => {});
+                try {
+                  db.collection("orders").doc(sanitizedIncomingRef).set({
+                    paymentMode: "PHONEPE_PAID",
+                    orderStatus: "Placed",
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                  }, { merge: true }).catch((fsErr) => console.warn("Notice updating Firestore status:", fsErr));
+                } catch (e) {}
               }
 
               if (savedCheckoutSource === "cart") {
@@ -2833,18 +2856,18 @@
                 renderCart();
               }
               showOrderConfirmationModal({
-                orderRef: incomingOrderRef,
+                orderRef: sanitizedIncomingRef,
                 paymentMode: "PhonePe Online (Verified)"
               });
             } else {
-              window.showPaymentFailedModal(incomingOrderRef, verification.reason || "Payment was cancelled or declined by bank.");
+              window.showPaymentFailedModal(sanitizedIncomingRef, verification.reason || "Payment was cancelled or declined by bank.");
             }
           })
           .catch(() => {
             if (handled) return;
             clearTimeout(cutoffTimer);
             handled = true;
-            window.showPaymentFailedModal(incomingOrderRef, "Payment was not confirmed. Connection dropped.");
+            window.showPaymentFailedModal(sanitizedIncomingRef, "Payment was not confirmed. Connection dropped.");
           })
           .finally(() => {
             sessionStorage.removeItem("manopavana_pending_checkout_source");
