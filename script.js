@@ -809,7 +809,7 @@
   });
 
   // ==========================================
-  // 7. USER DASHBOARD & ORDER TRACKING
+  // 7. USER DASHBOARD & FLIPKART ORDER TRACKING
   // ==========================================
   window.openAccountDashboard = function (initialTab = "orders") {
     const dropdown = document.getElementById("authDropdownMenu");
@@ -895,7 +895,8 @@
 
     if (saved && saved.name && saved.address) {
       if (nameEl) nameEl.textContent = saved.name;
-      if (textEl) textEl.textContent = `${saved.address}, ${saved.city || "Bengaluru"}, ${saved.state || "Karnataka"} - ${saved.pincode || "560058"}`;
+      const cleanCity = saved.city || "Bengaluru";
+      if (textEl) textEl.textContent = `${saved.address}, ${cleanCity}, ${saved.state || "Karnataka"} - ${saved.pincode || "560058"}`;
       if (phoneEl) phoneEl.textContent = `📞 ${saved.phone}`;
     } else {
       if (nameEl) nameEl.textContent = "No address saved yet";
@@ -951,10 +952,10 @@
         list.innerHTML = renderOrdersTimelineList(localMatches);
       } else {
         list.innerHTML = `
-          <div style="text-align:center; padding:3rem 1rem; color:#a8a29e;">
-            <div style="font-size:2rem; margin-bottom:0.5rem;">📦</div>
-            <strong>No orders placed yet.</strong>
-            <p style="margin-top:0.4rem; font-size:0.9rem;">Browse our fresh wood-pressed oils and place your first order!</p>
+          <div class="empty-orders-view">
+            <div class="empty-icon">📦</div>
+            <h4>No orders placed yet</h4>
+            <p>Browse our cold wood-pressed oils and place your first order!</p>
           </div>
         `;
       }
@@ -980,31 +981,32 @@
       const orderPayloadAttr = escapeHtml(JSON.stringify(order));
 
       return `
-        <div class="history-order-card" style="${isUnpaid ? 'border:1px solid #ef4444;' : ''}">
-          <div class="history-card-header">
-            <div>
-              <strong>Order #${escapeHtml(order.orderRef)}</strong>
-              <small style="color:#a8a29e; display:block;">${escapeHtml(order.timestamp || "Recent")} • ₹${escapeHtml(order.grandTotal)}</small>
+        <div class="fk-order-card ${isUnpaid ? 'fk-order-card-unpaid' : ''}">
+          <div class="fk-order-header">
+            <div class="fk-order-title-box">
+              <span class="fk-order-ref">Order #${escapeHtml(order.orderRef)}</span>
+              <span class="fk-order-meta">${escapeHtml(order.timestamp || "Recent")} • <strong>₹${escapeHtml(order.grandTotal)}</strong></span>
             </div>
-            <span class="track-status-pill" style="${isUnpaid ? 'background:#ef4444; color:#fff;' : ''}">
+            <span class="fk-order-status-badge ${isUnpaid ? 'badge-danger' : 'badge-success'}">
               ${isUnpaid ? '⚠️ Payment Incomplete' : escapeHtml(order.orderStatus || "Placed")}
             </span>
           </div>
 
-          <div class="history-card-items">
-            <strong>Items:</strong> ${escapeHtml(order.items)}
+          <div class="fk-order-items">
+            <span class="fk-order-label">Items:</span>
+            <span class="fk-order-names">${escapeHtml(order.items)}</span>
           </div>
 
           ${isUnpaid ? `
-            <div style="margin-top:1rem; padding:0.85rem; background:#291414; border-radius:8px; border:1px solid #7f1d1d;">
-              <p style="margin:0 0 0.5rem 0; color:#fca5a5; font-size:0.85rem; line-height:1.4;">
+            <div class="fk-order-unpaid-box">
+              <p class="fk-order-unpaid-text">
                 Payment was not completed for this order. Complete payment online or switch to Cash on Delivery:
               </p>
-              <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                <button type="button" class="btn-track-this-order" style="padding:0.6rem 1rem; font-size:0.85rem; flex:1; background:#eab308; color:#0c0a09; font-weight:bold; border-radius:6px; border:none; cursor:pointer;" onclick='window.retryOrderDirectly(${orderPayloadAttr}, "PHONEPE")'>
+              <div class="fk-order-unpaid-actions">
+                <button type="button" class="btn-fk-order-action btn-fk-retry" onclick='window.retryOrderDirectly(${orderPayloadAttr}, "PHONEPE")'>
                   ⚡ Retry via PhonePe
                 </button>
-                <button type="button" class="btn-track-this-order" style="padding:0.6rem 1rem; font-size:0.85rem; flex:1; background:#292524; color:#fafaf9; border:1px solid #44403c; border-radius:6px; cursor:pointer;" onclick='window.retryOrderDirectly(${orderPayloadAttr}, "COD")'>
+                <button type="button" class="btn-fk-order-action btn-fk-cod" onclick='window.retryOrderDirectly(${orderPayloadAttr}, "COD")'>
                   💵 Switch to COD
                 </button>
               </div>
@@ -1017,7 +1019,7 @@
               </div>
               <div class="track-step-node node-step ${oStat.includes('pack') || oStat.includes('process') || oStat.includes('settl') || oStat.includes('dispatch') || oStat.includes('deliver') ? 'active' : ''}">
                 <span class="node-dot ${oStat.includes('pack') || oStat.includes('process') || oStat.includes('settl') || oStat.includes('dispatch') || oStat.includes('deliver') ? 'active' : ''}">⚙</span>
-                <span class="node-lbl">Packed &amp; Sealed</span>
+                <span class="node-lbl">Packed</span>
               </div>
               <div class="track-step-node node-step ${oStat.includes('dispatch') || oStat.includes('transit') || oStat.includes('out') || oStat.includes('deliver') ? 'active' : ''}">
                 <span class="node-dot ${oStat.includes('dispatch') || oStat.includes('transit') || oStat.includes('out') || oStat.includes('deliver') ? 'active' : ''}">🚚</span>
@@ -1029,9 +1031,9 @@
               </div>
             </div>
 
-            <div class="history-card-footer">
-              <span style="color:#eab308; font-weight:600;">Facility Status:</span>
-              <span style="color:#d6d3d1;">${escapeHtml(order.trackingNotes || "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.")}</span>
+            <div class="fk-order-footer">
+              <strong class="fk-order-facility-tag">Facility Status:</strong>
+              <span class="fk-order-facility-text">${escapeHtml(order.trackingNotes || "Sourced directly from traditional wood-press artisans, settled naturally, and packed hygienically at our Bangalore packaging and distribution facility.")}</span>
             </div>
           `}
         </div>
@@ -1441,7 +1443,7 @@
   }
 
   // ==========================================
-  // 12. MAP INTEGRATION & ADDRESS PINNING
+  // 12. MAP INTEGRATION & ADDRESS PINNING (FAULT-TOLERANT GPS)
   // ==========================================
   function initOrUpdateDeliveryMap(lat = DEFAULT_BANGALORE_COORDS[0], lng = DEFAULT_BANGALORE_COORDS[1]) {
     const mapElement = document.getElementById("deliveryMap");
@@ -1506,27 +1508,45 @@
 
     if (btn) btn.innerHTML = "⏳ Locating...";
 
+    const handleSuccess = (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      if (isOnboarding) {
+        initOrUpdateOnboardingMap(lat, lng);
+        reverseGeocodeOpenStreetMap(lat, lng);
+      } else {
+        initOrUpdateDeliveryMap(lat, lng);
+        reverseGeocodeOpenStreetMap(lat, lng);
+      }
+
+      if (btn) btn.innerHTML = "✅ Located!";
+      setTimeout(() => { if (btn) btn.innerHTML = origText; }, 2000);
+    };
+
+    const handleFail = () => {
+      // Automatic fallback to standard network positioning
+      navigator.geolocation.getCurrentPosition(
+        handleSuccess,
+        (err) => {
+          let errDetail = "Could not retrieve exact location.";
+          if (err.code === 1) {
+            errDetail = "Location permission denied. Please enable Location in your device/browser settings.";
+          } else if (err.code === 3) {
+            errDetail = "Location request timed out. Please drag the pin manually on the map.";
+          }
+          alert(errDetail);
+          if (btn) btn.innerHTML = origText;
+        },
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+      );
+    };
+
+    // First attempt: High accuracy
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        if (isOnboarding) {
-          initOrUpdateOnboardingMap(lat, lng);
-          reverseGeocodeOpenStreetMap(lat, lng);
-        } else {
-          initOrUpdateDeliveryMap(lat, lng);
-          reverseGeocodeOpenStreetMap(lat, lng);
-        }
-
-        if (btn) btn.innerHTML = "✅ Located!";
-        setTimeout(() => { if (btn) btn.innerHTML = origText; }, 2000);
-      },
-      () => {
-        alert("Could not retrieve exact location. Please drag the marker pin manually to your gate or building.");
-        if (btn) btn.innerHTML = origText;
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+      handleSuccess,
+      handleFail,
+      { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
     );
   };
 
@@ -1862,7 +1882,7 @@
   }
 
   // ==========================================
-  // 15. PRODUCT CATALOG DISPLAY & STEPPERS
+  // 15. FLIPKART STYLE PRODUCT CATALOG DISPLAY (WITH BUY NOW + STEPPER)
   // ==========================================
   function renderStepperButtonHTML(id, title, price, img, quantity) {
     if (!isBangalorePincode) {
@@ -1884,7 +1904,7 @@
     }
 
     return `
-      <button class="btn-buy" onclick="handleDirectAdd('${id}', '${escapeHtml(title)}', ${price}, '${img}')" type="button">
+      <button class="btn-buy-cart" onclick="handleDirectAdd('${id}', '${escapeHtml(title)}', ${price}, '${img}')" type="button">
         Add to Bag
       </button>
     `;
@@ -1914,13 +1934,21 @@
         <div class="card-content">
           <h3 class="card-title-clickable" onclick="openProductDetailModal('${key}')">${escapeHtml(product.name)}</h3>
           <ul class="product-feature-list">${featuresHTML}</ul>
-          <div class="card-footer">
+          
+          <div class="card-price-row">
             <div class="price-block">
               <span class="price">₹${defaultData.price} <small>/ 1L</small></span>
             </div>
+            <span class="badge-stock">✓ In Stock (Bangalore)</span>
+          </div>
+
+          <div class="card-dual-actions">
             <div class="stepper-wrap-inline" id="stepper-container-${defaultData.id}">
               ${renderStepperButtonHTML(defaultData.id, defaultData.title, defaultData.price, product.img, currentQty)}
             </div>
+            <button class="btn-card-buynow" type="button" onclick="handleDirectBuyNow('${defaultData.id}', '${escapeHtml(defaultData.title)}', ${defaultData.price}, '${product.img}')">
+              ⚡ BUY NOW
+            </button>
           </div>
         </div>
       `;
@@ -2163,24 +2191,24 @@
       currentOrderRef = retryOrderData.orderRef;
 
       preview.innerHTML = `
-        <div style="background:#26221f; border:1px solid #44403c; border-radius:8px; padding:1rem; margin-bottom:1rem;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; border-bottom:1px solid #3d3834; padding-bottom:0.5rem;">
-            <span style="color:#eab308; font-weight:700; font-size:0.88rem;">📋 Retrying Order Reference</span>
-            <strong style="color:#fafaf9; font-size:0.95rem;">#${escapeHtml(retryOrderData.orderRef)}</strong>
+        <div class="retry-order-summary-box">
+          <div class="retry-summary-head">
+            <span class="retry-tag">📋 Retrying Order Reference</span>
+            <strong class="retry-ref">#${escapeHtml(retryOrderData.orderRef)}</strong>
           </div>
-          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:#d6d3d1;">
-            <strong style="color:#a8a29e;">Items to be Paid:</strong>
-            <div style="color:#fde047; margin-top:0.2rem;">${escapeHtml(retryOrderData.items)}</div>
+          <div class="retry-summary-field">
+            <strong>Items to be Paid:</strong>
+            <div class="retry-val">${escapeHtml(retryOrderData.items)}</div>
           </div>
-          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:#d6d3d1;">
-            <strong style="color:#a8a29e;">Delivery Destination:</strong>
-            <div style="margin-top:0.2rem;">${escapeHtml(retryOrderData.address || "Bangalore")} (${escapeHtml(retryOrderData.pincode || "560058")})</div>
+          <div class="retry-summary-field">
+            <strong>Delivery Destination:</strong>
+            <div class="retry-val-sub">${escapeHtml(retryOrderData.address || "Bangalore")} (${escapeHtml(retryOrderData.pincode || "560058")})</div>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #3d3834; padding-top:0.6rem; margin-top:0.6rem;">
-            <span style="color:#fafaf9; font-weight:700; font-size:0.95rem;">Locked Grand Total:</span>
-            <strong style="color:#eab308; font-size:1.15rem;">₹${currentCalculatedGrandTotal.toLocaleString("en-IN")}</strong>
+          <div class="retry-summary-total">
+            <span>Locked Grand Total:</span>
+            <strong>₹${currentCalculatedGrandTotal.toLocaleString("en-IN")}</strong>
           </div>
-          <small style="color:#a8a29e; display:block; margin-top:0.4rem; font-size:0.75rem;">
+          <small class="retry-notice">
             💡 Your current active shopping bag remains safely preserved in the background.
           </small>
         </div>
