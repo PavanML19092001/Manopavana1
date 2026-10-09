@@ -60,6 +60,10 @@
   let toastTimeoutTimer = null;
   let addressTypingTimer = null;
 
+  // Audio Engine State
+  let isAudioPlaying = false;
+  let hasInteracted = false;
+
   // Leaflet Map & Marker Instances
   let leafletMap = null;
   let mapMarker = null;
@@ -404,7 +408,7 @@
   }
 
   // ==========================================
-  // 4. ACTION TOAST & AUTH ERROR TRANSLATION
+  // 4. ACTION TOAST & AUTH TRANSLATION
   // ==========================================
   window.showActionToast = function (title, message, icon = "✨", type = "info") {
     const toast = document.getElementById("actionToast");
@@ -493,7 +497,78 @@
   }
 
   // ==========================================
-  // 6. FIREBASE AUTH & USER PROFILE
+  // 6. AUDIO ENGINE & AUTOPLAY (MOBILE SAFE)
+  // ==========================================
+  function tryImmediateAudioPlayback() {
+    const audio = document.getElementById("heroBgAudio");
+    const btn = document.getElementById("soundToggleBtn");
+    const icon = document.getElementById("soundIcon");
+    const text = document.getElementById("soundText");
+    if (!audio) return;
+
+    audio.volume = 1.0;
+    const playPromise = audio.play();
+
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        isAudioPlaying = true;
+        if (icon) icon.textContent = "🔊";
+        if (text) text.textContent = "Sound On";
+        btn?.classList.add("playing");
+      }).catch(() => {
+        isAudioPlaying = false;
+        if (icon) icon.textContent = "🔇";
+        if (text) text.textContent = "Tap for Sound";
+        btn?.classList.remove("playing");
+      });
+    }
+  }
+
+  function toggleAudio() {
+    const audio = document.getElementById("heroBgAudio");
+    const btn = document.getElementById("soundToggleBtn");
+    const icon = document.getElementById("soundIcon");
+    const text = document.getElementById("soundText");
+    if (!audio) return;
+
+    if (isAudioPlaying) {
+      audio.pause();
+      isAudioPlaying = false;
+      if (icon) icon.textContent = "🔇";
+      if (text) text.textContent = "Sound Off";
+      btn?.classList.remove("playing");
+    } else {
+      audio.play().then(() => {
+        isAudioPlaying = true;
+        if (icon) icon.textContent = "🔊";
+        if (text) text.textContent = "Sound On";
+        btn?.classList.add("playing");
+      }).catch(() => {});
+    }
+  }
+
+  function initVideoAutoplay() {
+    const heroVid = document.getElementById("heroVideo");
+    const bottleVid = document.getElementById("bottleAutoplayVideo");
+    const fallback = document.getElementById("heroFallbackImage");
+
+    [heroVid, bottleVid].forEach(v => {
+      if (v) {
+        v.muted = true;
+        v.loop = true;
+        v.playsInline = true;
+        v.play().catch(() => {
+          if (v === heroVid && fallback) {
+            heroVid.style.display = "none";
+            fallback.style.display = "block";
+          }
+        });
+      }
+    });
+  }
+
+  // ==========================================
+  // 7. FIREBASE AUTH & USER PROFILE
   // ==========================================
   function initFirebaseAuth() {
     try {
@@ -564,6 +639,7 @@
     const logoutItem = document.getElementById("authLogoutItem");
     const profDisplayName = document.getElementById("profDisplayName");
     const profEmail = document.getElementById("profEmail");
+    const custName = document.getElementById("custName");
 
     if (currentUser) {
       const name = currentUser.displayName || (currentUser.email ? currentUser.email.split("@")[0] : "Customer");
@@ -572,6 +648,7 @@
       if (logoutItem) logoutItem.style.display = "block";
       if (profDisplayName) profDisplayName.textContent = name;
       if (profEmail) profEmail.textContent = currentUser.email || "--";
+      if (custName && !custName.value) custName.value = name;
     } else {
       if (authPillLabel) authPillLabel.textContent = "👤 Login";
       if (authUserMeta) authUserMeta.textContent = "Welcome to MANOPAVANA";
@@ -748,7 +825,7 @@
   });
 
   // ==========================================
-  // 7. USER DASHBOARD & ORDERS
+  // 8. USER DASHBOARD & ORDERS
   // ==========================================
   window.openAccountDashboard = function (initialTab = "orders") {
     if (!currentUser) {
@@ -851,7 +928,7 @@
   }
 
   // ==========================================
-  // 8. PRODUCT GRID & FLIPKART SPLIT DETAIL MODAL
+  // 9. PRODUCT GRID & FLIPKART SPLIT DETAIL MODAL
   // ==========================================
   function renderProductsGrid() {
     const container = document.getElementById("productGridContainer");
@@ -919,7 +996,6 @@
 
     body.innerHTML = `
       <div class="fk-detail-split">
-        <!-- Left Big Image Gallery Column -->
         <div class="fk-gallery-col">
           <div class="fk-main-image-viewer">
             <img src="${p.gallery[0]}" id="fkDetailMainImg" alt="${escapeHtml(p.name)}" />
@@ -937,7 +1013,6 @@
           </div>
         </div>
 
-        <!-- Right Flipkart Info Column -->
         <div class="fk-info-col">
           <h2 class="fk-title">${escapeHtml(p.name)}</h2>
           <div class="fk-rating-row">
@@ -1023,7 +1098,7 @@
   };
 
   // ==========================================
-  // 9. CART & CHECKOUT MANAGEMENT
+  // 10. CART & CHECKOUT MANAGEMENT
   // ==========================================
   function saveCart() {
     localStorage.setItem("manopavana_cart", JSON.stringify(cart));
@@ -1313,26 +1388,32 @@
   };
 
   // ==========================================
-  // 10. LEAFLET MAP & LOCATION INTEGRATION
+  // 11. LEAFLET MAP & LOCATION INTEGRATION
   // ==========================================
   function initOrUpdateDeliveryMap(lat = DEFAULT_BANGALORE_COORDS[0], lng = DEFAULT_BANGALORE_COORDS[1]) {
     const el = document.getElementById("deliveryMap");
     if (!el || typeof L === "undefined") return;
 
     if (!leafletMap) {
-      leafletMap = L.map("deliveryMap", { center: [lat, lng], zoom: 14 });
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(leafletMap);
+      leafletMap = L.map("deliveryMap", { center: [lat, lng], zoom: 14, scrollWheelZoom: false });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(leafletMap);
       mapMarker = L.marker([lat, lng], { draggable: true }).addTo(leafletMap);
       mapMarker.on("dragend", (e) => {
         const p = e.target.getLatLng();
         setMapCoords(p.lat, p.lng);
         reverseGeocode(p.lat, p.lng);
       });
+      leafletMap.on("click", (e) => {
+        mapMarker.setLatLng(e.latlng);
+        setMapCoords(e.latlng.lat, e.latlng.lng);
+        reverseGeocode(e.latlng.lat, e.latlng.lng);
+      });
     } else {
       leafletMap.setView([lat, lng], 14);
       if (mapMarker) mapMarker.setLatLng([lat, lng]);
     }
     setMapCoords(lat, lng);
+    setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 250);
   }
 
   function initOrUpdateOnboardingMap(lat = DEFAULT_BANGALORE_COORDS[0], lng = DEFAULT_BANGALORE_COORDS[1]) {
@@ -1340,17 +1421,22 @@
     if (!el || typeof L === "undefined") return;
 
     if (!onboardingLeafletMap) {
-      onboardingLeafletMap = L.map("onboardingMap", { center: [lat, lng], zoom: 14 });
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(onboardingLeafletMap);
+      onboardingLeafletMap = L.map("onboardingMap", { center: [lat, lng], zoom: 14, scrollWheelZoom: false });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(onboardingLeafletMap);
       onboardingMapMarker = L.marker([lat, lng], { draggable: true }).addTo(onboardingLeafletMap);
       onboardingMapMarker.on("dragend", (e) => {
         const p = e.target.getLatLng();
         reverseGeocode(p.lat, p.lng);
       });
+      onboardingLeafletMap.on("click", (e) => {
+        onboardingMapMarker.setLatLng(e.latlng);
+        reverseGeocode(e.latlng.lat, e.latlng.lng);
+      });
     } else {
       onboardingLeafletMap.setView([lat, lng], 14);
       if (onboardingMapMarker) onboardingMapMarker.setLatLng([lat, lng]);
     }
+    setTimeout(() => { if (onboardingLeafletMap) onboardingLeafletMap.invalidateSize(); }, 250);
   }
 
   function setMapCoords(lat, lng) {
@@ -1478,7 +1564,7 @@
   };
 
   // ==========================================
-  // 11. BOTTLE CLAIM 10% DISCOUNT
+  // 12. BOTTLE CLAIM 10% DISCOUNT
   // ==========================================
   window.openBottleClaimModal = function () {
     document.getElementById("bottleQuizModalBackdrop")?.classList.add("open");
@@ -1494,35 +1580,23 @@
   window.selectOnboardingQuizBottle = function (key) {
     selectedQuizBottleKey = key;
     const q = BOTTLE_QUIZ_POOLS[key][0];
-    const hintText = document.getElementById("onboardQuizHintText");
-    const qTitle = document.getElementById("onboardQuizQuestionText");
-
-    if (hintText) hintText.textContent = q.hint;
-    if (qTitle) qTitle.textContent = q.question;
-
-    const distractors = [
-      "Extracted using industrial chemical solvents",
-      "Refined, bleached, and chemically deodorized",
-      "Blended with synthetic liquid paraffin wax"
-    ];
+    document.getElementById("onboardQuizHintText").textContent = q.hint;
+    document.getElementById("onboardQuizQuestionText").textContent = q.question;
 
     const options = [
       { text: q.correct, correct: true },
-      { text: distractors[0], correct: false },
-      { text: distractors[1], correct: false }
+      { text: "Chemically refined with industrial hexane solvents", correct: false },
+      { text: "Blended with mineral liquid paraffin", correct: false }
     ].sort(() => Math.random() - 0.5);
 
     activeQuizData = { correct: q.correct };
 
-    const container = document.getElementById("onboardQuizOptionsContainer");
-    if (container) {
-      container.innerHTML = options.map((opt, i) => `
-        <label class="quiz-option-card" onclick="window.chooseQuizOpt('${escapeHtml(opt.text)}')">
-          <input type="radio" name="bottleRadio" />
-          <span>${escapeHtml(opt.text)}</span>
-        </label>
-      `).join("");
-    }
+    document.getElementById("onboardQuizOptionsContainer").innerHTML = options.map((opt, i) => `
+      <label class="quiz-option-card" onclick="window.chooseQuizOpt('${escapeHtml(opt.text)}')">
+        <input type="radio" name="bottleRadio" />
+        <span>${escapeHtml(opt.text)}</span>
+      </label>
+    `).join("");
   };
 
   window.chooseQuizOpt = function (text) {
@@ -1541,16 +1615,6 @@
     }
   };
 
-  window.openFlipkartModal = function () {
-    document.getElementById("flipkartModalBackdrop")?.classList.add("open");
-    document.body.classList.add("modal-open");
-  };
-
-  window.closeFlipkartModal = function () {
-    document.getElementById("flipkartModalBackdrop")?.classList.remove("open");
-    document.body.classList.remove("modal-open");
-  };
-
   window.openLegalModal = function (id) {
     document.getElementById(id)?.classList.add("open");
     document.body.classList.add("modal-open");
@@ -1562,7 +1626,7 @@
   };
 
   // ==========================================
-  // 12. INITIALIZATION & REVIEWS
+  // 13. DOM INITIALIZATION
   // ==========================================
   document.addEventListener("DOMContentLoaded", () => {
     initFirebaseAuth();
@@ -1570,6 +1634,25 @@
     renderProductsGrid();
     renderCart();
     updateLocationUI();
+    initVideoAutoplay();
+
+    // Mobile Audio Autoplay Gestures
+    document.getElementById("soundToggleBtn")?.addEventListener("click", toggleAudio);
+
+    tryImmediateAudioPlayback();
+
+    const enableAudioOnGesture = () => {
+      if (!hasInteracted) {
+        hasInteracted = true;
+        tryImmediateAudioPlayback();
+      }
+      ["click", "touchend", "scroll", "touchstart"].forEach((e) =>
+        window.removeEventListener(e, enableAudioOnGesture)
+      );
+    };
+    ["click", "touchend", "scroll", "touchstart"].forEach((e) =>
+      window.addEventListener(e, enableAudioOnGesture, { passive: true })
+    );
 
     document.getElementById("openCartBtn")?.addEventListener("click", window.openCart);
     document.getElementById("closeCartBtn")?.addEventListener("click", window.closeCart);
@@ -1578,18 +1661,7 @@
     document.getElementById("closeModalBtn")?.addEventListener("click", window.closeCheckoutModal);
     document.getElementById("submitOrderBtn")?.addEventListener("click", handleCheckoutSubmission);
 
-    document.getElementById("soundToggleBtn")?.addEventListener("click", () => {
-      const audio = document.getElementById("heroBgAudio");
-      if (!audio) return;
-      if (audio.paused) {
-        audio.play();
-        document.getElementById("soundText").textContent = "Sound On";
-      } else {
-        audio.pause();
-        document.getElementById("soundText").textContent = "Sound Off";
-      }
-    });
-
+    // Reviews Submission
     document.getElementById("productReviewForm")?.addEventListener("submit", (e) => {
       e.preventDefault();
       const name = document.getElementById("revName")?.value.trim();
