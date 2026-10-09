@@ -1,0 +1,8 @@
+{
+  "name": "MANOPAVANA - Traditional Wood-Pressed Oils",
+  "description": "Authentic wood-pressed cooking oils delivered doorstep. Cold pressed groundnut, coconut, sesame oils crafted with traditional methods.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
