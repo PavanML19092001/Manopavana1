@@ -1,28 +1,31 @@
 /* ==========================================================================
    MANOPAVANA - TRADITIONAL WOOD-PRESSED OILS
-   COMPLETE PRODUCTION STYLESHEET (style.css) - FLIPKART PREMIUM THEME
+   COMPLETE PRODUCTION STYLESHEET (style.css)
+   FLIPKART PREMIUM THEME - FULL & UNTRUNCATED
    ========================================================================== */
 
+/* --------------------------------------------------------------------------
+   1. GLOBAL TOKENS & RESET
+   -------------------------------------------------------------------------- */
 :root {
   --font-primary: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-heading: 'Cinzel', serif;
 
-  /* Premium Flipkart Dark Palette */
+  /* Flipkart Official Palette */
   --bg-body: #0c0a09;
-  --bg-card: #151311;
-  --bg-card-alt: #1e1b18;
-  --bg-glass: rgba(20, 18, 16, 0.95);
-  --border-color: #2b2622;
+  --bg-card: #161311;
+  --bg-card-alt: #1f1b18;
+  --bg-glass: rgba(18, 15, 13, 0.95);
+  --border-color: #2b2520;
   --border-light: #3d352e;
 
+  --fk-yellow: #ff9f00;
+  --fk-orange: #fb641b;
+  --fk-blue: #2874f0;
   --primary-gold: #fbbf24;
   --primary-gold-hover: #f59e0b;
-  --primary-amber: #f59e0b;
-  --accent-orange: #fb641b; /* Authentic Flipkart Orange */
-  --accent-yellow: #ff9f00; /* Authentic Flipkart Yellow */
   --accent-green: #388e3c;
-  --accent-red: #ff6161;
-  --accent-blue: #2874f0;
+  --accent-red: #ef4444;
 
   --text-main: #f5f5f4;
   --text-muted: #a8a29e;
@@ -88,7 +91,7 @@ img, video {
 }
 
 /* --------------------------------------------------------------------------
-   1. FLOATING SOUND PILL & ACTION TOAST
+   2. FLOATING SOUND PILL & GLOBAL NOTIFICATION TOAST
    -------------------------------------------------------------------------- */
 .floating-sound-pill {
   position: fixed;
@@ -101,7 +104,7 @@ img, video {
   background: rgba(23, 20, 18, 0.92);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-light);
-  padding: 7px 14px;
+  padding: 8px 14px;
   border-radius: 999px;
   color: var(--primary-gold);
   font-weight: 600;
@@ -151,7 +154,7 @@ img, video {
 .action-toast.toast-error .action-toast-inner { border-color: var(--accent-red); }
 
 /* --------------------------------------------------------------------------
-   2. TOP ANNOUNCEMENT BAR
+   3. TOP ANNOUNCEMENT BAR & PINCODE BUTTONS
    -------------------------------------------------------------------------- */
 .top-announcement-bar {
   background: #171412;
@@ -218,12 +221,12 @@ img, video {
 }
 
 .btn-claim-bottle-top {
-  border-color: var(--primary-amber);
-  color: var(--primary-amber);
+  border-color: var(--primary-gold);
+  color: var(--primary-gold);
 }
 
 /* --------------------------------------------------------------------------
-   3. SITE HEADER & FLIPKART NAVIGATION
+   4. SITE HEADER & FLIPKART NAVIGATION
    -------------------------------------------------------------------------- */
 .site-header {
   position: sticky;
@@ -412,7 +415,7 @@ img, video {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--accent-yellow);
+  background: var(--fk-yellow);
   color: #0c0a09;
   padding: 0 16px;
   border-radius: var(--radius-sm);
@@ -439,7 +442,7 @@ img, video {
 }
 
 /* --------------------------------------------------------------------------
-   4. CART DRAWER
+   5. CART DRAWER
    -------------------------------------------------------------------------- */
 .cart-backdrop {
   position: fixed;
@@ -595,7 +598,7 @@ img, video {
 .btn-checkout {
   width: 100%;
   padding: 13px;
-  background: var(--accent-orange);
+  background: var(--fk-orange);
   color: #fff;
   font-weight: 800;
   border-radius: var(--radius-sm);
@@ -605,13 +608,13 @@ img, video {
 .btn-checkout:hover { background: #ea580c; }
 
 /* --------------------------------------------------------------------------
-   5. MODAL SYSTEM
+   6. GLOBAL MODAL CONTAINER & BACKDROP
    -------------------------------------------------------------------------- */
 .modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -655,7 +658,162 @@ img, video {
 .modal-body { padding: 20px; overflow-y: auto; }
 
 /* --------------------------------------------------------------------------
-   6. USER DASHBOARD & FLIPKART-ORDER TIMELINE (SCREENSHOT 21583 FIX)
+   7. FLIPKART SPLIT AUTH MODAL
+   -------------------------------------------------------------------------- */
+.fk-auth-modal-card {
+  max-width: 780px;
+  display: flex;
+  flex-direction: row;
+  min-height: 480px;
+  padding: 0;
+}
+
+.fk-auth-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 10;
+}
+
+.fk-auth-sidebar {
+  width: 38%;
+  background: linear-gradient(135deg, #1e1b18 0%, #2b2210 100%);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid var(--border-color);
+}
+
+.fk-auth-sidebar h3 {
+  font-size: 1.4rem;
+  color: var(--primary-gold);
+  margin-bottom: 8px;
+}
+
+.fk-auth-sidebar p {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.fk-sidebar-illustration {
+  font-size: 3.5rem;
+  align-self: center;
+}
+
+.fk-auth-body {
+  width: 62%;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.btn-google-auth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #26221f;
+  border: 1px solid var(--border-light);
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.btn-google-auth:hover { background: #332d28; }
+.google-icon { width: 20px; height: 20px; }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 18px 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.auth-divider::before, .auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.auth-divider span { padding: 0 10px; }
+
+.fk-floating-group {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.fk-input {
+  width: 100%;
+  background: #141210;
+  border: 1px solid var(--border-light);
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  color: #fff;
+}
+
+.fk-input:focus {
+  outline: none;
+  border-color: var(--primary-gold);
+}
+
+.fk-floating-label {
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  pointer-events: none;
+  transition: 0.2s ease all;
+}
+
+.fk-input:focus ~ .fk-floating-label,
+.fk-input:not(:placeholder-shown) ~ .fk-floating-label {
+  top: -8px;
+  left: 10px;
+  font-size: 0.7rem;
+  background: #171412;
+  padding: 0 4px;
+  color: var(--primary-gold);
+}
+
+.fk-forgot-btn {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  font-size: 0.78rem;
+  color: var(--primary-gold);
+}
+
+.fk-auth-terms {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin: 12px 0;
+}
+
+.fk-auth-terms a { color: var(--primary-gold); }
+
+.btn-fk-orange {
+  width: 100%;
+  padding: 12px;
+  background: var(--fk-orange);
+  color: #fff;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+}
+
+.btn-fk-orange:hover { background: #ea580c; }
+.fk-toggle-switch { margin-top: 16px; text-align: center; }
+.btn-fk-outline { font-size: 0.8rem; color: var(--primary-gold); font-weight: 600; }
+.form-error-msg, .field-error-text { color: var(--accent-red); font-size: 0.78rem; margin-top: 4px; }
+.form-success-msg { color: var(--accent-green); font-size: 0.78rem; margin-top: 4px; }
+
+/* --------------------------------------------------------------------------
+   8. USER DASHBOARD & TRACK ORDER MODAL (PREVENTS SQUISHED ARTIFACTS)
    -------------------------------------------------------------------------- */
 .fk-dashboard-card {
   max-width: 680px;
@@ -697,7 +855,6 @@ img, video {
 .empty-orders-view .empty-icon { font-size: 2.5rem; margin-bottom: 8px; }
 .empty-orders-view h4 { font-size: 1.05rem; color: var(--text-main); margin-bottom: 4px; }
 
-/* Clean Flipkart-style Order Card */
 .fk-order-card {
   background: #1a1715;
   border: 1px solid var(--border-color);
@@ -728,17 +885,8 @@ img, video {
   gap: 2px;
 }
 
-.fk-order-ref {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.fk-order-meta {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
+.fk-order-ref { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
+.fk-order-meta { font-size: 0.8rem; color: var(--text-muted); }
 .fk-order-status-badge {
   font-size: 0.74rem;
   font-weight: 700;
@@ -756,15 +904,8 @@ img, video {
   margin-bottom: 14px;
 }
 
-.fk-order-label {
-  color: var(--text-muted);
-  font-weight: 600;
-  margin-right: 6px;
-}
-
-.fk-order-names {
-  color: var(--text-light);
-}
+.fk-order-label { color: var(--text-muted); font-weight: 600; margin-right: 6px; }
+.fk-order-names { color: var(--text-light); }
 
 .fk-order-unpaid-box {
   background: #241414;
@@ -796,20 +937,11 @@ img, video {
   text-align: center;
 }
 
-.btn-fk-retry {
-  background: var(--accent-yellow);
-  color: #000;
-}
+.btn-fk-retry { background: var(--fk-yellow); color: #000; }
 .btn-fk-retry:hover { background: #f59e0b; }
-
-.btn-fk-cod {
-  background: #24201c;
-  color: var(--text-main);
-  border: 1px solid var(--border-light);
-}
+.btn-fk-cod { background: #24201c; color: var(--text-main); border: 1px solid var(--border-light); }
 .btn-fk-cod:hover { background: #332d27; }
 
-/* Timeline Stepper */
 .track-timeline-progress {
   display: flex;
   justify-content: space-between;
@@ -868,7 +1000,6 @@ img, video {
 .fk-order-facility-tag { color: var(--primary-gold); margin-right: 4px; }
 .fk-order-facility-text { color: var(--text-muted); }
 
-/* Profile & Address Cards */
 .profile-card-fk, .saved-address-card {
   background: #1d1916;
   border: 1px solid var(--border-color);
@@ -927,13 +1058,522 @@ img, video {
 }
 
 .saved-address-badge { font-size: 0.78rem; font-weight: 700; color: var(--primary-gold); }
-.btn-edit-address { font-size: 0.8rem; color: var(--primary-amber); font-weight: 600; }
+.btn-edit-address { font-size: 0.8rem; color: var(--primary-gold); font-weight: 600; }
 .saved-address-content strong { display: block; font-size: 0.95rem; margin-bottom: 4px; }
 .saved-address-content p { font-size: 0.84rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 6px; }
 .saved-address-content span { font-size: 0.82rem; color: var(--text-light); }
 
 /* --------------------------------------------------------------------------
-   7. HERO SECTION (TRUE WIDESCREEN LANDSCAPE BANNER)
+   9. LOCATION SELECTION & LEAFLET MAP MODAL (FIX FOR SCREENSHOT 21585)
+   -------------------------------------------------------------------------- */
+.fk-location-modal-card {
+  max-width: 600px;
+  background: #171412;
+}
+
+.location-check-sub {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.location-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.location-input-row input {
+  flex: 1;
+  background: #141210;
+  border: 1px solid var(--border-light);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  color: #fff;
+}
+
+.btn-gps-inline, .btn-gps-locate {
+  background: #26221e;
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.btn-gps-inline:hover, .btn-gps-locate:hover {
+  background: #332d28;
+  border-color: var(--primary-gold);
+}
+
+.btn-check-pincode {
+  background: var(--fk-yellow);
+  color: #000;
+  font-weight: 700;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.btn-check-pincode:hover {
+  background: #f59e0b;
+}
+
+.map-form-group {
+  margin: 14px 0;
+}
+
+.map-label-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.map-coords-badge {
+  color: var(--primary-gold);
+  font-weight: 600;
+}
+
+.delivery-map-canvas {
+  height: 220px;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  z-index: 1;
+}
+
+.pincode-result-box {
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  margin: 12px 0;
+}
+
+.pincode-result-box.success {
+  background: #064e3b;
+  border: 1px solid var(--accent-green);
+  color: #a7f3d0;
+}
+
+.pincode-result-box.warning {
+  background: #451a03;
+  border: 1px solid var(--primary-gold);
+  color: #fde68a;
+}
+
+.location-info-pills {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.info-loc-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #1c1815;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.info-loc-chip span { font-size: 1.4rem; }
+.info-loc-chip strong { display: block; font-size: 0.82rem; margin-bottom: 2px; }
+.info-loc-chip small { font-size: 0.74rem; color: var(--text-muted); line-height: 1.3; }
+
+/* --------------------------------------------------------------------------
+   10. BOTTLE LOYALTY QUIZ MODAL (FIX FOR SCREENSHOT 21586)
+   -------------------------------------------------------------------------- */
+.onboarding-modal-card {
+  max-width: 560px;
+  background: #171412;
+}
+
+.onboarding-badge-icon {
+  font-size: 2.2rem;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.onboarding-modal-body h4 {
+  text-align: center;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.onboarding-subtext {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.bottle-quiz-type-selector {
+  margin-bottom: 14px;
+}
+
+.bottle-quiz-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
+
+.bottle-quiz-pills {
+  display: flex;
+  gap: 8px;
+}
+
+.quiz-bottle-pill {
+  flex: 1;
+  padding: 9px;
+  background: #24201c;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+}
+
+.quiz-bottle-pill.active {
+  border-color: var(--primary-gold);
+  background: #2e2617;
+  color: var(--primary-gold);
+}
+
+.label-hint-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--primary-gold);
+  margin-bottom: 10px;
+}
+
+.quiz-question-box {
+  background: #1c1815;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  margin-bottom: 14px;
+}
+
+.quiz-question-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.quiz-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quiz-option-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #24201c;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.quiz-option-card input[type="radio"] {
+  appearance: auto;
+  accent-color: var(--primary-gold);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.quiz-option-card.selected {
+  border-color: var(--primary-gold);
+  background: #2e2617;
+  color: #fff;
+}
+
+.quiz-attempt-strip {
+  text-align: right;
+  margin-bottom: 14px;
+}
+
+.attempt-badge {
+  font-size: 0.76rem;
+  color: var(--primary-gold);
+  font-weight: 600;
+}
+
+.attempt-badge.danger { color: var(--accent-red); }
+
+.quiz-feedback-box {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  margin-bottom: 14px;
+}
+
+.quiz-feedback-box.success { background: #064e3b; color: #a7f3d0; border: 1px solid var(--accent-green); }
+.quiz-feedback-box.error { background: #450a0a; color: #fca5a5; border: 1px solid var(--accent-red); }
+
+.btn-verify-quiz-submit {
+  width: 100%;
+  padding: 13px;
+  background: var(--fk-yellow);
+  color: #000;
+  font-weight: 800;
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+}
+
+.btn-verify-quiz-submit:hover { background: #f59e0b; }
+
+/* --------------------------------------------------------------------------
+   11. IMMERSIVE PRODUCT DETAIL MODAL (FIX FOR SCREENSHOTS 21588, 21587)
+   -------------------------------------------------------------------------- */
+.product-detail-backdrop {
+  padding: 10px;
+}
+
+.fk-product-detail-card {
+  max-width: 950px;
+  max-height: 94vh;
+  background: #171412;
+}
+
+.fk-detail-header {
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 20px;
+}
+
+.fk-brand-pill {
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  font-weight: 800;
+  color: var(--primary-gold);
+}
+
+.detail-top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 28px;
+  margin-bottom: 24px;
+}
+
+.detail-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-main-img-box {
+  width: 100%;
+  height: 420px; /* Big product showcase like Flipkart */
+  background: radial-gradient(circle at center, #2e2823 0%, #151310 90%);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  padding: 16px;
+}
+
+.detail-main-img {
+  max-height: 92%;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.7));
+}
+
+.detail-thumb-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.detail-thumb-img {
+  width: 58px;
+  height: 68px;
+  object-fit: contain;
+  background: #24201c;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.detail-thumb-img.active {
+  border-color: var(--primary-gold);
+}
+
+.detail-info-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-badge-pill {
+  font-size: 0.75rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.detail-title {
+  font-size: 1.45rem;
+  margin-bottom: 10px;
+  font-weight: 800;
+}
+
+.detail-short-desc {
+  font-size: 0.88rem;
+  color: var(--text-light);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.modal-variant-wrap {
+  margin-bottom: 18px;
+}
+
+.modal-variant-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+
+.modal-variant-pills {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-size-pill {
+  padding: 8px 16px;
+  background: #24201c;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.modal-size-pill.active {
+  border-color: var(--primary-gold);
+  color: var(--primary-gold);
+  background: #2d2417;
+}
+
+.modal-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 18px 0 12px;
+  padding: 14px 16px;
+  background: #1d1916;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.price-sub { font-size: 0.76rem; color: var(--text-muted); }
+.modal-price-val { font-size: 1.45rem; font-weight: 800; color: var(--primary-gold); }
+
+.modal-direct-buy-wrap {
+  margin-bottom: 24px;
+}
+
+.btn-direct-buy-now {
+  width: 100%;
+  padding: 14px;
+  background: var(--fk-orange);
+  color: #fff;
+  font-weight: 800;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
+.btn-direct-buy-now:hover { background: #ea580c; }
+
+/* Specifications Table Fix */
+.detail-spec-box {
+  margin-top: 24px;
+  background: #1a1715;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+}
+
+.detail-spec-box h4 {
+  font-size: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  color: var(--primary-gold);
+}
+
+.specs-table-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.specs-table-grid tr {
+  border-bottom: 1px solid #28221e;
+}
+
+.specs-table-grid tr:last-child {
+  border-bottom: none;
+}
+
+.spec-lbl {
+  color: var(--text-muted);
+  width: 38%;
+  padding: 8px 6px 8px 0;
+  vertical-align: top;
+}
+
+.spec-val {
+  color: var(--text-main);
+  padding: 8px 0;
+  font-weight: 500;
+}
+
+.detail-nutrition-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+  gap: 10px;
+}
+
+.nutri-cell {
+  background: #24201c;
+  border: 1px solid var(--border-color);
+  padding: 10px 8px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.nutri-lbl { font-size: 0.72rem; color: var(--text-muted); }
+.nutri-num { font-size: 0.92rem; font-weight: 800; color: var(--primary-gold); margin-top: 2px; }
+
+/* --------------------------------------------------------------------------
+   12. HERO VIDEO SECTION (WIDESCREEN LANDSCAPE BANNER)
    -------------------------------------------------------------------------- */
 .hero-clean-video-section {
   position: relative;
@@ -996,7 +1636,7 @@ img, video {
 .brand-intro-section p { color: var(--text-muted); font-size: 0.95rem; }
 
 /* --------------------------------------------------------------------------
-   8. FLIPKART STYLE PRODUCT CATALOG GRID (BIG HIGH-VISIBILITY BOTTLES)
+   13. PRODUCTS CATALOG GRID (BIG HIGH-VISIBILITY BOTTLE CARDS)
    -------------------------------------------------------------------------- */
 .products-section {
   max-width: 1400px;
@@ -1054,10 +1694,9 @@ img, video {
   color: var(--primary-gold);
 }
 
-/* BIG SPOTLIGHT FLIPKART BOTTLE IMAGE STAGE */
 .card-image-wrap {
   width: 100%;
-  height: 380px; /* Big vertical presence like Flipkart flagship */
+  height: 380px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1143,7 +1782,6 @@ img, video {
   font-weight: 600;
 }
 
-/* Dual Button Action Strip */
 .card-dual-actions {
   display: flex;
   gap: 8px;
@@ -1157,7 +1795,7 @@ img, video {
 .btn-buy-cart {
   width: 100%;
   height: 42px;
-  background: var(--accent-yellow);
+  background: var(--fk-yellow);
   color: #0c0a09;
   font-weight: 700;
   font-size: 0.84rem;
@@ -1172,7 +1810,7 @@ img, video {
 .btn-card-buynow {
   flex: 1;
   height: 42px;
-  background: var(--accent-orange);
+  background: var(--fk-orange);
   color: #fff;
   font-weight: 800;
   font-size: 0.84rem;
@@ -1214,7 +1852,7 @@ img, video {
 .btn-buy-flipkart-inline {
   width: 100%;
   height: 42px;
-  background: var(--accent-blue);
+  background: var(--fk-blue);
   color: #fff;
   font-size: 0.82rem;
   font-weight: 700;
@@ -1225,7 +1863,7 @@ img, video {
 }
 
 /* --------------------------------------------------------------------------
-   9. BOTTLE DESIGN SHOWCASE
+   14. BOTTLE DESIGN SHOWCASE
    -------------------------------------------------------------------------- */
 .bottle-design-section {
   max-width: 1400px;
@@ -1308,7 +1946,7 @@ img, video {
 .design-feature-card p { font-size: 0.85rem; color: var(--text-light); }
 
 /* --------------------------------------------------------------------------
-   10. VALUE COMBO SECTION
+   15. VALUE COMBO SECTION
    -------------------------------------------------------------------------- */
 .combo-section {
   max-width: 1200px;
@@ -1433,7 +2071,7 @@ img, video {
 
 .fk-combo-actions { display: flex; gap: 10px; }
 .btn-fk-yellow {
-  background: var(--accent-yellow);
+  background: var(--fk-yellow);
   color: #000;
   padding: 10px 20px;
   border-radius: var(--radius-sm);
@@ -1442,7 +2080,7 @@ img, video {
 .btn-fk-yellow:hover { background: #f59e0b; }
 
 /* --------------------------------------------------------------------------
-   11. CULINARY ARTISTRY (COMPLETE ARTWORK FIT, NO CLIPPING)
+   16. CULINARY ARTISTRY (RECIPES FIT PROPORTIONATELY)
    -------------------------------------------------------------------------- */
 .culinary-section {
   max-width: 1400px;
@@ -1508,7 +2146,7 @@ img, video {
 .label-info-box p { font-size: 0.85rem; color: var(--text-light); }
 
 /* --------------------------------------------------------------------------
-   12. CUSTOMER REVIEWS
+   17. CUSTOMER REVIEWS
    -------------------------------------------------------------------------- */
 .reviews-section {
   max-width: 1200px;
@@ -1579,7 +2217,7 @@ img, video {
 }
 
 /* --------------------------------------------------------------------------
-   13. 10% QR PROGRAM / LOYALTY GUIDE
+   18. 10% QR PROGRAM / LOYALTY GUIDE
    -------------------------------------------------------------------------- */
 .loyalty-section {
   max-width: 1200px;
@@ -1646,7 +2284,7 @@ img, video {
 .loyalty-footnote { margin-top: 24px; font-size: 0.8rem; color: var(--text-muted); }
 
 /* --------------------------------------------------------------------------
-   14. EXTRACTION BENCHMARK TABLE
+   19. EXTRACTION BENCHMARK TABLE
    -------------------------------------------------------------------------- */
 .benchmark-section {
   max-width: 1000px;
@@ -1676,7 +2314,7 @@ img, video {
 .quality-disclaimer { font-size: 0.75rem; color: var(--text-muted); margin-top: 12px; }
 
 /* --------------------------------------------------------------------------
-   15. FAQS ACCORDION
+   20. FAQS ACCORDION
    -------------------------------------------------------------------------- */
 .faqs-section {
   max-width: 900px;
@@ -1717,62 +2355,49 @@ img, video {
 .faq-item.active .faq-icon { transform: rotate(45deg); }
 
 /* --------------------------------------------------------------------------
-   16. SITE FOOTER
+   21. CHECKOUT MODAL & FORMS (3-PAYMENT METHOD LAYOUT)
    -------------------------------------------------------------------------- */
-.site-footer {
-  background: #0f0d0c;
-  border-top: 1px solid var(--border-color);
-  padding: 60px 24px 24px;
-  font-size: 0.85rem;
+.checkout-modal-card-extended {
+  max-width: 680px;
 }
 
-.footer-inner {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1.5fr;
-  gap: 40px;
-  margin-bottom: 40px;
+.checkout-order-preview {
+  background: #1c1917;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 16px;
 }
 
-.brand-col .brand-logo { display: flex; flex-direction: column; margin-bottom: 12px; }
-.brand-desc { color: var(--text-muted); margin-bottom: 16px; }
-.reg-badges { display: flex; flex-direction: column; gap: 4px; }
-.reg-item { font-size: 0.75rem; }
-.reg-label { color: var(--text-muted); }
-.reg-val { color: var(--primary-gold); font-weight: 600; }
-
-.footer-col h4 { font-size: 0.95rem; margin-bottom: 16px; color: var(--text-main); }
-.footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-.footer-col ul a { color: var(--text-muted); }
-.footer-col ul a:hover { color: var(--primary-gold); }
-
-.contact-info { display: flex; flex-direction: column; gap: 12px; }
-.contact-row { display: flex; gap: 10px; align-items: flex-start; color: var(--text-muted); }
-.contact-lead-name { color: var(--text-main); font-weight: 600; }
-.contact-alt-phone { font-size: 0.8rem; }
-.contact-row address { font-style: normal; line-height: 1.4; }
-
-.footer-bottom {
-  border-top: 1px solid var(--border-color);
-  padding-top: 24px;
-  text-align: center;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.footer-bottom-inner {
-  max-width: 1400px;
-  margin: 0 auto;
+.checkout-preview-header {
   display: flex;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
 }
 
-/* --------------------------------------------------------------------------
-   17. RETRY & CHECKOUT MODAL UTILITIES
-   -------------------------------------------------------------------------- */
+.checkout-preview-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.checkout-preview-thumb { width: 36px; height: 44px; object-fit: contain; }
+.checkout-preview-info { flex: 1; }
+.checkout-preview-info strong { display: block; font-size: 0.85rem; }
+.checkout-preview-info span { font-size: 0.75rem; color: var(--text-muted); }
+.checkout-preview-cost { font-weight: 700; font-size: 0.85rem; }
+.checkout-preview-footer { border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 8px; }
+.checkout-row { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
+.checkout-row.discount-text { color: var(--accent-green); }
+.checkout-row.total-highlight {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-gold);
+  border-top: 1px dashed var(--border-light);
+  padding-top: 6px;
+  margin-top: 6px;
+}
+
 .retry-order-summary-box {
   background: #26221f;
   border: 1px solid var(--border-light);
@@ -1805,24 +2430,6 @@ img, video {
 .retry-summary-total span { color: var(--text-main); font-weight: 700; font-size: 0.95rem; }
 .retry-summary-total strong { color: var(--primary-gold); font-size: 1.15rem; }
 .retry-notice { color: var(--text-muted); display: block; margin-top: 0.4rem; font-size: 0.75rem; }
-
-.checkout-preview-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.checkout-preview-thumb { width: 36px; height: 44px; object-fit: contain; }
-.checkout-preview-info { flex: 1; }
-.checkout-preview-info strong { display: block; font-size: 0.85rem; }
-.checkout-preview-info span { font-size: 0.75rem; color: var(--text-muted); }
-.checkout-preview-cost { font-weight: 700; font-size: 0.85rem; }
-.checkout-preview-footer { border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 8px; }
-.checkout-row { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
-.checkout-row.discount-text { color: var(--accent-green); }
-.checkout-row.total-highlight {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--primary-gold);
-  border-top: 1px dashed var(--border-light);
-  padding-top: 6px;
-  margin-top: 6px;
-}
 
 .form-group { margin-bottom: 14px; }
 .form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: var(--text-light); }
@@ -1895,7 +2502,7 @@ img, video {
 .btn-submit-order {
   width: 100%;
   padding: 14px;
-  background: var(--accent-orange);
+  background: var(--fk-orange);
   color: #fff;
   font-weight: 800;
   border-radius: var(--radius-sm);
@@ -1904,7 +2511,124 @@ img, video {
 .btn-submit-order:hover { background: #ea580c; }
 
 /* --------------------------------------------------------------------------
-   18. MOBILE BREAKPOINTS & RESPONSIVENESS
+   22. CONFIRMATION & RETRY MODALS
+   -------------------------------------------------------------------------- */
+.order-confirm-body, .payment-failed-card .modal-body { text-align: center; }
+.confirm-badge-icon, .failed-badge-icon, .flipkart-modal-icon { font-size: 3rem; margin-bottom: 8px; }
+.confirm-receipt-summary {
+  background: #1c1917;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  margin: 16px 0;
+  text-align: left;
+}
+.confirm-receipt-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; }
+.confirm-actions-row { display: flex; gap: 10px; margin-top: 16px; }
+.btn-track-this-order {
+  flex: 1;
+  background: var(--fk-yellow);
+  color: #000;
+  font-weight: 700;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+}
+.btn-whatsapp-confirm {
+  flex: 1;
+  background: #25d366;
+  color: #fff;
+  font-weight: 700;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.failed-actions-column { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.btn-retry-phonepe {
+  padding: 12px;
+  background: var(--fk-yellow);
+  color: #000;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+}
+.btn-switch-cod {
+  padding: 12px;
+  background: #26221f;
+  border: 1px solid var(--border-light);
+  color: #fff;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+}
+.btn-continue-flipkart {
+  display: block;
+  background: var(--fk-blue);
+  color: #fff;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  text-align: center;
+  margin: 14px 0 8px;
+}
+.status-declined { color: var(--accent-red); }
+.status-saved { color: var(--accent-green); }
+
+/* --------------------------------------------------------------------------
+   23. SITE FOOTER
+   -------------------------------------------------------------------------- */
+.site-footer {
+  background: #0f0d0c;
+  border-top: 1px solid var(--border-color);
+  padding: 60px 24px 24px;
+  font-size: 0.85rem;
+}
+
+.footer-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.5fr;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.brand-col .brand-logo { display: flex; flex-direction: column; margin-bottom: 12px; }
+.brand-desc { color: var(--text-muted); margin-bottom: 16px; }
+.reg-badges { display: flex; flex-direction: column; gap: 4px; }
+.reg-item { font-size: 0.75rem; }
+.reg-label { color: var(--text-muted); }
+.reg-val { color: var(--primary-gold); font-weight: 600; }
+
+.footer-col h4 { font-size: 0.95rem; margin-bottom: 16px; color: var(--text-main); }
+.footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-col ul a { color: var(--text-muted); }
+.footer-col ul a:hover { color: var(--primary-gold); }
+
+.contact-info { display: flex; flex-direction: column; gap: 12px; }
+.contact-row { display: flex; gap: 10px; align-items: flex-start; color: var(--text-muted); }
+.contact-lead-name { color: var(--text-main); font-weight: 600; }
+.contact-alt-phone { font-size: 0.8rem; }
+.contact-row address { font-style: normal; line-height: 1.4; }
+
+.footer-bottom {
+  border-top: 1px solid var(--border-color);
+  padding-top: 24px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.footer-bottom-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   24. MOBILE BREAKPOINTS (SCREENSHOT-ALIGNED)
    -------------------------------------------------------------------------- */
 @media (max-width: 1024px) {
   .header-search-bar { max-width: 240px; }
@@ -1929,7 +2653,6 @@ img, video {
   .announcement-content-wrap { flex-direction: column; text-align: center; gap: 8px; }
   .top-bar-action-group { justify-content: center; width: 100%; }
 
-  /* True landscape hero video on mobile phones */
   .hero-clean-video-section {
     aspect-ratio: 16 / 9;
     width: 100%;
@@ -1939,15 +2662,18 @@ img, video {
 
   .video-cta-strip { margin-top: 10px; }
 
-  /* Big Flipkart-Style Bottle Images on Mobile */
+  /* Big Bottle Cards on Mobile */
   .card-image-wrap {
-    height: 320px;
+    height: 330px;
     padding: 12px;
   }
 
   .product-img {
     max-height: 94%;
   }
+
+  .detail-top-grid { grid-template-columns: 1fr; }
+  .detail-main-img-box { height: 320px; }
 
   .bottle-video-wrapper { height: 300px; }
   .combo-card { padding: 24px 16px; }
@@ -1958,7 +2684,6 @@ img, video {
   .fk-combo-actions { display: flex; flex-direction: row; width: 100%; }
   .fk-combo-actions button { flex: 1; padding: 12px; }
 
-  .detail-top-grid { grid-template-columns: 1fr; }
   .fk-auth-modal-card { flex-direction: column; }
   .fk-auth-sidebar { width: 100%; padding: 20px; }
   .fk-auth-body { width: 100%; padding: 20px; }
